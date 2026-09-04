@@ -1,0 +1,17 @@
+{
+  "best_test_accuracy": 100.0,
+  "final_test_accuracy": 1.0,
+  "num_epochs": 80,
+  "input_features": [
+    "wpm",
+    "pitch_cv",
+    "pause_ratio",
+    "volume_cv",
+    "pauses_per_min"
+  ],
+  "classes": [
+    "nervous",
+    "moderate",
+    "confident"
+  ]
+}

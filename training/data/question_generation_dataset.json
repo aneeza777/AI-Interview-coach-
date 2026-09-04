@@ -1,0 +1,932 @@
+[
+  {
+    "context": "Skills: Python, Django, REST APIs",
+    "question": "Can you explain how Django's ORM handles database queries and what N+1 query problem is?",
+    "category": "technical",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Skills: Python, Flask, microservices",
+    "question": "How would you design a RESTful API using Flask? Walk me through your approach.",
+    "category": "technical",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Skills: Python, pandas, data analysis",
+    "question": "How do you handle missing data in a pandas DataFrame? What strategies do you use?",
+    "category": "technical",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Skills: React, TypeScript, Next.js",
+    "question": "Explain the difference between useEffect and useLayoutEffect in React.",
+    "category": "technical",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Skills: React, Redux, state management",
+    "question": "How do you manage global state in a large React application?",
+    "category": "technical",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Skills: Machine Learning, TensorFlow, NLP",
+    "question": "What is overfitting and how do you prevent it in a neural network?",
+    "category": "technical",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Skills: Deep Learning, PyTorch, Computer Vision",
+    "question": "Explain the architecture of a CNN and when you'd use it.",
+    "category": "technical",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Skills: PostgreSQL, MongoDB, Redis",
+    "question": "When would you choose a NoSQL database over a relational one?",
+    "category": "technical",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Skills: Docker, Kubernetes, CI/CD",
+    "question": "Describe how you would set up a CI/CD pipeline from scratch.",
+    "category": "technical",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Skills: AWS, Lambda, S3, DynamoDB",
+    "question": "How would you design a serverless architecture for a web application?",
+    "category": "technical",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Experience: 3 years, Team Lead",
+    "question": "Tell me about a time you had to make a difficult decision as a team lead.",
+    "category": "behavioral",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Experience: 2 years, cross-functional teams",
+    "question": "Describe a situation where you disagreed with a colleague's approach. How did you handle it?",
+    "category": "behavioral",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Experience: Software Engineer, startup",
+    "question": "Tell me about a project that failed. What did you learn from it?",
+    "category": "behavioral",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Experience: 4 years, multiple deadlines",
+    "question": "How do you prioritize when you have multiple urgent tasks?",
+    "category": "behavioral",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Experience: Junior developer, 1 year",
+    "question": "Where do you see yourself growing technically in the next 2 years?",
+    "category": "behavioral",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Job Title: Software Engineer",
+    "question": "Describe your approach to writing clean, testable code.",
+    "category": "job",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Job Title: Data Scientist",
+    "question": "How do you validate whether your model generalizes well to unseen data?",
+    "category": "job",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Job Title: Frontend Developer",
+    "question": "How do you ensure your web application is accessible to all users?",
+    "category": "job",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Job Title: Backend Developer",
+    "question": "How do you handle database migrations in a production environment?",
+    "category": "job",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Job Title: DevOps Engineer",
+    "question": "What monitoring and alerting strategies do you use for production systems?",
+    "category": "job",
+    "source": "custom_interview"
+  },
+  {
+    "context": "Skills: Python, Django, PostgreSQL",
+    "question": "How would you debug a performance issue involving Python?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, Django, PostgreSQL",
+    "question": "Explain your experience with Python. What projects have you built?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, Django, PostgreSQL",
+    "question": "Walk me through how Python works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, Django, PostgreSQL",
+    "question": "What are the most important concepts in Django that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, Django, PostgreSQL",
+    "question": "How has Django evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, Django, PostgreSQL",
+    "question": "What are the trade-offs when using Django versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, Django, PostgreSQL",
+    "question": "Explain your experience with PostgreSQL. What projects have you built?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, Django, PostgreSQL",
+    "question": "What are the most important concepts in PostgreSQL that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, Django, PostgreSQL",
+    "question": "Describe a challenging problem you solved using PostgreSQL.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: JavaScript, React, Node.js",
+    "question": "Describe a challenging problem you solved using JavaScript.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: JavaScript, React, Node.js",
+    "question": "How has JavaScript evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: JavaScript, React, Node.js",
+    "question": "What are the most important concepts in JavaScript that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: JavaScript, React, Node.js",
+    "question": "How do you keep up with updates and best practices in React?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: JavaScript, React, Node.js",
+    "question": "How would you debug a performance issue involving React?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: JavaScript, React, Node.js",
+    "question": "How has React evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: JavaScript, React, Node.js",
+    "question": "Describe a challenging problem you solved using Node.js.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: JavaScript, React, Node.js",
+    "question": "What are the trade-offs when using Node.js versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: JavaScript, React, Node.js",
+    "question": "How do you keep up with updates and best practices in Node.js?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Java, Spring Boot, MySQL",
+    "question": "How do you keep up with updates and best practices in Java?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Java, Spring Boot, MySQL",
+    "question": "How has Java evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Java, Spring Boot, MySQL",
+    "question": "What are the trade-offs when using Java versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Java, Spring Boot, MySQL",
+    "question": "Walk me through how Spring Boot works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Java, Spring Boot, MySQL",
+    "question": "What are the trade-offs when using Spring Boot versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Java, Spring Boot, MySQL",
+    "question": "How would you debug a performance issue involving Spring Boot?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Java, Spring Boot, MySQL",
+    "question": "What are the most important concepts in MySQL that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Java, Spring Boot, MySQL",
+    "question": "What are the trade-offs when using MySQL versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Java, Spring Boot, MySQL",
+    "question": "How would you debug a performance issue involving MySQL?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, TensorFlow, scikit-learn",
+    "question": "What are the most important concepts in Python that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, TensorFlow, scikit-learn",
+    "question": "How would you debug a performance issue involving Python?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, TensorFlow, scikit-learn",
+    "question": "Walk me through how Python works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, TensorFlow, scikit-learn",
+    "question": "Walk me through how TensorFlow works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, TensorFlow, scikit-learn",
+    "question": "How would you debug a performance issue involving TensorFlow?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, TensorFlow, scikit-learn",
+    "question": "How do you keep up with updates and best practices in TensorFlow?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, TensorFlow, scikit-learn",
+    "question": "How do you keep up with updates and best practices in scikit-learn?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, TensorFlow, scikit-learn",
+    "question": "What are the most important concepts in scikit-learn that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, TensorFlow, scikit-learn",
+    "question": "What are the trade-offs when using scikit-learn versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Go, Docker, Kubernetes",
+    "question": "Walk me through how Go works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Go, Docker, Kubernetes",
+    "question": "What are the most important concepts in Go that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Go, Docker, Kubernetes",
+    "question": "How would you debug a performance issue involving Go?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Go, Docker, Kubernetes",
+    "question": "Explain your experience with Docker. What projects have you built?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Go, Docker, Kubernetes",
+    "question": "Walk me through how Docker works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Go, Docker, Kubernetes",
+    "question": "How would you debug a performance issue involving Docker?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Go, Docker, Kubernetes",
+    "question": "What are the most important concepts in Kubernetes that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Go, Docker, Kubernetes",
+    "question": "How has Kubernetes evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Go, Docker, Kubernetes",
+    "question": "Describe a challenging problem you solved using Kubernetes.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: TypeScript, Angular, MongoDB",
+    "question": "What are the trade-offs when using TypeScript versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: TypeScript, Angular, MongoDB",
+    "question": "How would you debug a performance issue involving TypeScript?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: TypeScript, Angular, MongoDB",
+    "question": "How has TypeScript evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: TypeScript, Angular, MongoDB",
+    "question": "How do you keep up with updates and best practices in Angular?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: TypeScript, Angular, MongoDB",
+    "question": "What are the trade-offs when using Angular versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: TypeScript, Angular, MongoDB",
+    "question": "Walk me through how Angular works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: TypeScript, Angular, MongoDB",
+    "question": "How has MongoDB evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: TypeScript, Angular, MongoDB",
+    "question": "Walk me through how MongoDB works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: TypeScript, Angular, MongoDB",
+    "question": "How would you debug a performance issue involving MongoDB?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: C++, algorithms, data structures",
+    "question": "What are the most important concepts in C++ that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: C++, algorithms, data structures",
+    "question": "Describe a challenging problem you solved using C++.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: C++, algorithms, data structures",
+    "question": "How do you keep up with updates and best practices in C++?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: C++, algorithms, data structures",
+    "question": "What are the most important concepts in algorithms that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: C++, algorithms, data structures",
+    "question": "Walk me through how algorithms works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: C++, algorithms, data structures",
+    "question": "What are the trade-offs when using algorithms versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: C++, algorithms, data structures",
+    "question": "Explain your experience with data structures. What projects have you built?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: C++, algorithms, data structures",
+    "question": "How would you debug a performance issue involving data structures?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: C++, algorithms, data structures",
+    "question": "What are the most important concepts in data structures that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, FastAPI, Redis",
+    "question": "Explain your experience with Python. What projects have you built?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, FastAPI, Redis",
+    "question": "What are the trade-offs when using Python versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, FastAPI, Redis",
+    "question": "What are the most important concepts in Python that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, FastAPI, Redis",
+    "question": "How would you debug a performance issue involving FastAPI?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, FastAPI, Redis",
+    "question": "Describe a challenging problem you solved using FastAPI.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, FastAPI, Redis",
+    "question": "Walk me through how FastAPI works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, FastAPI, Redis",
+    "question": "Describe a challenging problem you solved using Redis.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, FastAPI, Redis",
+    "question": "How would you debug a performance issue involving Redis?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, FastAPI, Redis",
+    "question": "How has Redis evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Swift, iOS, Core Data",
+    "question": "Describe a challenging problem you solved using Swift.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Swift, iOS, Core Data",
+    "question": "Walk me through how Swift works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Swift, iOS, Core Data",
+    "question": "What are the most important concepts in Swift that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Swift, iOS, Core Data",
+    "question": "Describe a challenging problem you solved using iOS.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Swift, iOS, Core Data",
+    "question": "Walk me through how iOS works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Swift, iOS, Core Data",
+    "question": "What are the most important concepts in iOS that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Swift, iOS, Core Data",
+    "question": "How do you keep up with updates and best practices in Core Data?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Swift, iOS, Core Data",
+    "question": "Describe a challenging problem you solved using Core Data.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Swift, iOS, Core Data",
+    "question": "How has Core Data evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Kotlin, Android, Room",
+    "question": "Explain your experience with Kotlin. What projects have you built?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Kotlin, Android, Room",
+    "question": "Walk me through how Kotlin works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Kotlin, Android, Room",
+    "question": "Describe a challenging problem you solved using Kotlin.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Kotlin, Android, Room",
+    "question": "How would you debug a performance issue involving Android?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Kotlin, Android, Room",
+    "question": "How do you keep up with updates and best practices in Android?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Kotlin, Android, Room",
+    "question": "Describe a challenging problem you solved using Android.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Kotlin, Android, Room",
+    "question": "How would you debug a performance issue involving Room?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Kotlin, Android, Room",
+    "question": "Walk me through how Room works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Kotlin, Android, Room",
+    "question": "What are the trade-offs when using Room versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, pandas, NumPy, matplotlib",
+    "question": "Describe a challenging problem you solved using Python.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, pandas, NumPy, matplotlib",
+    "question": "What are the trade-offs when using Python versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, pandas, NumPy, matplotlib",
+    "question": "What are the most important concepts in Python that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, pandas, NumPy, matplotlib",
+    "question": "Explain your experience with pandas. What projects have you built?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, pandas, NumPy, matplotlib",
+    "question": "What are the most important concepts in pandas that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, pandas, NumPy, matplotlib",
+    "question": "How would you debug a performance issue involving pandas?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, pandas, NumPy, matplotlib",
+    "question": "Describe a challenging problem you solved using NumPy.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, pandas, NumPy, matplotlib",
+    "question": "How has NumPy evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Python, pandas, NumPy, matplotlib",
+    "question": "Explain your experience with NumPy. What projects have you built?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: React Native, Firebase, Redux",
+    "question": "Walk me through how React Native works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: React Native, Firebase, Redux",
+    "question": "How has React Native evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: React Native, Firebase, Redux",
+    "question": "Describe a challenging problem you solved using React Native.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: React Native, Firebase, Redux",
+    "question": "How do you keep up with updates and best practices in Firebase?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: React Native, Firebase, Redux",
+    "question": "Explain your experience with Firebase. What projects have you built?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: React Native, Firebase, Redux",
+    "question": "How would you debug a performance issue involving Firebase?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: React Native, Firebase, Redux",
+    "question": "How do you keep up with updates and best practices in Redux?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: React Native, Firebase, Redux",
+    "question": "What are the most important concepts in Redux that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: React Native, Firebase, Redux",
+    "question": "What are the trade-offs when using Redux versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Rust, systems programming, WebAssembly",
+    "question": "How has Rust evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Rust, systems programming, WebAssembly",
+    "question": "Walk me through how Rust works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Rust, systems programming, WebAssembly",
+    "question": "How would you debug a performance issue involving Rust?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Rust, systems programming, WebAssembly",
+    "question": "How would you debug a performance issue involving systems programming?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Rust, systems programming, WebAssembly",
+    "question": "Walk me through how systems programming works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Rust, systems programming, WebAssembly",
+    "question": "How has systems programming evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Rust, systems programming, WebAssembly",
+    "question": "Walk me through how WebAssembly works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Rust, systems programming, WebAssembly",
+    "question": "Explain your experience with WebAssembly. What projects have you built?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Rust, systems programming, WebAssembly",
+    "question": "What are the most important concepts in WebAssembly that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: PHP, Laravel, Vue.js",
+    "question": "Walk me through how PHP works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: PHP, Laravel, Vue.js",
+    "question": "Explain your experience with PHP. What projects have you built?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: PHP, Laravel, Vue.js",
+    "question": "How has PHP evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: PHP, Laravel, Vue.js",
+    "question": "Explain your experience with Laravel. What projects have you built?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: PHP, Laravel, Vue.js",
+    "question": "Walk me through how Laravel works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: PHP, Laravel, Vue.js",
+    "question": "What are the most important concepts in Laravel that a developer should master?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: PHP, Laravel, Vue.js",
+    "question": "Explain your experience with Vue.js. What projects have you built?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: PHP, Laravel, Vue.js",
+    "question": "How do you keep up with updates and best practices in Vue.js?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: PHP, Laravel, Vue.js",
+    "question": "Describe a challenging problem you solved using Vue.js.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Ruby, Rails, Sidekiq",
+    "question": "Describe a challenging problem you solved using Ruby.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Ruby, Rails, Sidekiq",
+    "question": "Walk me through how Ruby works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Ruby, Rails, Sidekiq",
+    "question": "How has Ruby evolved in recent years and what trends do you see?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Ruby, Rails, Sidekiq",
+    "question": "How do you keep up with updates and best practices in Rails?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Ruby, Rails, Sidekiq",
+    "question": "Walk me through how Rails works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Ruby, Rails, Sidekiq",
+    "question": "What are the trade-offs when using Rails versus its alternatives?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Ruby, Rails, Sidekiq",
+    "question": "How would you debug a performance issue involving Sidekiq?",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Ruby, Rails, Sidekiq",
+    "question": "Describe a challenging problem you solved using Sidekiq.",
+    "category": "technical",
+    "source": "augmented"
+  },
+  {
+    "context": "Skills: Ruby, Rails, Sidekiq",
+    "question": "Walk me through how Sidekiq works under the hood.",
+    "category": "technical",
+    "source": "augmented"
+  }
+]

@@ -1,0 +1,78 @@
+# ==============================================================================
+# AI Interview Coach — Git Ignore Rules
+# Alibaba Cloud AI Hackathon Pakistan 2026 Compliance
+# ==============================================================================
+
+# Environment & Secrets (NEVER COMMIT)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+credentials.json
+secrets.json
+
+# Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# User Uploads & Media (contains personal CVs and voice recordings)
+uploads/
+*.wav
+*.mp3
+*.webm
+*.ogg
+*.m4a
+!sample_audio.wav
+
+# Database & Persistent Storage
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+*.db
+*.sqlite
+*.sqlite3
+
+# Large Archives & Temporary Backups
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+ai interview coach.zip
+ai interview coach2.zip
+ai interview coach2/
+
+# IDE & OS Files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs & Checkpoints
+*.log
+logs/
+checkpoints/
+.system_generated/

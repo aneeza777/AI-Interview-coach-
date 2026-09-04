@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Coach — Mock Interview Practice</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- ═══════════════════════════════════════ -->
+    <!-- AUTH SCREEN (Login / Register)         -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="screen-auth" class="screen active">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="logo-icon">🎯</span>
+                <span class="logo-text">AI Interview Coach</span>
+            </div>
+        </nav>
+
+        <section class="auth-container">
+            <div class="auth-card">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="login">Login</button>
+                    <button class="auth-tab" data-tab="register">Register</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="login-form" class="auth-form active">
+                    <h2>Welcome Back 👋</h2>
+                    <p class="auth-subtitle">Login to practice your interview skills</p>
+
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" placeholder="you@example.com" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" placeholder="••••••••" required />
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        <span class="btn-text">Login</span>
+                        <span class="btn-loader" hidden>Please wait...</span>
+                    </button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form" class="auth-form">
+                    <h2>Create Account 🚀</h2>
+                    <p class="auth-subtitle">Start your interview preparation journey</p>
+
+                    <div class="form-group">
+                        <label for="register-name">Full Name</label>
+                        <input type="text" id="register-name" placeholder="Ahmed Khan" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" placeholder="you@example.com" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" placeholder="Min 6 characters" required minlength="6" />
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        <span class="btn-text">Create Account</span>
+                        <span class="btn-loader" hidden>Please wait...</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="auth-info">
+                <h1>Master Your Next Interview</h1>
+                <ul>
+                    <li>✅ AI reviews your CV like a recruiter</li>
+                    <li>🎤 Practice with voice-based mock interviews</li>
+                    <li>📊 Get confidence & content scores</li>
+                    <li>💡 Receive personalized improvement tips</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- DASHBOARD SCREEN                       -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="screen-dashboard" class="screen">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="logo-icon">🎯</span>
+                <span class="logo-text">AI Interview Coach</span>
+            </div>
+            <div class="nav-user">
+                <span id="user-name">User</span>
+                <button class="btn-link" id="btn-logout">Logout</button>
+            </div>
+        </nav>
+
+        <section class="dashboard-container">
+            <div class="dashboard-header">
+                <h1>Dashboard</h1>
+                <p>Upload your CV, review it, and start practicing interviews.</p>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-card action-card">
+                    <div class="card-icon">📄</div>
+                    <h3>Review My CV</h3>
+                    <p>Upload your CV and get recruiter-style feedback instantly.</p>
+                    <button class="btn-primary" id="btn-goto-upload">Review CV</button>
+                </div>
+
+                <div class="dashboard-card action-card">
+                    <div class="card-icon">📚</div>
+                    <h3>Interview Preparation</h3>
+                    <p>Practice with tips and model answers for any job title.</p>
+                    <button class="btn-primary" id="btn-goto-prep">Start Preparation</button>
+                </div>
+
+                <div class="dashboard-card action-card">
+                    <div class="card-icon">🎤</div>
+                    <h3>Mock Interview</h3>
+                    <p>Take a full mock interview and get a detailed report.</p>
+                    <button class="btn-primary" id="btn-goto-interview">Start Interview</button>
+                </div>
+
+                <div class="dashboard-card list-card">
+                    <div class="card-icon">📋</div>
+                    <h3>Your CVs <small>(latest 3)</small></h3>
+                    <div id="resumes-list" class="resumes-list">
+                        <p class="empty-state">No CVs uploaded yet.</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-card list-card">
+                    <div class="card-icon">📊</div>
+                    <h3>Recent Interviews</h3>
+                    <div id="interviews-list" class="interviews-list">
+                        <p class="empty-state">No interviews yet.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- CV UPLOAD & REVIEW SCREEN              -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="screen-cv" class="screen">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="logo-icon">🎯</span>
+                <span class="logo-text">AI Interview Coach</span>
+            </div>
+            <div class="nav-user">
+                <button class="btn-link" id="btn-cv-back">← Dashboard</button>
+            </div>
+        </nav>
+
+        <section class="cv-container">
+            <!-- Upload Section -->
+            <div id="cv-upload-section">
+                <h1>Upload Your CV</h1>
+                <p class="subtitle">Our AI recruiter will scan your resume and highlight issues.</p>
+
+                <div class="cv-upload-card">
+                    <div class="form-group">
+                        <label for="cv-job-title">Target Job Title</label>
+                        <input type="text" id="cv-job-title" placeholder="e.g. Flutter Developer" />
+                    </div>
+
+                    <div class="upload-zone" id="cv-upload-zone">
+                        <div class="upload-icon">📄</div>
+                        <p>Drag & drop your PDF here or <span class="browse-link">browse</span></p>
+                        <input type="file" id="cv-file-input" accept=".pdf" hidden />
+                        <p class="file-name" id="cv-file-name"></p>
+                    </div>
+
+                    <button class="btn-primary" id="btn-upload-cv" disabled>
+                        <span class="btn-text">Review My CV</span>
+                        <span class="btn-loader" hidden>Scanning...</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Review Results Section -->
+            <div id="cv-review-section" hidden>
+                <div class="cv-review-header">
+                    <h1>CV Review Report</h1>
+                    <div class="cv-score-badge">
+                        <span class="cv-score" id="cv-score">0</span>
+                        <span class="cv-grade" id="cv-grade">B</span>
+                    </div>
+                </div>
+
+                <p class="cv-summary" id="cv-summary"></p>
+
+                <div class="cv-grid">
+                    <div class="cv-card issues-card">
+                        <h3>⚠️ Issues Found</h3>
+                        <div id="cv-issues-list"></div>
+                    </div>
+
+                    <div class="cv-card strengths-card">
+                        <h3>✅ Strengths</h3>
+                        <ul id="cv-strengths-list"></ul>
+                    </div>
+
+                    <div class="cv-card plan-card">
+                        <h3>💡 Improvement Plan</h3>
+                        <ul id="cv-plan-list"></ul>
+                    </div>
+
+                    <div class="cv-card sections-card">
+                        <h3>📋 Sections Found</h3>
+                        <div id="cv-sections-list"></div>
+                    </div>
+                </div>
+
+                <div class="cv-actions">
+                    <button class="btn-primary" id="btn-start-interview">Continue to Interview →</button>
+                    <button class="btn-secondary" id="btn-upload-another">Upload Another CV</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- MODE SELECTION SCREEN                  -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="screen-mode" class="screen">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="logo-icon">🎯</span>
+                <span class="logo-text">AI Interview Coach</span>
+            </div>
+        </nav>
+
+        <section class="mode-container">
+            <h1>How would you like to practice?</h1>
+            <p class="subtitle">Choose the mode that fits your preparation level.</p>
+
+            <div class="mode-grid">
+                <div class="mode-card" id="mode-practice">
+                    <div class="mode-icon">📚</div>
+                    <h3>Practice Mode</h3>
+                    <p>Relaxed practice with real-time tips and feedback after each answer. Great for learning.</p>
+                    <button class="btn-primary">Start Practice</button>
+                </div>
+
+                <div class="mode-card" id="mode-direct">
+                    <div class="mode-icon">🎤</div>
+                    <h3>Direct Interview</h3>
+                    <p>Simulates a real interview. No tips during — just like the actual experience.</p>
+                    <button class="btn-primary">Start Interview</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- INTERVIEW PREPARATION SETUP SCREEN     -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="screen-prep-setup" class="screen">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="logo-icon">🎯</span>
+                <span class="logo-text">AI Interview Coach</span>
+            </div>
+            <div class="nav-user">
+                <button class="btn-link" id="btn-prep-setup-back">← Dashboard</button>
+            </div>
+        </nav>
+
+        <section class="setup-container">
+            <h1>Prepare for Your Interview</h1>
+            <p class="subtitle">Choose a CV, enter the job title, and start guided practice.</p>
+
+            <div class="setup-card">
+                <div class="prep-tabs">
+                    <button class="prep-tab active" data-prep-tab="existing">Use Existing CV</button>
+                    <button class="prep-tab" data-prep-tab="upload">Upload New CV</button>
+                </div>
+
+                <!-- Existing CV -->
+                <div class="prep-tab-panel" id="prep-panel-existing">
+                    <div class="form-group">
+                        <label for="prep-resume-select">Select CV</label>
+                        <select id="prep-resume-select">
+                            <option value="">-- Choose a CV --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prep-job-title">Target Job Title</label>
+                        <input type="text" id="prep-job-title" placeholder="e.g. Flutter Developer" />
+                    </div>
+
+                    <button class="btn-primary" id="btn-start-prep" disabled>
+                        <span class="btn-text">Start Preparation</span>
+                        <span class="btn-loader" hidden>Preparing...</span>
+                    </button>
+                </div>
+
+                <!-- Upload New CV -->
+                <div class="prep-tab-panel" id="prep-panel-upload" hidden>
+                    <div class="form-group">
+                        <label for="prep-upload-job-title">Target Job Title</label>
+                        <input type="text" id="prep-upload-job-title" placeholder="e.g. Flutter Developer" />
+                    </div>
+
+                    <div class="upload-zone" id="prep-upload-zone">
+                        <div class="upload-icon">📄</div>
+                        <p>Drag & drop your PDF here or <span class="browse-link">browse</span></p>
+                        <input type="file" id="prep-upload-file" accept=".pdf" hidden />
+                        <p class="file-name" id="prep-upload-file-name"></p>
+                    </div>
+
+                    <button class="btn-primary" id="btn-prep-upload-start" disabled>
+                        <span class="btn-text">Review & Start Preparation</span>
+                        <span class="btn-loader" hidden>Uploading...</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- MOCK INTERVIEW SETUP SCREEN            -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="screen-interview-setup" class="screen">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="logo-icon">🎯</span>
+                <span class="logo-text">AI Interview Coach</span>
+            </div>
+            <div class="nav-user">
+                <button class="btn-link" id="btn-interview-setup-back">← Dashboard</button>
+            </div>
+        </nav>
+
+        <section class="setup-container">
+            <h1>Start a Mock Interview</h1>
+            <p class="subtitle">Select a CV, enter the job title, and choose your mode.</p>
+
+            <div class="setup-card">
+                <div class="form-group">
+                    <label for="interview-resume-select">Select CV</label>
+                    <select id="interview-resume-select">
+                        <option value="">-- Choose a CV --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="interview-job-title">Target Job Title</label>
+                    <input type="text" id="interview-job-title" placeholder="e.g. Flutter Developer" />
+                </div>
+
+                <div class="setup-mode-grid">
+                    <div class="setup-mode-card" id="setup-mode-practice" data-mode="practice">
+                        <div class="mode-icon">📚</div>
+                        <h3>Practice Mode</h3>
+                        <p>Real-time tips and model answers.</p>
+                    </div>
+                    <div class="setup-mode-card" id="setup-mode-direct" data-mode="direct">
+                        <div class="mode-icon">🎤</div>
+                        <h3>Direct Interview</h3>
+                        <p>Real interview simulation, no help.</p>
+                    </div>
+                </div>
+
+                <button class="btn-primary" id="btn-start-interview-from-setup" disabled>
+                    <span class="btn-text">Start Interview</span>
+                    <span class="btn-loader" hidden>Starting...</span>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- INTERVIEW SCREEN                       -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="screen-interview" class="screen">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="logo-icon">🎯</span>
+                <span class="logo-text">AI Interview Coach</span>
+            </div>
+            <div class="nav-progress">
+                <span id="progress-text">Question 1 of 12</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
+            <div class="nav-user">
+                <button class="btn-link" id="btn-exit-interview">Exit</button>
+            </div>
+        </nav>
+
+        <section class="interview-layout">
+            <!-- Left: Interview flow -->
+            <div class="interview-main">
+                <div class="mode-badge" id="mode-badge">Practice Mode</div>
+
+                <div class="question-card">
+                    <div class="question-meta">
+                        <span class="question-badge" id="question-badge">introduction</span>
+                        <span class="question-count" id="question-count">1 / 12</span>
+                    </div>
+                    <h2 id="question-text">Loading...</h2>
+                </div>
+
+                <div class="recording-area" id="recording-area">
+                    <div class="mic-prompt" id="mic-prompt">
+                        <button class="mic-button" id="btn-record" title="Start Recording">
+                            <span class="mic-icon">🎤</span>
+                        </button>
+                        <p class="recording-hint">Tap the microphone and answer the question</p>
+                    </div>
+
+                    <div class="recording-active" id="recording-active" hidden>
+                        <div class="timer-row">
+                            <div class="timer-dot"></div>
+                            <span id="timer-display">00:00</span>
+                        </div>
+                        <canvas id="waveform-canvas" width="500" height="80"></canvas>
+                        <button class="btn-stop" id="btn-stop">⬛ Stop & Submit Answer</button>
+                    </div>
+
+                    <div class="processing" id="processing" hidden>
+                        <div class="spinner"></div>
+                        <p>AI is analyzing your answer...</p>
+                    </div>
+                </div>
+
+                <!-- Real-time tip (practice mode) -->
+                <div class="realtime-tip" id="realtime-tip" hidden>
+                    <span class="tip-icon">💡</span>
+                    <span id="tip-text"></span>
+                </div>
+
+                <!-- Answer feedback -->
+                <div class="answer-result" id="answer-result" hidden>
+                    <div class="result-scores">
+                        <div class="score-circle">
+                            <svg viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" class="score-bg" />
+                                <circle cx="50" cy="50" r="45" class="score-fill content-fill" id="content-circle" />
+                            </svg>
+                            <div class="score-label">
+                                <span class="score-value" id="content-score-display">0</span>
+                                <span class="score-name">Content</span>
+                            </div>
+                        </div>
+                        <div class="score-circle">
+                            <svg viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" class="score-bg" />
+                                <circle cx="50" cy="50" r="45" class="score-fill confidence-fill" id="confidence-circle" />
+                            </svg>
+                            <div class="score-label">
+                                <span class="score-value" id="confidence-score-display">0</span>
+                                <span class="score-name">Confidence</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="transcription-box">
+                        <h4>📝 Your Answer</h4>
+                        <p id="transcription-text"></p>
+                    </div>
+
+                    <div class="feedback-box">
+                        <h4>💡 Feedback</h4>
+                        <p id="feedback-text"></p>
+                        <ul id="tips-list"></ul>
+                    </div>
+
+                    <div class="model-answer-box" id="model-answer-box" hidden>
+                        <h4>✅ Model Answer</h4>
+                        <p id="model-answer-text"></p>
+                    </div>
+
+                    <div class="answer-actions">
+                        <button class="btn-secondary" id="btn-re-record" hidden>🔄 Re-record Answer</button>
+                        <button class="btn-primary btn-next" id="btn-next">Next Question →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Sidebar -->
+            <aside class="interview-sidebar">
+                <div class="sidebar-card">
+                    <h4>🎯 Job Title</h4>
+                    <p id="sidebar-job-title">-</p>
+                </div>
+                <div class="sidebar-card">
+                    <h4>📊 Interview Progress</h4>
+                    <div class="mini-progress">
+                        <div class="mini-progress-fill" id="mini-progress-fill"></div>
+                    </div>
+                    <p id="sidebar-progress">0 / 12 answered</p>
+                </div>
+                <div class="sidebar-card" id="sidebar-skills">
+                    <h4>🔧 Top Skills</h4>
+                    <div id="sidebar-skills-list"></div>
+                </div>
+                <div class="sidebar-card tips-card" id="sidebar-tips">
+                    <h4>🎤 Speaking Tips</h4>
+                    <ul>
+                        <li>Speak clearly and at a moderate pace</li>
+                        <li>Use the STAR method for behavioral questions</li>
+                        <li>Pause instead of using filler words</li>
+                        <li>Maintain steady volume</li>
+                    </ul>
+                </div>
+            </aside>
+        </section>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- REPORT SCREEN                          -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="screen-report" class="screen">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="logo-icon">🎯</span>
+                <span class="logo-text">AI Interview Coach</span>
+            </div>
+            <div class="nav-user">
+                <button class="btn-link" id="btn-report-dashboard">← Dashboard</button>
+            </div>
+        </nav>
+
+        <section class="report-container">
+            <h1 class="report-title">📊 Interview Report</h1>
+
+            <div class="report-partial-banner" id="report-partial-banner" hidden>
+                ⚠️ This interview was left incomplete. The results below are based only on the answers you gave.
+            </div>
+
+            <div class="overall-score-card">
+                <div class="big-score">
+                    <span id="overall-score-value">0</span>
+                    <span class="out-of">/ 100</span>
+                </div>
+                <div class="grade-badge" id="grade-badge">Grade: B</div>
+
+                <div class="score-bars">
+                    <div class="score-bar-item">
+                        <span class="bar-label">Content Quality</span>
+                        <div class="bar-track"><div class="bar-fill content-bar" id="content-bar"></div></div>
+                        <span class="bar-value" id="content-avg-value">0%</span>
+                    </div>
+                    <div class="score-bar-item">
+                        <span class="bar-label">Speaking Confidence</span>
+                        <div class="bar-track"><div class="bar-fill confidence-bar" id="confidence-bar"></div></div>
+                        <span class="bar-value" id="confidence-avg-value">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="report-grid">
+                <div class="report-card strengths-card">
+                    <h3>✅ Strengths</h3>
+                    <ul id="strengths-list"></ul>
+                </div>
+                <div class="report-card weaknesses-card">
+                    <h3>⚠️ Areas to Improve</h3>
+                    <ul id="weaknesses-list"></ul>
+                </div>
+            </div>
+
+            <div class="report-card tips-card">
+                <h3>💡 Improvement Tips</h3>
+                <ul id="report-tips-list"></ul>
+            </div>
+
+            <div class="report-card breakdown-card">
+                <h3>📋 Question-by-Question Breakdown</h3>
+                <div id="question-breakdown-list"></div>
+            </div>
+
+            <div class="report-actions">
+                <button class="btn-primary" id="btn-practice-again">Practice Again</button>
+                <button class="btn-secondary" id="btn-export-report">Export Report (JSON)</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

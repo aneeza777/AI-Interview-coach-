@@ -1448,6 +1448,252 @@ body {
 }
 
 /* ═══════════════════════════════════════════════
+   NEW FEATURE STYLES (TTS, JD Matcher, STAR Helper, PDF Print)
+   ═══════════════════════════════════════════════ */
+
+/* 1. TTS Question Speaker Button */
+.question-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-icon-speak {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(108, 92, 231, 0.15);
+    color: #6c5ce7;
+    border: 1px solid rgba(108, 92, 231, 0.3);
+    border-radius: 16px;
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon-speak:hover {
+    background: #6c5ce7;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.btn-icon-speak.speaking {
+    animation: pulse 1.2s infinite;
+    background: #6c5ce7;
+    color: #ffffff;
+}
+
+/* 2. STAR Method Helper Card */
+.star-helper-card {
+    background: rgba(108, 92, 231, 0.06);
+    border: 1px solid rgba(108, 92, 231, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    margin: 12px 0 16px;
+    cursor: pointer;
+}
+
+.star-helper-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6c5ce7;
+    list-style: none;
+    user-select: none;
+}
+
+.star-helper-summary::-webkit-details-marker {
+    display: none;
+}
+
+.star-helper-content {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text);
+    border-top: 1px solid rgba(108, 92, 231, 0.15);
+    padding-top: 10px;
+}
+
+.star-item {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 8px 10px;
+    border-radius: 6px;
+    border-left: 3px solid #6c5ce7;
+}
+
+.star-tag {
+    display: inline-block;
+    color: #6c5ce7;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+/* 3. Live Pace Indicator */
+.live-pace-indicator {
+    display: inline-block;
+    margin-left: 14px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(0, 184, 148, 0.15);
+    color: #00b894;
+    border: 1px solid rgba(0, 184, 148, 0.3);
+}
+
+/* 4. JD Matcher Card */
+.jd-matcher-card {
+    margin-top: 16px;
+    border: 1px dashed rgba(108, 92, 231, 0.4);
+    background: rgba(108, 92, 231, 0.03);
+}
+
+.jd-subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+}
+
+.jd-textarea {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    color: var(--text-bright);
+    font-family: inherit;
+    font-size: 13px;
+    resize: vertical;
+    margin-bottom: 10px;
+}
+
+.jd-textarea:focus {
+    outline: none;
+    border-color: #6c5ce7;
+}
+
+.btn-sm {
+    padding: 8px 18px;
+    font-size: 13px;
+}
+
+.jd-match-result {
+    margin-top: 14px;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.jd-match-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.jd-match-score {
+    font-size: 20px;
+    font-weight: 800;
+    color: #00b894;
+    background: rgba(0, 184, 148, 0.15);
+    padding: 4px 14px;
+    border-radius: 20px;
+}
+
+.jd-match-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-bright);
+}
+
+.jd-skills-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.jd-col-title {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.jd-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.jd-tag-list span {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.jd-tag-matched {
+    background: #e6f9f0;
+    color: #00875a;
+}
+
+.jd-tag-missing {
+    background: #fff0b3;
+    color: #974f0c;
+}
+
+.jd-recs-list {
+    font-size: 12px;
+    color: var(--text);
+    padding-left: 18px;
+    margin: 0;
+}
+
+.jd-recs-list li {
+    margin-bottom: 4px;
+}
+
+/* 5. Printable PDF Report Styles */
+@media print {
+    body {
+        background: #ffffff !important;
+        color: #111111 !important;
+    }
+    .navbar, .report-actions, #btn-report-dashboard, .btn-link {
+        display: none !important;
+    }
+    .screen {
+        display: block !important;
+    }
+    #screen-report {
+        display: block !important;
+    }
+    .report-container {
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+    .overall-score-card, .report-card, .breakdown-item {
+        border: 1px solid #ddd !important;
+        background: #fafafa !important;
+        color: #111111 !important;
+        break-inside: avoid;
+        box-shadow: none !important;
+    }
+    .big-score span, .grade-badge, .q-text, h1, h3, h4 {
+        color: #111111 !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════════ */
 
@@ -1456,6 +1702,7 @@ body {
     .auth-info h1 { font-size: 32px; }
     .auth-info ul { text-align: left; }
     .cv-grid { grid-template-columns: 1fr; }
+    .jd-skills-row { grid-template-columns: 1fr; }
     .mode-grid { grid-template-columns: 1fr; }
     .interview-layout { grid-template-columns: 1fr; }
     .interview-sidebar { order: -1; }

@@ -216,7 +216,7 @@ def _looks_like_company(name: str) -> bool:
 # Education extraction
 # ──────────────────────────────────────────────
 def extract_education(text: str) -> List[str]:
-    """Extract education-related lines from resume."""
+    """Extract education-related lines from resume, strictly rejecting contact numbers and emails."""
     education_lines = []
     lines = text.split("\n")
 
@@ -226,8 +226,20 @@ def extract_education(text: str) -> List[str]:
             continue
         line_lower = line_stripped.lower()
 
+        # Reject pure contact lines
+        if any(c in line_lower for c in ['@', 'email', 'cell:', 'phone:', 'tel:', 'contact:', 'github.com', 'linkedin.com']):
+            # If line has degree keywords, clean the contact prefix out
+            line_stripped = re.sub(r'(?:cell|phone|tel|contact|mobile)\s*:\s*[\+\d\s\-\.\(\)]+', '', line_stripped, flags=re.IGNORECASE)
+            line_stripped = re.sub(r'[\w\.-]+@[\w\.-]+\.\w+', '', line_stripped)
+            line_stripped = re.sub(r'\+?\d[\d\s\-\.\(\)]{7,}\d', '', line_stripped).strip()
+            line_lower = line_stripped.lower()
+
         if any(kw in line_lower for kw in EDUCATION_KEYWORDS):
-            education_lines.append(line_stripped)
+            # Clean any leftover phone numbers or extra symbols
+            cleaned = re.sub(r'\+?\d[\d\s\-\.\(\)]{7,}\d', '', line_stripped).strip()
+            cleaned = re.sub(r'^[•\-\*\d\.\)\s]+', '', cleaned).strip()
+            if len(cleaned) > 3:
+                education_lines.append(cleaned)
 
     return education_lines[:5]
 

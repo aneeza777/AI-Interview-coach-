@@ -777,9 +777,10 @@ function renderInterviewScreen() {
     $("#progress-text").textContent = `Question ${question.number} of ${interview.total_questions}`;
 
     // Sidebar
+    const answeredCount = Math.min(state.answers.length, interview.total_questions);
     $("#sidebar-job-title").textContent = interview.job_title;
-    $("#sidebar-progress").textContent = `${state.answers.length} / ${interview.total_questions} answered`;
-    $("#mini-progress-fill").style.width = `${(state.answers.length / interview.total_questions) * 100}%`;
+    $("#sidebar-progress").textContent = `${answeredCount} / ${interview.total_questions} answered`;
+    $("#mini-progress-fill").style.width = `${(answeredCount / interview.total_questions) * 100}%`;
 
     const skills = state.currentResume?.parsed_data?.skills || [];
     $("#sidebar-skills-list").innerHTML = skills.slice(0, 8).map((s) => `<span class="skill-tag">${s}</span>`).join("");
@@ -791,7 +792,98 @@ function renderInterviewScreen() {
     $("#model-answer-box").hidden = true;
     $("#btn-re-record").hidden = true;
     $("#recording-area").hidden = false;
+
+    // Feature 1: AI Interviewer Voice (TTS)
+    speakQuestion(question.question);
 }
+
+// ──────────────────────────────────────────────
+// TTS Voice Helper
+// ──────────────────────────────────────────────
+let currentUtterance = null;
+
+function speakQuestion(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+
+    const btn = $("#btn-speak-question");
+    if (!text) return;
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+    utter.lang = "en-US";
+
+    const voices = window.speechSynthesis.getVoices();
+    const naturalVoice = voices.find((v) => v.lang.startsWith("en") && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("David") || v.name.includes("Zira")));
+    if (naturalVoice) utter.voice = naturalVoice;
+
+    if (btn) btn.classList.add("speaking");
+
+    utter.onend = () => {
+        if (btn) btn.classList.remove("speaking");
+    };
+    utter.onerror = () => {
+        if (btn) btn.classList.remove("speaking");
+    };
+
+    currentUtterance = utter;
+    window.speechSynthesis.speak(utter);
+}
+
+$("#btn-speak-question")?.addEventListener("click", () => {
+    if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        $("#btn-speak-question").classList.remove("speaking");
+    } else if (state.currentQuestion) {
+        speakQuestion(state.currentQuestion.question);
+    }
+});
+
+// ──────────────────────────────────────────────
+// Feature 3: Job Description Matcher
+// ──────────────────────────────────────────────
+$("#btn-match-jd")?.addEventListener("click", async () => {
+    const jdText = $("#jd-input-text").value.trim();
+    if (!jdText) {
+        showError("Please paste a Job Description text first.");
+        return;
+    }
+    if (!state.currentResume) {
+        showError("No resume selected.");
+        return;
+    }
+
+    const btn = $("#btn-match-jd");
+    setLoading(btn, true);
+
+    try {
+        const result = await api(`/api/resumes/${state.currentResume.id}/match-jd`, {
+            method: "POST",
+            body: JSON.stringify({ jd_text: jdText }),
+        });
+
+        $("#jd-match-result").hidden = false;
+        $("#jd-match-score-badge").textContent = `${result.match_score}% Match`;
+        $("#jd-match-score-badge").style.background = result.match_score >= 70 ? "rgba(0, 184, 148, 0.2)" : "rgba(253, 203, 110, 0.2)";
+        $("#jd-match-score-badge").style.color = result.match_score >= 70 ? "#00b894" : "#e17055";
+        $("#jd-match-label").textContent = result.match_score >= 75 ? "Strong Alignment" : (result.match_score >= 50 ? "Moderate Alignment" : "Skill Gap Detected");
+
+        $("#jd-matched-skills-list").innerHTML = result.matched_skills.length
+            ? result.matched_skills.map((s) => `<span class="jd-tag-matched">${s}</span>`).join("")
+            : '<span class="text-dim">No direct match</span>';
+
+        $("#jd-missing-skills-list").innerHTML = result.missing_skills.length
+            ? result.missing_skills.map((s) => `<span class="jd-tag-missing">${s}</span>`).join("")
+            : '<span class="text-dim">No major missing skills!</span>';
+
+        $("#jd-recs-list").innerHTML = result.recommendations.map((r) => `<li>${r}</li>`).join("");
+    } catch (err) {
+        showError(err.message);
+    } finally {
+        setLoading(btn, false);
+    }
+});
 
 function resetRecordingUI() {
     const micBtn = $("#btn-record");
@@ -856,6 +948,8 @@ $("#btn-stop").addEventListener("click", stopRecording);
 
 async function startRecording() {
     try {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+
         // Safety: clear any leftover timer from a previous take
         if (state.timerInterval) {
             clearInterval(state.timerInterval);
@@ -876,7 +970,7 @@ async function startRecording() {
         state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         state.audioStream = stream;
         state.audioBuffers = [];
-        state.audioChunks = []; // legacy compatibility
+        state.audioChunks = [];
 
         const source = state.audioContext.createMediaStreamSource(stream);
 
@@ -967,14 +1061,32 @@ function setupWaveform() {
         ctx.fillStyle = "rgba(26, 26, 46, 0.3)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        let sum = 0;
         const barWidth = (canvas.width / bufferLength) * 2.5;
         let x = 0;
         for (let i = 0; i < bufferLength; i++) {
+            sum += dataArray[i];
             const barHeight = (dataArray[i] / 255) * canvas.height;
             const hue = 260 + (dataArray[i] / 255) * 60;
             ctx.fillStyle = `hsla(${hue}, 70%, 60%, 0.8)`;
             ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
             x += barWidth + 1;
+        }
+
+        // Feature 4: Live voice energy indicator
+        const avg = sum / bufferLength;
+        const paceEl = $("#live-pace-indicator");
+        if (paceEl) {
+            if (avg > 30) {
+                paceEl.textContent = "🟢 Clear Speaking Voice";
+                paceEl.style.color = "#00b894";
+            } else if (avg > 10) {
+                paceEl.textContent = "🟡 Soft Speech Detected";
+                paceEl.style.color = "#fdcb6e";
+            } else {
+                paceEl.textContent = "⚪ Listening for speech...";
+                paceEl.style.color = "#a0a0b0";
+            }
         }
     }
     draw();
@@ -997,7 +1109,19 @@ async function submitAnswer() {
             body: formData,
         });
 
-        state.answers.push(result);
+        // Deduplicate answer by question number (fixes 14/10 answered issue)
+        const existingIdx = state.answers.findIndex((a) => a.question_number === result.question_number);
+        if (existingIdx >= 0) {
+            state.answers[existingIdx] = result;
+        } else {
+            state.answers.push(result);
+        }
+
+        // Update sidebar progress accurately
+        const answeredCount = Math.min(state.answers.length, interview.total_questions);
+        $("#sidebar-progress").textContent = `${answeredCount} / ${interview.total_questions} answered`;
+        $("#mini-progress-fill").style.width = `${(answeredCount / interview.total_questions) * 100}%`;
+
         showAnswerResult(result);
     } catch (err) {
         $("#processing").hidden = true;
@@ -1100,6 +1224,7 @@ $("#btn-next").addEventListener("click", () => {
 });
 
 $("#btn-exit-interview").addEventListener("click", () => {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
     if (confirm("Are you sure you want to exit? Your progress will be lost.")) {
         loadDashboard();
     }
@@ -1109,6 +1234,7 @@ $("#btn-exit-interview").addEventListener("click", () => {
 // REPORT SCREEN
 // ──────────────────────────────────────────────
 async function loadReport() {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
     $("#report-partial-banner").hidden = true;
     showScreen("report");
 
@@ -1164,6 +1290,11 @@ $("#btn-practice-again").addEventListener("click", () => {
     } else {
         loadDashboard();
     }
+});
+
+// Feature 2: Download PDF Report
+$("#btn-download-pdf")?.addEventListener("click", () => {
+    window.print();
 });
 
 $("#btn-export-report").addEventListener("click", async () => {

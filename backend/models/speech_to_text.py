@@ -110,10 +110,13 @@ def _clean_repetitive_loops(text: str) -> str:
     text = re.sub(r'([a-zA-Z])\1{3,}', r'\1\1', text)
     # Remove single-char spaced repeats like "m-m-m-m" or "m.m.m."
     text = re.sub(r'\b([a-zA-Z])[-.\s]+\1(?:[-.\s]+\1)+\b', '', text)
-    # Deduplicate words repeating 3+ times in a row (e.g. "and and and and" -> "and")
-    text = re.sub(r'\b(\w+)(?:\s+\1){2,}\b', r'\1', text, flags=re.IGNORECASE)
-    # Clean redundant whitespace
+    # Deduplicate comma/space/dot-separated number or token repeats (e.g. "10,10,10,10,10..." -> "10")
+    text = re.sub(r'(\b\w+\b)(?:[\s,.-]+(?:\1\b)){2,}', r'\1', text, flags=re.IGNORECASE)
+    # Deduplicate phrase repeats (e.g. "thank you thank you thank you")
+    text = re.sub(r'(\b[\w\s]{2,20}\b)(?:\s+\1){2,}', r'\1', text, flags=re.IGNORECASE)
+    # Clean redundant whitespace and trailing punctuation
     text = re.sub(r'\s+', ' ', text).strip()
+    text = re.sub(r'[,.\s\-]+$', '', text).strip()
     return text
 
 

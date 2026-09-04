@@ -119,69 +119,87 @@ CLOSING_QUESTIONS = [
 JOB_QUESTION_TEMPLATES = {
     "software engineer": [
         "How do you ensure the code you write is clean, maintainable, and testable?",
-        "Walk me through how you'd approach debugging a production issue.",
-        "What's your experience with code reviews, and how do you give constructive feedback?",
-        "How do you balance writing perfect code with meeting deadlines?",
+        "Walk me through how you'd approach debugging a production issue under tight time constraints.",
+        "What's your experience with code reviews, and how do you give constructive feedback to peers?",
+        "How do you balance writing perfect, architecturally sound code with meeting strict product deadlines?",
+        "Describe a situation where you had to refactor a legacy codebase. What strategy did you follow?",
+        "How do you manage technical debt when developing features rapidly?",
+    ],
+    "web developer": [
+        "What modern frontend frameworks and backend technologies are you most comfortable working with?",
+        "How do you ensure your web applications are cross-browser compatible and responsive on mobile devices?",
+        "Explain how you optimize website load speed, assets, and API requests for smooth user experience.",
+        "How do you handle client-side form validation, error states, and security vulnerabilities like XSS or CSRF?",
+        "Walk me through the lifecycle of an HTTP request from the browser address bar to the database and back.",
+        "Tell me about a web application you built from scratch. What challenges did you encounter?",
     ],
     "frontend developer": [
-        "How do you make sure your web applications are accessible and responsive?",
-        "Tell me about a time you had to optimize frontend performance.",
-        "How do you manage state in complex frontend applications?",
-        "What's your approach to component design and reusability?",
+        "How do you make sure your web applications are accessible (WCAG) and responsive across all viewports?",
+        "Tell me about a time you had to profile and optimize frontend rendering performance.",
+        "How do you manage state in complex frontend applications (e.g., Redux, Context, Zustand)?",
+        "What's your approach to component-driven design, modular CSS, and reusable UI libraries?",
+        "How do you handle asynchronous data fetching, loading skeletons, and optimistic UI updates?",
+        "Explain the difference between Server-Side Rendering (SSR), Client-Side Rendering (CSR), and Static Site Generation.",
     ],
     "backend developer": [
-        "How do you design APIs that are scalable and easy to maintain?",
-        "Explain your approach to database design and optimization.",
-        "How do you handle authentication and security in backend systems?",
-        "What strategies do you use for handling high traffic loads?",
+        "How do you design RESTful or GraphQL APIs that are scalable, versioned, and easy to maintain?",
+        "Explain your approach to relational vs non-relational database design, indexing, and query optimization.",
+        "How do you handle authentication, role-based authorization, and token management in distributed backend systems?",
+        "What caching strategies (e.g., Redis, Memcached) do you use to mitigate heavy traffic loads on databases?",
+        "Describe a time you diagnosed and resolved a high-latency database bottleneck or deadlock in production.",
+        "How do you structure microservices communication, message queues (RabbitMQ/Kafka), and error retries?",
     ],
     "full stack developer": [
-        "How do you decide which logic belongs on the frontend vs the backend?",
-        "Describe a full project you built from database to UI.",
-        "How do you ensure consistency between frontend and backend APIs?",
-        "What's your deployment and DevOps experience like?",
+        "How do you decide which business logic belongs on the client-side vs the server-side?",
+        "Describe a full-stack project you built end-to-end from database schema design to responsive UI.",
+        "How do you ensure data integrity and type safety between your frontend client and backend APIs?",
+        "What is your continuous deployment (CI/CD) workflow and how do you manage environment configurations?",
+        "How do you handle WebSocket or real-time event streaming in a full-stack architecture?",
     ],
     "data scientist": [
-        "How do you validate that your model will perform well on unseen data?",
-        "Explain how you handle messy or incomplete datasets.",
-        "How do you communicate technical findings to non-technical stakeholders?",
-        "Tell me about a project where your analysis led to a business decision.",
+        "How do you validate that your machine learning model will generalize well on unseen test data?",
+        "Explain your methodology for handling messy, skewed, or incomplete real-world datasets.",
+        "How do you communicate complex technical and mathematical findings to non-technical business stakeholders?",
+        "Tell me about a project where your exploratory data analysis directly led to a high-impact business decision.",
+        "What metrics (Precision, Recall, ROC-AUC, F1) do you prioritize when evaluating imbalanced classification problems?",
     ],
     "machine learning engineer": [
-        "How do you take a model from experimentation to production?",
-        "What ML deployment challenges have you faced?",
-        "How do you monitor model performance over time?",
-        "Explain your experience with feature engineering.",
+        "How do you take an ML model from Jupyter notebook experimentation into a scalable production API?",
+        "What model deployment, containerization, and low-latency inference challenges have you solved?",
+        "How do you monitor model performance over time to detect data drift and concept drift in production?",
+        "Explain your experience with advanced feature engineering, embeddings, and vector similarity search.",
+        "How do you choose between fine-tuning a pre-trained Transformer model vs utilizing prompt engineering with RAG?",
     ],
     "mobile developer": [
-        "How do you handle app state and lifecycle in mobile development?",
-        "What's your approach to building apps that work offline?",
-        "How do you ensure your app performs well on different devices?",
-        "Tell me about a challenging mobile UI problem you solved.",
+        "How do you handle state management, memory leaks, and activity lifecycles in mobile applications?",
+        "What is your architectural approach to building mobile apps that work seamlessly offline with local sync?",
+        "How do you optimize mobile UI rendering, frame rates (60/120 fps), and battery consumption on diverse devices?",
+        "Tell me about a challenging native integration or platform-specific mobile problem you solved.",
     ],
     "flutter developer": [
-        "How do you manage state in Flutter applications?",
-        "What's your experience with platform channels and native integrations?",
-        "How do you handle responsive layouts across different screen sizes?",
-        "Tell me about a Flutter app you built and the architecture you used.",
+        "How do you manage complex application state in Flutter (e.g., Bloc, Riverpod, Provider)?",
+        "What is your experience with platform channels and integrating native Android (Kotlin) / iOS (Swift) code?",
+        "How do you handle responsive layouts and adaptive UI widgets across phones, tablets, and web?",
+        "Tell me about a Flutter app you published and how you organized its clean layered architecture.",
     ],
     "devops engineer": [
-        "Describe your ideal CI/CD pipeline.",
-        "How do you approach infrastructure as code?",
-        "What monitoring and alerting tools have you used?",
-        "How do you handle security in cloud deployments?",
+        "Describe your ideal automated CI/CD pipeline from git push to zero-downtime production deployment.",
+        "How do you approach Infrastructure as Code (IaC) using tools like Terraform, Ansible, or CloudFormation?",
+        "What centralized logging, distributed tracing, and real-time alerting tools (e.g. Prometheus, Grafana) have you configured?",
+        "How do you enforce security guardrails, secrets management, and container vulnerability scanning in cloud deployments?",
     ],
     "ui/ux designer": [
-        "Walk me through your design process from research to final prototype.",
-        "How do you incorporate user feedback into your designs?",
-        "Tell me about a time you had to defend a design decision.",
-        "How do you balance aesthetics with usability?",
+        "Walk me through your end-to-end design process from user research, wireframing, to high-fidelity prototypes in Figma.",
+        "How do you conduct usability testing and incorporate feedback into iterative design sprints?",
+        "Tell me about a time you had to defend a user-centric design decision against engineering or business constraints.",
+        "How do you balance aesthetic visual appeal with strict accessibility standards (contrast, typography, screen readers)?",
     ],
     "default": [
-        "What excites you most about this role?",
-        "How would your previous experience help you succeed here?",
-        "What do you consider your strongest professional quality?",
-        "How do you handle feedback and criticism?",
+        "What excites you most about this role and how does it fit into your long-term career goals?",
+        "How does your previous technical and academic experience prepare you to succeed here?",
+        "What do you consider your strongest professional quality, and what area are you actively working to improve?",
+        "How do you approach receiving constructive criticism or code review feedback from team members?",
+        "Describe a time you had to quickly learn a new technology or framework to complete a high-priority deliverable.",
     ],
 }
 
@@ -195,7 +213,8 @@ def _match_job_title(job_title: str) -> str:
     for key in JOB_QUESTION_TEMPLATES:
         if key == "default":
             continue
-        if any(kw in title_lower for kw in key.replace("/", " ").split()):
+        keywords = key.replace("/", " ").split()
+        if any(kw in title_lower for kw in keywords):
             return key
     return "default"
 
@@ -207,8 +226,8 @@ def _paraphrase(template_q: Dict) -> str:
     return template_q["question"]
 
 
-def _generate_cv_questions(resume_data: Dict, job_title: str) -> List[Dict]:
-    """Generate questions based on resume content with rich contextual awareness."""
+def _generate_cv_questions(resume_data: Dict, job_title: str, mode: str = "direct") -> List[Dict]:
+    """Generate questions based on resume content with rich contextual awareness and random variety."""
     questions = []
 
     experience = resume_data.get("experience", {})
@@ -219,36 +238,56 @@ def _generate_cv_questions(resume_data: Dict, job_title: str) -> List[Dict]:
 
     # 1. Experience-based questions
     if total_years > 0:
+        exp_options = [
+            f"I see you have {total_years}+ years of experience in the field. Could you walk me through your career progression and key milestones so far?",
+            f"With around {total_years} years of professional background, what has been the most technically challenging problem you had to solve?",
+            f"Reflecting on your {total_years}+ years in tech, how has your engineering approach and problem-solving mindset evolved over time?",
+        ]
         questions.append({
-            "question": f"I see you have {total_years}+ years of experience in the field. Could you walk me through your career progression and key milestones so far?",
+            "question": random.choice(exp_options),
             "type": "experience",
             "expected_keywords": ["role", "company", "project", "responsibility", "learn", "growth", "experience", "milestone"],
-            "difficulty": "easy",
+            "difficulty": "medium" if mode == "direct" else "easy",
         })
     else:
+        fresh_options = [
+            "Could you tell me about your academic journey and any hands-on internship or coursework projects you've worked on?",
+            "As an emerging technologist, what practical software engineering projects have you built that best demonstrate your technical passion?",
+            "How do you approach learning complex programming frameworks independently outside of standard coursework?",
+        ]
         questions.append({
-            "question": "Could you tell me about your academic journey and any hands-on internship or coursework projects you've worked on?",
+            "question": random.choice(fresh_options),
             "type": "experience",
             "expected_keywords": ["education", "project", "internship", "learn", "hands-on", "experience", "coursework"],
             "difficulty": "easy",
         })
 
     if company:
+        comp_options = [
+            f"Tell me more about your responsibilities during your time at {company}. What were your primary contributions and achievements?",
+            f"What was the most impactful feature or project you delivered while working at {company}?",
+            f"How did you collaborate with cross-functional team members and senior engineers during your tenure at {company}?",
+        ]
         questions.append({
-            "question": f"Tell me more about your responsibilities during your time at {company}. What were your primary contributions and achievements?",
+            "question": random.choice(comp_options),
             "type": "experience",
             "expected_keywords": ["responsibility", "achieve", "result", "project", "team", "contribute", company.lower()],
             "difficulty": "medium",
         })
 
-    # 2. Project-based questions (specifically referencing candidate's project name if available)
+    # 2. Project-based questions
     if projects:
         best_project = projects[0][:50]
+        proj_options = [
+            f"I noticed your project '{best_project}'. Can you describe the system architecture, your individual role, and the main technical challenge you solved?",
+            f"Regarding your project '{best_project}', what key design trade-offs did you make during implementation?",
+            f"If you were to scale '{best_project}' to 100,000 active users, what architectural changes or caching layers would you introduce?",
+        ]
         questions.append({
-            "question": f"I noticed your project '{best_project}'. Can you describe the system architecture, your individual role, and the main technical challenge you solved?",
+            "question": random.choice(proj_options),
             "type": "projects",
             "expected_keywords": ["project", "architecture", "build", "develop", "result", "challenge", "solution", "impact"],
-            "difficulty": "medium",
+            "difficulty": "hard" if mode == "direct" else "medium",
             "target_project": best_project,
         })
     elif resume_data.get("raw_text", "").lower().count("project") > 0:
@@ -262,22 +301,28 @@ def _generate_cv_questions(resume_data: Dict, job_title: str) -> List[Dict]:
     # 3. Education-based questions
     education = resume_data.get("education", [])
     if education:
+        edu_options = [
+            "How has your academic background and coursework prepared you for the technical demands of this role?",
+            "What was the most rewarding technical or software project you completed during your degree studies?",
+        ]
         questions.append({
-            "question": "How has your academic background and coursework prepared you for the technical demands of this role?",
+            "question": random.choice(edu_options),
             "type": "education",
             "expected_keywords": ["education", "university", "degree", "course", "skill", "prepare", "learn", "foundation"],
             "difficulty": "easy",
         })
 
-    # 4. Skill-based questions (tailored to specific extracted skills)
+    # 4. Skill-based questions
     skills = resume_data.get("skills", [])
     if skills:
-        top_skills = skills[:3]
-        for skill in top_skills:
+        shuffled_skills = list(skills)
+        random.shuffle(shuffled_skills)
+        for skill in shuffled_skills[:3]:
             paraphrases = [
                 f"Could you walk me through how you've used {skill} in a real-world project, and what challenges you solved with it?",
                 f"How would you rate your hands-on proficiency in {skill}, and what architecture patterns have you applied using it?",
                 f"What is a memorable feature or bug fix where {skill} played a crucial role in your implementation?",
+                f"How do you handle error handling, performance optimization, and testing when building with {skill}?",
             ]
             questions.append({
                 "question": random.choice(paraphrases),
@@ -287,21 +332,24 @@ def _generate_cv_questions(resume_data: Dict, job_title: str) -> List[Dict]:
                 "target_skill": skill,
             })
 
+    # Shuffle non-intro CV questions for variety
+    random.shuffle(questions)
     return questions
 
 
-def _generate_job_questions(job_title: str) -> List[Dict]:
-    """Generate questions specific to the target job title."""
+def _generate_job_questions(job_title: str, mode: str = "direct") -> List[Dict]:
+    """Generate questions specific to the target job title with random sampling."""
     category = _match_job_title(job_title)
-    templates = JOB_QUESTION_TEMPLATES.get(category, JOB_QUESTION_TEMPLATES["default"])
+    templates = list(JOB_QUESTION_TEMPLATES.get(category, JOB_QUESTION_TEMPLATES["default"]))
+    random.shuffle(templates)
 
     questions = []
     for q_text in templates:
         questions.append({
             "question": q_text,
             "type": "job_specific",
-            "expected_keywords": ["experience", "approach", "project", "team", "problem", "solution"],
-            "difficulty": "medium",
+            "expected_keywords": ["experience", "approach", "project", "team", "problem", "solution", "architecture"],
+            "difficulty": "hard" if mode == "direct" else "medium",
         })
 
     return questions
@@ -312,11 +360,11 @@ def _generate_follow_up(last_answer: str, last_question: Dict) -> Optional[Dict]
     answer_lower = last_answer.lower()
 
     # If they mentioned a technology, ask deeper
-    tech_keywords = ["python", "react", "flutter", "django", "node", "aws", "docker", "machine learning", "sql"]
+    tech_keywords = ["python", "react", "flutter", "django", "node", "aws", "docker", "machine learning", "sql", "javascript"]
     for tech in tech_keywords:
         if tech in answer_lower:
             return {
-                "question": f"You mentioned {tech}. Could you go a bit deeper into how exactly you used it?",
+                "question": f"You mentioned {tech}. Could you go a bit deeper into how exactly you used it in your project?",
                 "type": "follow_up",
                 "expected_keywords": [tech, "use", "implement", "build", "example", "detail"],
                 "difficulty": "medium",
@@ -326,7 +374,7 @@ def _generate_follow_up(last_answer: str, last_question: Dict) -> Optional[Dict]
     words = last_answer.split()
     if len(words) < 25:
         return {
-            "question": "Could you expand on that a bit more? I'd love to hear the details.",
+            "question": "Could you expand on that a bit more? I'd love to hear a specific technical example.",
             "type": "follow_up",
             "expected_keywords": ["detail", "example", "explain", "expand", "more"],
             "difficulty": "easy",
@@ -346,12 +394,13 @@ def build_interview_plan(
 ) -> List[Dict]:
     """
     Build a complete adaptive interview question plan.
+    Ensures randomized, non-repetitive, and role-tailored questions.
 
     Args:
         resume_data: Parsed resume dict.
         job_title: Target job title.
-        mode: 'practice' (more tips, easier pace) or 'direct' (formal interview).
-        total_questions: Approximate number of questions.
+        mode: 'practice' (more tips, easier pace) or 'direct' (formal mock interview).
+        total_questions: Target number of questions (default 10).
 
     Returns:
         List of question dicts with metadata.
@@ -367,22 +416,22 @@ def build_interview_plan(
         "difficulty": intro["difficulty"],
     })
 
-    # 2. CV walkthrough questions (3-4 questions)
-    cv_questions = _generate_cv_questions(resume_data, job_title)
-    plan.extend(cv_questions[:4])
+    # 2. CV walkthrough questions (3-4 randomized questions)
+    cv_questions = _generate_cv_questions(resume_data, job_title, mode=mode)
+    plan.extend(cv_questions[:3])
 
-    # 3. Behavioral questions (2-3 questions, paraphrased)
-    behavioral = random.sample(BEHAVIORAL_QUESTIONS, min(3, len(BEHAVIORAL_QUESTIONS)))
-    for b in behavioral:
+    # 3. Behavioral questions (2-3 questions, sampled randomly)
+    behavioral_sample = random.sample(BEHAVIORAL_QUESTIONS, min(3, len(BEHAVIORAL_QUESTIONS)))
+    for b in behavioral_sample:
         plan.append({
             "question": _paraphrase(b),
             "type": b["type"],
             "expected_keywords": b["expected_keywords"],
-            "difficulty": b["difficulty"],
+            "difficulty": "hard" if mode == "direct" else b["difficulty"],
         })
 
-    # 4. Job-specific questions (2-3 questions)
-    job_qs = _generate_job_questions(job_title)
+    # 4. Job-specific questions (3 randomized questions)
+    job_qs = _generate_job_questions(job_title, mode=mode)
     plan.extend(job_qs[:3])
 
     # 5. Closing (1 question)
@@ -394,9 +443,12 @@ def build_interview_plan(
         "difficulty": closing["difficulty"],
     })
 
-    # Trim or extend to target count
+    # Ensure exact question count
     if len(plan) > total_questions:
-        plan = plan[:total_questions]
+        # Keep intro (0) and closing (-1), trim from middle
+        middle = plan[1:-1]
+        random.shuffle(middle)
+        plan = [plan[0]] + middle[:total_questions - 2] + [plan[-1]]
 
     # Assign question numbers
     for i, q in enumerate(plan):
@@ -585,6 +637,45 @@ def _sanitize_name(name: Optional[str]) -> str:
     return name_stripped
 
 
+def _sanitize_education(education_val: Optional[str]) -> str:
+    """Sanitize education string, stripping phone numbers, URLs, and noisy status text."""
+    if not education_val or not isinstance(education_val, str):
+        return "Computer Science"
+    
+    clean = education_val.strip()
+    # Remove phone numbers, cell numbers, emails
+    clean = re.sub(r'(?:cell|phone|tel|contact|mobile)\s*:\s*[\+\d\s\-\.\(\)]+', '', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'[\w\.-]+@[\w\.-]+\.\w+', '', clean)
+    clean = re.sub(r'\+?\d[\d\s\-\.\(\)]{7,}\d', '', clean)
+    # Remove trailing status like (final result awaited) with hands-
+    clean = re.sub(r'\(.*?\)', '', clean)
+    clean = re.sub(r'with\s+hands.*$', '', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\s+', ' ', clean).strip()
+
+    # If common degrees appear, format cleanly
+    clean_lower = clean.lower()
+    if "computer science" in clean_lower:
+        if "bs" in clean_lower or "bachelor" in clean_lower:
+            return "BS Computer Science"
+        return "Computer Science"
+    elif "software engineering" in clean_lower:
+        if "bs" in clean_lower or "bachelor" in clean_lower:
+            return "BS Software Engineering"
+        return "Software Engineering"
+    elif "information technology" in clean_lower or "bsit" in clean_lower:
+        return "Information Technology"
+    elif "data science" in clean_lower:
+        return "Data Science"
+    elif "artificial intelligence" in clean_lower or "ai" in clean_lower.split():
+        return "Artificial Intelligence"
+
+    # If it's too short or contains no letters, fallback
+    if len(clean) < 3 or not any(c.isalpha() for c in clean):
+        return "Computer Science"
+
+    return clean[:40]
+
+
 def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> str:
     """
     Generate a sample / model answer for a given interview question.
@@ -599,7 +690,7 @@ def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> 
     primary_skill = question.get("target_skill") or (skills[0] if skills else "technical problem solving")
     
     education_list = resume_data.get("education", [])
-    education = education_list[0] if education_list else "Computer Science"
+    education = _sanitize_education(education_list[0] if education_list else None)
     
     experience = resume_data.get("experience", {})
     total_years = experience.get("total_years", 0) or 0

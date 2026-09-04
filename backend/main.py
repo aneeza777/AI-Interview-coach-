@@ -37,7 +37,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 # AI models
 from models.resume_parser import parse_resume
-from models.cv_reviewer import review_cv
+from models.cv_reviewer import review_cv, match_job_description
 from models.interview_engine import build_interview_plan, generate_tip, maybe_add_follow_up, generate_model_answer
 from models.speech_to_text import transcribe_audio
 from models.answer_evaluator import evaluate_answer
@@ -260,6 +260,26 @@ async def delete_resume(
     db.commit()
 
     return {"success": True, "message": "Resume deleted"}
+
+
+@app.post("/api/resumes/{resume_id}/match-jd")
+async def match_jd(
+    resume_id: int,
+    payload: dict,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Match resume with target job description text and return skill gap analysis."""
+    resume = db.query(Resume).filter(Resume.id == resume_id, Resume.user_id == user.id).first()
+    if not resume:
+        raise HTTPException(404, "Resume not found")
+
+    jd_text = payload.get("jd_text", "")
+    resume_text = resume.parsed_data.get("raw_text", "") if resume.parsed_data else ""
+    resume_skills = resume.parsed_data.get("skills", []) if resume.parsed_data else []
+
+    result = match_job_description(resume_text, jd_text, resume_skills=resume_skills)
+    return result
 
 
 # ═══════════════════════════════════════════════

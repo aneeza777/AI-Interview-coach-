@@ -220,6 +220,32 @@
                         <h3>📋 Sections Found</h3>
                         <div id="cv-sections-list"></div>
                     </div>
+
+                    <!-- JD Matcher Card -->
+                    <div class="cv-card jd-matcher-card">
+                        <h3>🎯 Match with Target Job Description (Optional)</h3>
+                        <p class="jd-subtitle">Paste job requirements below to see your skill match score and gap analysis.</p>
+                        <textarea id="jd-input-text" class="jd-textarea" placeholder="Paste job description text here (e.g. Looking for a Web Developer with Python, React, Docker, SQL...)" rows="3"></textarea>
+                        <button class="btn-secondary btn-sm" id="btn-match-jd">🔍 Analyze Job Match</button>
+                        
+                        <div id="jd-match-result" class="jd-match-result" hidden>
+                            <div class="jd-match-header">
+                                <span class="jd-match-score" id="jd-match-score-badge">0% Match</span>
+                                <span class="jd-match-label" id="jd-match-label">Analyzing...</span>
+                            </div>
+                            <div class="jd-skills-row">
+                                <div class="jd-skills-col">
+                                    <span class="jd-col-title">✅ Matched Skills:</span>
+                                    <div id="jd-matched-skills-list" class="jd-tag-list"></div>
+                                </div>
+                                <div class="jd-skills-col">
+                                    <span class="jd-col-title">⚠️ Missing Skill Gaps:</span>
+                                    <div id="jd-missing-skills-list" class="jd-tag-list"></div>
+                                </div>
+                            </div>
+                            <ul id="jd-recs-list" class="jd-recs-list"></ul>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="cv-actions">
@@ -410,10 +436,29 @@
                 <div class="question-card">
                     <div class="question-meta">
                         <span class="question-badge" id="question-badge">introduction</span>
-                        <span class="question-count" id="question-count">1 / 12</span>
+                        <div class="question-actions-row">
+                            <button class="btn-icon-speak" id="btn-speak-question" title="Listen to AI interviewer speak this question">
+                                <span class="speaker-icon">🔊</span> <span class="speak-btn-text">Listen</span>
+                            </button>
+                            <span class="question-count" id="question-count">1 / 10</span>
+                        </div>
                     </div>
                     <h2 id="question-text">Loading...</h2>
                 </div>
+
+                <!-- STAR Method Helper (Interactive) -->
+                <details class="star-helper-card" id="star-helper-details">
+                    <summary class="star-helper-summary">
+                        <span>💡 How to structure this answer (STAR Method)</span>
+                        <span class="star-arrow">▼</span>
+                    </summary>
+                    <div class="star-helper-content">
+                        <div class="star-item"><strong class="star-tag star-s">S (Situation)</strong> Set the brief context, role, or project.</div>
+                        <div class="star-item"><strong class="star-tag star-t">T (Task)</strong> Explain the core challenge or goal.</div>
+                        <div class="star-item"><strong class="star-tag star-a">A (Action)</strong> Detail the specific tools, code, and decisions YOU made.</div>
+                        <div class="star-item"><strong class="star-tag star-r">R (Result)</strong> Share measurable impact, performance, and outcomes.</div>
+                    </div>
+                </details>
 
                 <div class="recording-area" id="recording-area">
                     <div class="mic-prompt" id="mic-prompt">
@@ -427,6 +472,7 @@
                         <div class="timer-row">
                             <div class="timer-dot"></div>
                             <span id="timer-display">00:00</span>
+                            <span class="live-pace-indicator" id="live-pace-indicator">🟢 Steady Pace</span>
                         </div>
                         <canvas id="waveform-canvas" width="500" height="80"></canvas>
                         <button class="btn-stop" id="btn-stop">⬛ Stop & Submit Answer</button>
@@ -503,7 +549,7 @@
                     <div class="mini-progress">
                         <div class="mini-progress-fill" id="mini-progress-fill"></div>
                     </div>
-                    <p id="sidebar-progress">0 / 12 answered</p>
+                    <p id="sidebar-progress">0 / 10 answered</p>
                 </div>
                 <div class="sidebar-card" id="sidebar-skills">
                     <h4>🔧 Top Skills</h4>
@@ -586,8 +632,9 @@
             </div>
 
             <div class="report-actions">
-                <button class="btn-primary" id="btn-practice-again">Practice Again</button>
-                <button class="btn-secondary" id="btn-export-report">Export Report (JSON)</button>
+                <button class="btn-primary" id="btn-download-pdf">📄 Download Official PDF Report</button>
+                <button class="btn-secondary" id="btn-export-report">Export JSON</button>
+                <button class="btn-secondary" id="btn-practice-again">Practice Again</button>
             </div>
         </section>
     </div>

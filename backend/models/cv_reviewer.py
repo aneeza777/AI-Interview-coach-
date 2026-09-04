@@ -484,6 +484,58 @@ def review_cv(pdf_path: str) -> Dict:
     }
 
 
+def match_job_description(resume_text: str, jd_text: str, resume_skills: List[str] = None) -> Dict:
+    """
+    Compare a candidate's resume with a target Job Description.
+    Extracts matching skills, missing skill gaps, and computes an overall alignment score.
+    """
+    if not jd_text or not jd_text.strip():
+        return {
+            "match_score": 0,
+            "matched_skills": [],
+            "missing_skills": [],
+            "recommendations": ["Paste a job description to see skill match analysis."],
+        }
+
+    from models.resume_parser import extract_skills
+
+    r_skills_set = set(s.lower() for s in (resume_skills or extract_skills(resume_text)))
+    jd_skills_set = set(s.lower() for s in extract_skills(jd_text))
+
+    if not jd_skills_set:
+        words = re.findall(r'\b[a-zA-Z]{3,15}\b', jd_text.lower())
+        tech_vocab = {"python", "javascript", "react", "node", "sql", "docker", "aws", "git", "api", "rest", "html", "css", "django", "fastapi", "java", "c++", "pytorch", "flutter"}
+        jd_skills_set = set(w for w in words if w in tech_vocab)
+
+    matched = sorted(list(r_skills_set.intersection(jd_skills_set)))
+    missing = sorted(list(jd_skills_set - r_skills_set))
+
+    total_jd = len(jd_skills_set)
+    if total_jd > 0:
+        match_score = int((len(matched) / total_jd) * 100)
+    else:
+        match_score = 75
+
+    recs = []
+    if missing:
+        missing_preview = ", ".join(missing[:4]).title()
+        recs.append(f"The job description highlights {missing_preview}. Emphasize related coursework or projects in these areas.")
+    if match_score >= 80:
+        recs.append("Strong technical alignment! Focus your interview answers on quantifiable impact and system design.")
+    elif match_score >= 50:
+        recs.append("Moderate alignment. Review missing core competencies and prepare to explain how quickly you learn new tools.")
+    else:
+        recs.append("Low direct skill overlap. Emphasize your fundamental problem-solving skills and related foundational concepts.")
+
+    return {
+        "match_score": max(20, min(100, match_score)),
+        "matched_skills": [s.title() for s in matched],
+        "missing_skills": [s.title() for s in missing],
+        "total_jd_skills": total_jd,
+        "recommendations": recs,
+    }
+
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:

@@ -106,7 +106,9 @@ def _clean_repetitive_loops(text: str) -> str:
     """Clean degenerate repetition loops from speech without discarding genuine responses."""
     if not text:
         return ""
-    # Remove single-char repeats like "m-m-m-m" or "m.m.m."
+    # Collapse runaway character repeats (e.g. "Beeeeeeeee..." -> "Bee")
+    text = re.sub(r'([a-zA-Z])\1{3,}', r'\1\1', text)
+    # Remove single-char spaced repeats like "m-m-m-m" or "m.m.m."
     text = re.sub(r'\b([a-zA-Z])[-.\s]+\1(?:[-.\s]+\1)+\b', '', text)
     # Deduplicate words repeating 3+ times in a row (e.g. "and and and and" -> "and")
     text = re.sub(r'\b(\w+)(?:\s+\1){2,}\b', r'\1', text, flags=re.IGNORECASE)

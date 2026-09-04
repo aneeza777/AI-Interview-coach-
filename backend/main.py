@@ -129,8 +129,10 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
 async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     """Login and get JWT token."""
     user = db.query(User).filter(User.email == user_data.email).first()
-    if not user or not verify_password(user_data.password, user.hashed_password):
-        raise HTTPException(401, "Invalid email or password")
+    if not user:
+        raise HTTPException(401, "Account not found with this email. Please click the 'Register' tab to create an account.")
+    if not verify_password(user_data.password, user.hashed_password):
+        raise HTTPException(401, "Incorrect password. Please check your password and try again.")
 
     token = create_access_token({"sub": str(user.id)})
     return {

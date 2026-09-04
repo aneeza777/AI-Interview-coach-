@@ -92,19 +92,37 @@ async function api(endpoint, options = {}) {
     }
 
     const res = await fetch(url, config);
+    const isAuthEndpoint = endpoint.startsWith("/api/auth/login") || endpoint.startsWith("/api/auth/register");
 
     if (res.status === 401) {
-        logout();
-        throw new Error("Session expired. Please login again.");
+        if (!isAuthEndpoint) {
+            logout();
+            throw new Error("Session expired. Please login again.");
+        }
+        
+        let err = "Invalid email or password. If you don't have an account, please click Register.";
+        try {
+            const data = await res.json();
+            if (data && data.detail) err = data.detail;
+        } catch (e) {}
+        throw new Error(err);
     }
 
     if (!res.ok) {
         let err = "Request failed";
         try {
             const data = await res.json();
-            err = data.detail || JSON.stringify(data);
+            if (typeof data.detail === "string") {
+                err = data.detail;
+            } else if (Array.isArray(data.detail)) {
+                err = data.detail.map(d => d.msg || JSON.stringify(d)).join(", ");
+            } else if (data.detail) {
+                err = JSON.stringify(data.detail);
+            } else {
+                err = JSON.stringify(data);
+            }
         } catch (e) {
-            err = res.statusText;
+            err = res.statusText || "An unexpected error occurred.";
         }
         throw new Error(err);
     }

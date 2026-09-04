@@ -2144,3 +2144,414 @@ textarea:focus {
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   SCREEN 3: ENHANCED CV REVIEW & MISTAKES AUDIT STYLES
+   ═════════════════════════════════════════════════════════════════════════════ */
+.cv-review-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 1.5rem;
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .cv-review-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cv-review-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.candidate-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.candidate-avatar-large {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid var(--accent-emerald);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+
+.role-pill {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-mint);
+  background: rgba(52, 211, 153, 0.12);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  margin-top: 0.25rem;
+}
+
+.score-circle-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 1rem 0 1.5rem 0;
+}
+
+.score-circle {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent-emerald) 0deg, var(--accent-mint) 280deg, rgba(255, 255, 255, 0.05) 280deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.3);
+}
+
+.score-circle::before {
+  content: '';
+  position: absolute;
+  width: 105px;
+  height: 105px;
+  border-radius: 50%;
+  background: var(--bg-card);
+}
+
+.score-number {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #fff;
+  z-index: 1;
+}
+
+.score-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  z-index: 1;
+}
+
+.grade-badge {
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--accent-emerald);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 0.3rem 0.9rem;
+  border-radius: var(--radius-full);
+}
+
+.meta-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+  text-align: center;
+}
+
+.meta-stat .m-label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+  text-transform: uppercase;
+}
+
+.meta-stat strong {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+/* Sections Checklist */
+.sections-checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.6rem;
+}
+
+.section-check-item {
+  display: flex;
+  flex-direction: column;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+  transition: var(--transition);
+}
+
+.section-check-item.present {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.section-check-item.missing {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.06);
+}
+
+.chk-icon {
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+.chk-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.chk-status {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.section-check-item.present .chk-status {
+  color: var(--accent-mint);
+  font-weight: 700;
+}
+
+.section-check-item.missing .chk-status {
+  color: var(--accent-amber);
+  font-weight: 700;
+}
+
+/* CV Detected Issues & Mistakes */
+.cv-issues-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.empty-issues-card {
+  text-align: center;
+  padding: 2rem 1rem;
+  background: rgba(16, 185, 129, 0.04);
+  border: 1px dashed rgba(16, 185, 129, 0.3);
+  border-radius: var(--radius-md);
+}
+
+.issue-card {
+  border-radius: var(--radius-md);
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+  transition: var(--transition);
+}
+
+.issue-card.issue-high {
+  border-color: rgba(244, 63, 94, 0.35);
+  background: rgba(244, 63, 94, 0.05);
+}
+
+.issue-card.issue-medium {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.issue-card.issue-low {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.05);
+}
+
+.issue-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.issue-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+.issue-pill-high {
+  background: rgba(244, 63, 94, 0.2);
+  color: #fb7185;
+}
+
+.issue-pill-medium {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.issue-pill-low {
+  background: rgba(52, 211, 153, 0.2);
+  color: #6ee7b7;
+}
+
+.issue-type-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.issue-message {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.issue-suggestion-box {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.sugg-icon {
+  font-weight: 700;
+  color: var(--accent-mint);
+  flex-shrink: 0;
+}
+
+.sugg-text {
+  line-height: 1.4;
+}
+
+/* Bullet list styles */
+.styled-bullet-list {
+  padding-left: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.styled-bullet-list li {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 0.4rem;
+}
+
+.warning-bullets li::marker {
+  color: var(--accent-amber);
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   PRINT MEDIA QUERY (FOR CLEAN CERTIFICATE & REPORT PDF PRINTS)
+   ═════════════════════════════════════════════════════════════════════════════ */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .site-header,
+  .screen-top-bar,
+  .cert-modal-header,
+  .cert-modal-actions,
+  .report-header-actions,
+  .toast-container,
+  button {
+    display: none !important;
+  }
+
+  .modal-overlay {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  .certificate-modal-card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .printable-certificate {
+    background: #ffffff !important;
+    color: #000000 !important;
+    page-break-inside: avoid;
+    box-shadow: none !important;
+  }
+
+  .cert-gold-border {
+    border: 3px solid #d97706 !important;
+  }
+
+  .cert-inner-frame {
+    border: 1px dashed #d97706 !important;
+    background: #fafaf9 !important;
+  }
+
+  .cert-heading,
+  .cert-candidate-name,
+  .cert-job-role,
+  .c-val {
+    color: #0f172a !important;
+  }
+
+  .cert-subheading,
+  .cert-statement,
+  .c-lbl,
+  .sig-line,
+  .sig-title {
+    color: #334155 !important;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   CV MATCHER STUDIO INPUT GRID & SELECTOR
+   ═════════════════════════════════════════════════════════════════════════════ */
+.cv-matcher-input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 860px) {
+  .cv-matcher-input-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cv-target-inputs-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.cv-quick-selector select {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  font-family: var(--font-main);
+  outline: none;
+}
+
+.cv-quick-selector select:focus {
+  border-color: var(--accent-emerald);
+}
+
+.jd-match-preview-card {
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.04);
+  border-radius: var(--radius-md);
+  padding: 1.1rem;
+}

@@ -195,6 +195,8 @@ function navigateTo(viewName) {
   // Lifecycle triggers
   if (viewName === 'dashboard') {
     loadDashboard();
+  } else if (viewName === 'cv-review') {
+    loadCVReviewScreen();
   } else if (viewName === 'questions') {
     loadQuestionBank();
   } else if (viewName === 'ats') {
@@ -257,13 +259,12 @@ async function uploadAndAnalyzeCV() {
 
   const btn = document.getElementById('btn-analyze-cv');
   btn.disabled = true;
-  btn.innerHTML = '<span>⏳ Parsing Resume with AI...</span>';
+  btn.innerHTML = '<span>⏳ Parsing Resume & Matching JD...</span>';
 
   try {
     const formData = new FormData();
-    formData.append('file', state.selectedCVFile);
+    formData.append('resume', state.selectedCVFile);
     formData.append('job_title', document.getElementById('cv-job-title').value.trim() || 'Full Stack AI Developer');
-    formData.append('job_description', document.getElementById('cv-job-description').value.trim() || '');
 
     const res = await fetch(`${API_BASE}/resumes/upload`, {
       method: 'POST',
@@ -275,15 +276,103 @@ async function uploadAndAnalyzeCV() {
     if (!res.ok) throw new Error(formatAPIError(data) || 'Upload failed');
 
     state.activeResumeId = data.id;
-    showToast('Resume parsed successfully!', 'success');
-    renderCVReviewScreen(data);
+    showToast('Resume parsed and reviewed successfully!', 'success');
+
+    const jdText = document.getElementById('cv-job-description')?.value.trim();
+    let jdMatchData = null;
+    if (jdText) {
+      try {
+        jdMatchData = await fetchAPI(`/resumes/${data.id}/match-jd`, {
+          method: 'POST',
+          body: JSON.stringify({ jd_text: jdText })
+        });
+      } catch (e) {}
+    }
+
+    renderCVReviewScreen(data, jdMatchData);
     loadDashboard();
-    navigateTo('cv-review');
+    loadCVReviewScreen();
+    document.getElementById('cv-audit-results')?.scrollIntoView({ behavior: 'smooth' });
   } catch (err) {
     showToast(err.message, 'error');
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<span>⚡ Analyze Resume with AI</span>';
+    btn.innerHTML = '<span>⚡ Analyze Resume & Run Job Matcher</span>';
+  }
+}
+
+async function loadCVReviewScreen() {
+  try {
+    const resumes = await fetchAPI('/resumes');
+    const select = document.getElementById('cv-select-previous');
+    if (select) {
+      select.innerHTML = '<option value="">-- Upload New or Pick Previous CV --</option>' +
+        resumes.map(r => `<option value="${r.id}">${r.filename} (${r.target_role || 'General'})</option>`).join('');
+      if (state.activeResumeId) {
+        select.value = state.activeResumeId;
+      }
+    }
+
+    if (state.activeResumeId) {
+      await fetchAndRenderCVReview(state.activeResumeId);
+    } else if (resumes && resumes.length > 0) {
+      state.activeResumeId = resumes[0].id;
+      if (select) select.value = resumes[0].id;
+      await fetchAndRenderCVReview(resumes[0].id);
+    }
+  } catch (err) {
+    console.error('Failed to load CV review screen:', err);
+  }
+}
+
+async function handleCVReviewResumeChange(resumeId) {
+  if (!resumeId) return;
+  state.activeResumeId = parseInt(resumeId, 10);
+  await fetchAndRenderCVReview(state.activeResumeId);
+}
+
+async function fetchAndRenderCVReview(resumeId) {
+  try {
+    const data = await fetchAPI(`/resumes/${resumeId}/review`);
+    const jdText = document.getElementById('cv-job-description')?.value.trim();
+    let jdMatchData = null;
+    if (jdText) {
+      try {
+        jdMatchData = await fetchAPI(`/resumes/${resumeId}/match-jd`, {
+          method: 'POST',
+          body: JSON.stringify({ jd_text: jdText })
+        });
+      } catch (e) {}
+    }
+    renderCVReviewScreen(data, jdMatchData);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function openCVReviewScreen() {
+  navigateTo('cv-review');
+}
+
+async function deleteResume(resumeId) {
+  if (!confirm('Are you sure you want to delete this resume?')) return;
+  try {
+    await fetchAPI(`/resumes/${resumeId}`, { method: 'DELETE' });
+    showToast('Resume deleted successfully', 'success');
+    loadDashboard();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function deleteInterview(interviewId) {
+  if (!confirm('Are you sure you want to delete this interview history?')) return;
+  try {
+    await fetchAPI(`/interviews/${interviewId}`, { method: 'DELETE' });
+    showToast('Interview deleted successfully', 'success');
+    loadDashboard();
+  } catch (err) {
+    showToast(err.message, 'error');
   }
 }
 
@@ -301,11 +390,12 @@ function renderResumesList(resumes) {
     <div class="resume-item-row">
       <div class="item-main-info">
         <h4>📄 ${r.filename}</h4>
-        <span class="item-meta">Role: ${r.target_role || 'General'} • Score: ${r.score || 75}/100</span>
+        <span class="item-meta">Role: ${r.target_role || r.job_title || 'General'} • Score: ${r.score || r.cv_score || 75}/100</span>
       </div>
       <div class="item-actions">
         <button class="btn btn-sm btn-outline" onclick="viewParsedResume(${r.id})">Review</button>
-        <button class="btn btn-sm btn-primary" onclick="launchInterviewWithResume(${r.id}, '${r.target_role || 'Software Engineer'}')">Practice</button>
+        <button class="btn btn-sm btn-primary" onclick="launchInterviewWithResume(${r.id}, '${(r.target_role || r.job_title || 'Software Engineer').replace(/'/g, "\'")}')">Practice</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteResume(${r.id})" title="Delete Resume">🗑️ Delete</button>
       </div>
     </div>
   `).join('');
@@ -322,11 +412,12 @@ function renderInterviewsList(interviews) {
     <div class="interview-item-row">
       <div class="item-main-info">
         <h4>${i.job_title}</h4>
-        <span class="item-meta">${new Date(i.created_at).toLocaleDateString()} • Mode: ${i.mode || 'Practice'}</span>
+        <span class="item-meta">${i.created_at ? new Date(i.created_at).toLocaleDateString() : 'Recent'} • Mode: ${i.mode === 'mock' || i.mode === 'simulation' || i.mode === 'direct' ? '🎙️ Pro Mock' : '🎯 Practice'}</span>
       </div>
       <div class="item-actions">
         <button class="btn btn-sm btn-outline" onclick="openCertificateModal(${i.id})">🎖️ Cert</button>
         <button class="btn btn-sm btn-primary" onclick="viewInterviewReport(${i.id})">Scorecard</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteInterview(${i.id})" title="Delete Interview">🗑️ Delete</button>
       </div>
     </div>
   `).join('');
@@ -336,36 +427,136 @@ function populateSetupResumeDropdown(resumes) {
   const select = document.getElementById('setup-resume-select');
   if (!select) return;
   select.innerHTML = '<option value="">-- Auto Pick Latest Resume --</option>' +
-    resumes.map(r => `<option value="${r.id}">${r.filename} (${r.target_role || 'General'})</option>`).join('');
+    resumes.map(r => `<option value="${r.id}">${r.filename} (${r.target_role || r.job_title || 'General'})</option>`).join('');
 }
 
-function renderCVReviewScreen(resumeData) {
+function renderCVReviewScreen(resumeData, jdMatchData = null) {
   const parsed = resumeData.parsed_data || {};
   document.getElementById('cv-candidate-name').textContent = parsed.name || state.user?.full_name || 'Candidate';
-  document.getElementById('cv-target-role').textContent = resumeData.target_role || 'Software Engineer';
-  document.getElementById('cv-overall-score').textContent = resumeData.score || 78;
+  document.getElementById('cv-target-role').textContent = resumeData.target_role || resumeData.job_title || 'Software Engineer';
+  document.getElementById('cv-overall-score').textContent = resumeData.score !== undefined ? resumeData.score : (resumeData.cv_score || 78);
   document.getElementById('cv-grade-badge').textContent = `Grade: ${resumeData.grade || 'B+'}`;
   document.getElementById('cv-exp-years').textContent = `${parsed.experience_years || 2}+ Years`;
-  document.getElementById('cv-education').textContent = parsed.education || 'B.S. in Computer Science';
+  document.getElementById('cv-education').textContent = (Array.isArray(parsed.education) ? parsed.education.join(', ') : parsed.education) || 'B.S. in Computer Science';
 
+  const wordCountElem = document.getElementById('cv-word-count');
+  if (wordCountElem) {
+    wordCountElem.textContent = `${resumeData.word_count || 380} words`;
+  }
+
+  // JD Match box
+  const jdBox = document.getElementById('cv-jd-match-box');
+  if (jdBox) {
+    if (jdMatchData && jdMatchData.match_score !== undefined) {
+      jdBox.classList.remove('hidden');
+      document.getElementById('cv-jd-match-score').textContent = `${jdMatchData.match_score}%`;
+      document.getElementById('cv-jd-match-desc').textContent = `Matched ${jdMatchData.matched_skills?.length || 0} skills against target job description.`;
+      document.getElementById('cv-jd-matched-tags').innerHTML = (jdMatchData.matched_skills && jdMatchData.matched_skills.length > 0)
+        ? jdMatchData.matched_skills.map(s => `<span class="kw-pill kw-matched">✓ ${s}</span>`).join(' ')
+        : `<span style="font-size: 0.8rem; color: var(--text-muted);">None detected</span>`;
+      document.getElementById('cv-jd-missing-tags').innerHTML = (jdMatchData.missing_skills && jdMatchData.missing_skills.length > 0)
+        ? jdMatchData.missing_skills.map(s => `<span class="kw-pill kw-missing">⚠️ ${s}</span>`).join(' ')
+        : `<span style="font-size: 0.8rem; color: var(--accent-emerald);">All required JD skills covered!</span>`;
+    } else {
+      jdBox.classList.add('hidden');
+    }
+  }
+
+  // Section Checklist
+  const sectionGrid = document.getElementById('cv-sections-checklist');
+  if (sectionGrid) {
+    const sections = resumeData.sections_found || {
+      contact: true,
+      summary: true,
+      experience: true,
+      education: true,
+      skills: true,
+      projects: true,
+      certifications: false
+    };
+    const sectionNames = [
+      { key: 'contact', label: 'Contact Info' },
+      { key: 'summary', label: 'Professional Summary' },
+      { key: 'experience', label: 'Work Experience' },
+      { key: 'education', label: 'Education' },
+      { key: 'skills', label: 'Skills & Tech' },
+      { key: 'projects', label: 'Projects' },
+      { key: 'certifications', label: 'Certifications' }
+    ];
+    sectionGrid.innerHTML = sectionNames.map(s => {
+      const isPresent = Boolean(sections[s.key]);
+      return `
+        <div class="section-check-item ${isPresent ? 'present' : 'missing'}">
+          <span class="chk-icon">${isPresent ? '✓' : '⚠️'}</span>
+          <span class="chk-label">${s.label}</span>
+          <span class="chk-status">${isPresent ? 'Found' : 'Missing'}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Skills List
   const skillsList = document.getElementById('cv-skills-list');
   const skills = parsed.skills || ['Python', 'FastAPI', 'JavaScript', 'SQL', 'Git'];
-  skillsList.innerHTML = skills.map(s => `<span class="kw-pill">${s}</span>`).join('');
+  if (skillsList) {
+    skillsList.innerHTML = skills.map(s => `<span class="kw-pill">${s}</span>`).join('');
+  }
 
+  // Detected Mistakes / Issues
+  const issuesContainer = document.getElementById('cv-issues-container');
+  const issuesBadge = document.getElementById('cv-issues-count-badge');
+  const issues = resumeData.issues || [];
+  if (issuesBadge) {
+    issuesBadge.textContent = `${issues.length} Issue${issues.length === 1 ? '' : 's'} Detected`;
+  }
+  if (issuesContainer) {
+    if (issues.length === 0) {
+      issuesContainer.innerHTML = `
+        <div class="empty-issues-card">
+          <span style="font-size: 1.5rem;">🎉</span>
+          <p style="color: var(--accent-emerald); font-weight: 600;">No critical formatting or content mistakes found! Your CV looks strong.</p>
+        </div>
+      `;
+    } else {
+      issuesContainer.innerHTML = issues.map(iss => {
+        const severity = (iss.severity || 'medium').toLowerCase();
+        return `
+          <div class="issue-card issue-${severity}">
+            <div class="issue-card-top">
+              <span class="issue-pill issue-pill-${severity}">${severity.toUpperCase()} PRIORITY</span>
+              <span class="issue-type-tag">${(iss.type || 'ATS').toUpperCase()}</span>
+            </div>
+            <h4 class="issue-message">${iss.message}</h4>
+            <div class="issue-suggestion-box">
+              <span class="sugg-icon">💡 Fix:</span>
+              <span class="sugg-text">${iss.suggestion}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // Strengths
   const strengthsList = document.getElementById('cv-strengths-list');
   const str = resumeData.strengths || ['Well-structured technical project descriptions', 'Strong foundational skills detected'];
-  strengthsList.innerHTML = str.map(s => `<li>${s}</li>`).join('');
+  if (strengthsList) {
+    strengthsList.innerHTML = str.map(s => `<li>${s}</li>`).join('');
+  }
 
+  // Improvement Recommendations
   const impList = document.getElementById('cv-improvements-list');
-  const imp = resumeData.improvements || ['Add quantifiable metrics (e.g. 35% latency reduction)', 'Include recent cloud certifications'];
-  impList.innerHTML = imp.map(i => `<li>${i}</li>`).join('');
+  const imp = resumeData.improvement_plan || resumeData.improvements || ['Add quantifiable metrics (e.g. 35% latency reduction)', 'Include recent cloud certifications'];
+  if (impList) {
+    impList.innerHTML = imp.map(i => `<li>${i}</li>`).join('');
+  }
 }
 
 async function viewParsedResume(resumeId) {
   try {
-    const data = await fetchAPI(`/resumes/${resumeId}/review`);
-    renderCVReviewScreen(data);
+    state.activeResumeId = resumeId;
     navigateTo('cv-review');
+    await fetchAndRenderCVReview(resumeId);
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -1149,6 +1340,17 @@ async function openCertificateModal(interviewId) {
 function closeCertificateModal(e) {
   if (e) e.stopPropagation();
   document.getElementById('modal-certificate').classList.add('hidden');
+}
+
+function printCertificate() {
+  window.print();
+}
+
+function downloadCertificatePDF() {
+  showToast('Opening print dialog... Select "Save as PDF" to download your verified certificate.', 'info');
+  setTimeout(() => {
+    window.print();
+  }, 400);
 }
 
 /* ═════════════════════════════════════════════════════════════════════════════

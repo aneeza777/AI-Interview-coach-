@@ -27,6 +27,9 @@
         <button class="nav-btn active" data-nav="dashboard" onclick="navigateTo('dashboard')">
           <span class="nav-icon">📊</span> Dashboard
         </button>
+        <button class="nav-btn" data-nav="cv-review" onclick="navigateTo('cv-review')">
+          <span class="nav-icon">📂</span> Resume Matcher
+        </button>
         <button class="nav-btn" data-nav="practice" onclick="startInterviewMode('practice')">
           <span class="nav-icon">🎯</span> Practice Mode
         </button>
@@ -170,6 +173,21 @@
 
       <!-- Quick Feature Grid -->
       <div class="feature-cards-grid">
+        <!-- Card 0: Resume & Job Matcher -->
+        <div class="glass-card feature-action-card highlight-cyan" onclick="navigateTo('cv-review')">
+          <div class="card-icon-box mint-glow">📂</div>
+          <div class="card-content">
+            <div class="card-badge-row">
+              <span class="pill-badge pill-mint">Resume Matcher Studio</span>
+            </div>
+            <h3>Resume & Job Matcher</h3>
+            <p>Upload CV to audit formatting mistakes, match skills with target JD, and get tailored interview questions.</p>
+          </div>
+          <div class="card-footer-action">
+            <span>Open Matcher Studio</span> ➔
+          </div>
+        </div>
+
         <!-- Card 1: Practice Mode -->
         <div class="glass-card feature-action-card highlight-cyan" onclick="startInterviewMode('practice')">
           <div class="card-icon-box cyan-glow">🎯</div>
@@ -263,67 +281,31 @@
 
       <!-- Main Dashboard Content Layout -->
       <div class="dashboard-split-layout">
-        <!-- Left: CV Upload & Review -->
+        <!-- Left: Parsed Resumes List -->
         <div class="dashboard-column">
-          <div class="glass-card cv-upload-card">
+          <div class="glass-card stored-resumes-card">
             <div class="section-title-row">
               <div class="title-with-icon">
                 <span class="sec-icon">📂</span>
                 <div>
-                  <h3>Resume & Job Matcher</h3>
-                  <p class="sec-desc">Upload CV to generate personalized technical & behavioral interview questions.</p>
+                  <h3>Parsed Resumes</h3>
+                  <p class="sec-desc">Manage your uploaded CVs or upload a new one for audit.</p>
                 </div>
               </div>
-            </div>
-
-            <!-- Upload Drop Zone -->
-            <div class="upload-dropzone" id="upload-zone" onclick="triggerFileInput()">
-              <input type="file" id="file-input" accept=".pdf,.docx,.txt" style="display:none;" onchange="handleCVFileSelect(event)">
-              <div class="dropzone-inner">
-                <div class="drop-icon-pulse">📤</div>
-                <h4>Drop your Resume here, or <span class="browse-link">Browse Files</span></h4>
-                <p class="drop-hint">Supports PDF, DOCX, TXT (Up to 10MB)</p>
-                <div class="selected-file-badge hidden" id="selected-file-info">
-                  <span id="selected-file-name">filename.pdf</span>
-                  <button type="button" class="btn-remove-file" onclick="clearSelectedFile(event)">✕</button>
-                </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span class="badge-count" id="resumes-count-badge">0</span>
+                <button class="btn btn-sm btn-primary" onclick="navigateTo('cv-review')">➕ Upload CV</button>
               </div>
-            </div>
-
-            <div class="cv-target-role-inputs">
-              <div class="form-group">
-                <label for="cv-job-title">Target Role / Specialization</label>
-                <input type="text" id="cv-job-title" placeholder="e.g. Full Stack AI Developer, Cloud Engineer..." value="Full Stack AI Developer">
-              </div>
-
-              <details class="jd-accordion">
-                <summary>➕ Optional: Match with Job Description (JD)</summary>
-                <div class="accordion-body">
-                  <textarea id="cv-job-description" rows="3" placeholder="Paste the target job description here to calculate ATS match score and extract key skills..."></textarea>
-                </div>
-              </details>
-            </div>
-
-            <button class="btn btn-primary btn-block btn-glow" id="btn-analyze-cv" onclick="uploadAndAnalyzeCV()" disabled>
-              <span>⚡ Analyze Resume with AI</span>
-            </button>
-          </div>
-
-          <!-- Stored Resumes List -->
-          <div class="glass-card stored-resumes-card">
-            <div class="section-title-row">
-              <h3>Parsed Resumes</h3>
-              <span class="badge-count" id="resumes-count-badge">0</span>
             </div>
             <div id="resume-list-container" class="resumes-list-scroll">
               <div class="empty-state-card">
-                <p>No resumes uploaded yet. Upload a CV above to get started!</p>
+                <p>No resumes uploaded yet. Click "Upload CV" to start!</p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Right: Active CV Review & Recent Interviews -->
+        <!-- Right: Interview History & Scores -->
         <div class="dashboard-column">
           <div class="glass-card recent-interviews-card">
             <div class="section-title-row">
@@ -347,13 +329,13 @@
     </section>
 
     <!-- ══════════════════════════════════════════════════════════════════════════
-         SCREEN 3: CV REVIEW / SCORECARD
+         SCREEN 3: RESUME & JOB MATCHER STUDIO / CV REVIEW
          ══════════════════════════════════════════════════════════════════════════ -->
     <section id="screen-cv-review" class="app-screen">
       <div class="screen-top-bar">
         <button class="btn btn-ghost" onclick="navigateTo('dashboard')">➔ Back to Dashboard</button>
-        <div class="screen-title-badge">📄 AI Resume Evaluation & Scorecard</div>
-        <div style="display: flex; gap: 0.5rem;">
+        <div class="screen-title-badge">📂 Resume & AI Job Matcher Studio</div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
           <button class="btn btn-outline" onclick="navigateTo('ats')">⚡ ATS Scanner</button>
           <button class="btn btn-outline" onclick="startInterviewMode('mock')">🎙️ Mock Interview</button>
           <button class="btn btn-primary btn-glow" id="btn-cv-start-interview" onclick="proceedToInterviewFromCV()">
@@ -362,49 +344,159 @@
         </div>
       </div>
 
-      <div class="cv-review-grid">
-        <!-- Score Card -->
-        <div class="glass-card cv-score-summary-card">
-          <div class="candidate-header">
-            <div class="candidate-avatar-large">👤</div>
+      <!-- Top Section: Upload & JD Matcher Input Studio -->
+      <div class="glass-card cv-upload-card" style="margin-bottom: 1.5rem;">
+        <div class="section-title-row">
+          <div class="title-with-icon">
+            <span class="sec-icon">📤</span>
             <div>
-              <h2 id="cv-candidate-name">Candidate Name</h2>
-              <span class="role-pill" id="cv-target-role">Full Stack Developer</span>
+              <h3>Upload Resume & Match with Target Role</h3>
+              <p class="sec-desc">Upload your CV to detect mistakes, get section checklist, and calculate target role skill alignment.</p>
+            </div>
+          </div>
+          <div class="cv-quick-selector" id="cv-quick-selector-container">
+            <select id="cv-select-previous" onchange="handleCVReviewResumeChange(this.value)">
+              <option value="">-- Upload New or Pick Previous CV --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="cv-matcher-input-grid">
+          <!-- Dropzone -->
+          <div class="upload-dropzone" id="upload-zone" onclick="triggerFileInput()">
+            <input type="file" id="file-input" accept=".pdf,.docx,.txt" style="display:none;" onchange="handleCVFileSelect(event)">
+            <div class="dropzone-inner">
+              <div class="drop-icon-pulse">📤</div>
+              <h4>Drop your Resume here, or <span class="browse-link">Browse Files</span></h4>
+              <p class="drop-hint">Supports PDF, DOCX, TXT (Up to 10MB)</p>
+              <div class="selected-file-badge hidden" id="selected-file-info">
+                <span id="selected-file-name">filename.pdf</span>
+                <button type="button" class="btn-remove-file" onclick="clearSelectedFile(event)">✕</button>
+              </div>
             </div>
           </div>
 
-          <div class="score-circle-wrapper">
-            <div class="score-circle" id="cv-score-circle">
-              <span class="score-number" id="cv-overall-score">--</span>
-              <span class="score-label">CV Score / 100</span>
+          <!-- Role & JD Form -->
+          <div class="cv-target-inputs-box">
+            <div class="form-group">
+              <label for="cv-job-title">Target Role / Specialization</label>
+              <input type="text" id="cv-job-title" placeholder="e.g. Full Stack AI Developer, Flutter Engineer" value="Full Stack AI Developer">
             </div>
-            <div class="grade-badge" id="cv-grade-badge">Grade: --</div>
+
+            <div class="form-group">
+              <label for="cv-job-description">Optional: Match with Job Description (JD)</label>
+              <textarea id="cv-job-description" rows="3" placeholder="Paste target job description here to calculate ATS match score, keyword overlap, and missing skill gaps..."></textarea>
+            </div>
+
+            <button class="btn btn-primary btn-block btn-glow" id="btn-analyze-cv" onclick="uploadAndAnalyzeCV()" disabled>
+              <span>⚡ Analyze Resume & Run Job Matcher</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Section: Deep Audit Results & Scorecard -->
+      <div class="cv-review-grid" id="cv-audit-results">
+        <!-- Left: Score Card & Section Checklist -->
+        <div class="cv-review-col">
+          <div class="glass-card cv-score-summary-card">
+            <div class="candidate-header">
+              <div class="candidate-avatar-large">👤</div>
+              <div>
+                <h2 id="cv-candidate-name">Candidate Name</h2>
+                <span class="role-pill" id="cv-target-role">Full Stack Developer</span>
+              </div>
+            </div>
+
+            <div class="score-circle-wrapper">
+              <div class="score-circle" id="cv-score-circle">
+                <span class="score-number" id="cv-overall-score">--</span>
+                <span class="score-label">CV Score / 100</span>
+              </div>
+              <div class="grade-badge" id="cv-grade-badge">Grade: --</div>
+            </div>
+
+            <div class="meta-stats-row">
+              <div class="meta-stat">
+                <span class="m-label">Experience</span>
+                <strong id="cv-exp-years">-- Years</strong>
+              </div>
+              <div class="meta-stat">
+                <span class="m-label">Education</span>
+                <strong id="cv-education">--</strong>
+              </div>
+              <div class="meta-stat">
+                <span class="m-label">Word Count</span>
+                <strong id="cv-word-count">-- words</strong>
+              </div>
+            </div>
           </div>
 
-          <div class="meta-stats-row">
-            <div class="meta-stat">
-              <span class="m-label">Experience</span>
-              <strong id="cv-exp-years">-- Years</strong>
+          <!-- Section Completeness Checklist -->
+          <div class="glass-card cv-sections-card" style="margin-top: 1.25rem;">
+            <h3>📋 Resume Sections Checklist</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Recruiter standard sections detected in your CV:</p>
+            <div class="sections-checklist-grid" id="cv-sections-checklist">
+              <!-- Rendered dynamically -->
             </div>
-            <div class="meta-stat">
-              <span class="m-label">Education</span>
-              <strong id="cv-education">--</strong>
+          </div>
+
+          <!-- Skills Tag Cloud -->
+          <div class="glass-card cv-skills-card" style="margin-top: 1.25rem;">
+            <h3>🛠️ Detected Technical & Soft Skills</h3>
+            <div class="skills-tags-cloud" id="cv-skills-list">
+              <!-- Dynamic skills -->
             </div>
           </div>
         </div>
 
-        <!-- Skills & Breakdown -->
-        <div class="glass-card cv-details-card">
-          <h3>Detected Technical & Soft Skills</h3>
-          <div class="skills-tags-cloud" id="cv-skills-list">
-            <!-- Dynamic skills -->
+        <!-- Right: Detected Mistakes & Actionable Improvements -->
+        <div class="cv-review-col">
+          <!-- JD Match Gap Box (Optional, shown if JD provided) -->
+          <div class="glass-card jd-match-preview-card hidden" id="cv-jd-match-box" style="margin-bottom: 1.25rem;">
+            <div class="section-title-row">
+              <div class="title-with-icon">
+                <span class="sec-icon">🎯</span>
+                <div>
+                  <h3>Job Description Skill Match: <span id="cv-jd-match-score" style="color: var(--accent-mint);">0%</span></h3>
+                  <p class="sec-desc" id="cv-jd-match-desc">Skill alignment with target job description.</p>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 0.5rem;">
+              <strong style="font-size: 0.82rem; color: var(--accent-mint);">Matched Skills:</strong>
+              <div id="cv-jd-matched-tags" class="skills-tags-cloud" style="margin-top: 0.3rem;"></div>
+            </div>
+            <div style="margin-top: 0.75rem;">
+              <strong style="font-size: 0.82rem; color: var(--accent-amber);">Missing Skill Gaps:</strong>
+              <div id="cv-jd-missing-tags" class="skills-tags-cloud" style="margin-top: 0.3rem;"></div>
+            </div>
           </div>
 
-          <div class="cv-feedback-section">
-            <h4>AI Resume Strengths</h4>
+          <!-- Detected Mistakes / Issues Box -->
+          <div class="glass-card cv-issues-card">
+            <div class="section-title-row">
+              <div class="title-with-icon">
+                <span class="sec-icon">⚠️</span>
+                <div>
+                  <h3>Detected Formatting & Content Mistakes</h3>
+                  <p class="sec-desc">Recruiter red flags and ATS compatibility issues detected.</p>
+                </div>
+              </div>
+              <span class="badge-count pill-rose" id="cv-issues-count-badge">0 Issues</span>
+            </div>
+
+            <div class="cv-issues-container" id="cv-issues-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Strengths & Roadmap -->
+          <div class="glass-card cv-feedback-card" style="margin-top: 1.25rem;">
+            <h4>✅ AI Resume Strengths</h4>
             <ul id="cv-strengths-list" class="styled-bullet-list"></ul>
 
-            <h4>Improvement Recommendations</h4>
+            <h4 style="margin-top: 1.25rem;">🚀 AI Actionable Improvement Plan</h4>
             <ul id="cv-improvements-list" class="styled-bullet-list warning-bullets"></ul>
           </div>
         </div>
@@ -1060,8 +1152,11 @@
 
       <div class="cert-modal-actions">
         <button class="btn btn-outline" onclick="closeCertificateModal()">Close</button>
-        <button class="btn btn-primary btn-glow" onclick="window.print()">
-          <span>🖨️ Print / Download PDF</span>
+        <button class="btn btn-outline" onclick="printCertificate()">
+          <span>🖨️ Print Certificate</span>
+        </button>
+        <button class="btn btn-primary btn-glow" onclick="downloadCertificatePDF()">
+          <span>📥 Download PDF / Image</span>
         </button>
       </div>
     </div>

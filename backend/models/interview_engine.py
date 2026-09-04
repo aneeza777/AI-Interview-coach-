@@ -446,10 +446,15 @@ def build_interview_plan(
 
     # Ensure exact question count
     if len(plan) > total_questions:
-        # Keep intro (0) and closing (-1), trim from middle
-        middle = plan[1:-1]
-        random.shuffle(middle)
-        plan = [plan[0]] + middle[:total_questions - 2] + [plan[-1]]
+        if total_questions <= 2:
+            plan = plan[:total_questions]
+        else:
+            # Keep intro (0) and closing (-1), trim from middle
+            middle = plan[1:-1]
+            random.shuffle(middle)
+            plan = [plan[0]] + middle[:total_questions - 2] + [plan[-1]]
+
+    plan = plan[:total_questions]
 
     # Assign question numbers
     for i, q in enumerate(plan):

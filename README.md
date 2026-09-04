@@ -247,10 +247,7 @@ This repository adheres strictly to hackathon open-source security guidelines:
 - **Hackathon:** Alibaba Cloud AI Hackathon Pakistan 2026
 - **Category:** Open Innovation
 - **Project Name:** AI Interview Coach
-- **Team Lead Email:** Registered Lead Address (`aihackathon.cognix-pk.com`)
 
 ---
 
-## 📄 License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.

@@ -71,6 +71,7 @@ class InterviewCreate(BaseModel):
     job_title: str
     mode: str = "direct"  # 'practice' or 'direct'
     difficulty: Optional[str] = "mid"  # 'junior', 'mid', 'senior'
+    language: Optional[str] = "en"  # 'en' or 'ur'
 
 
 class QuestionResponse(BaseModel):
@@ -80,6 +81,8 @@ class QuestionResponse(BaseModel):
     difficulty: str
     expected_keywords: List[str]
     is_follow_up: bool = False
+    question_ur: Optional[str] = None
+    question_roman_ur: Optional[str] = None
 
 
 class InterviewResponse(BaseModel):

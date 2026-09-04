@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>AI Interview Coach — Mock Interview Practice</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=3.5">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- ═══════════════════════════════════════ -->
@@ -336,6 +339,14 @@
                         </div>
                     </div>
 
+                    <div class="form-group">
+                        <label>🌐 Interview Language / زبان کا انتخاب</label>
+                        <div class="language-group" id="prep-lang-group">
+                            <button type="button" class="lang-btn active" data-lang="en">🇬🇧 English</button>
+                            <button type="button" class="lang-btn" data-lang="ur">🇵🇰 Urdu / اردو (Bilingual)</button>
+                        </div>
+                    </div>
+
                     <button class="btn-primary" id="btn-start-prep" disabled>
                         <span class="btn-text">Start Preparation</span>
                         <span class="btn-loader" hidden>Preparing...</span>
@@ -405,6 +416,14 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label>🌐 Interview Language / زبان کا انتخاب</label>
+                    <div class="language-group" id="interview-lang-group">
+                        <button type="button" class="lang-btn active" data-lang="en">🇬🇧 English</button>
+                        <button type="button" class="lang-btn" data-lang="ur">🇵🇰 Urdu / اردو (Bilingual)</button>
+                    </div>
+                </div>
+
                 <div class="setup-mode-grid">
                     <div class="setup-mode-card" id="setup-mode-practice" data-mode="practice">
                         <div class="mode-icon">📚</div>
@@ -450,7 +469,12 @@
             <!-- Left: Interview flow -->
             <div class="interview-main">
                 <div class="interview-top-bar">
-                    <div class="mode-badge" id="mode-badge">Practice Mode</div>
+                    <div class="top-bar-left">
+                        <div class="mode-badge" id="mode-badge">Practice Mode</div>
+                        <button type="button" class="btn-lang-toggle" id="btn-interview-lang-toggle" title="Toggle English / Urdu Language">
+                            <span id="interview-lang-flag">🇵🇰</span> <span id="interview-lang-label">Urdu / Bilingual</span>
+                        </button>
+                    </div>
                     <div class="countdown-badge" id="countdown-badge" title="Time remaining for this question">
                         <span class="countdown-icon">⏳</span>
                         <span id="question-countdown-display">01:30</span>
@@ -488,6 +512,12 @@
                         </div>
                     </div>
                     <h2 id="question-text">Loading...</h2>
+                    
+                    <!-- Bilingual Urdu & Roman Urdu Card -->
+                    <div class="bilingual-translation-card" id="bilingual-translation-card">
+                        <div class="urdu-script-text" id="question-urdu-script">آپ اپنے بارے میں مختصراً بتائیں اور اپنے تعلیمی و فنی پس منظر کا جائزہ پیش کریں۔</div>
+                        <div class="urdu-roman-text" id="question-urdu-roman">🗣️ "Apne baray mein mukhtasar btaiye aur background ka overview dein."</div>
+                    </div>
                 </div>
 
                 <!-- STAR Method Helper (Interactive) -->
@@ -724,6 +754,6 @@
     <!-- Confetti Celebration Canvas -->
     <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
-    <script src="/static/js/app.js"></script>
+    <script src="/static/js/app.js?v=3.5"></script>
 </body>
 </html>

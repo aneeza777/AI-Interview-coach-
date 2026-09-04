@@ -67,9 +67,9 @@ class CVReviewResponse(BaseModel):
 # Interview Schemas
 # ──────────────────────────────────────────────
 class InterviewCreate(BaseModel):
-    resume_id: int
+    resume_id: Optional[int] = None
     job_title: str
-    mode: str = "direct"  # 'practice' or 'direct'
+    mode: str = "practice"  # 'practice', 'direct', or 'mock'
     difficulty: Optional[str] = "mid"  # 'junior', 'mid', 'senior'
     language: Optional[str] = "en"  # 'en' or 'ur'
 

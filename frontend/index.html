@@ -323,8 +323,53 @@
           </div>
         </div>
 
-        <!-- Right: Recent Interviews & Readiness Score -->
+        <!-- Right: Active CV Review & Recent Interviews -->
         <div class="dashboard-column">
+          <!-- Active Parsed CV Review Widget on Dashboard -->
+          <div class="glass-card active-cv-dashboard-widget" id="dash-active-cv-card">
+            <div class="section-title-row">
+              <div class="title-with-icon">
+                <span class="sec-icon">🎯</span>
+                <div>
+                  <h3>Active CV Evaluation & Skills</h3>
+                  <p class="sec-desc">AI-extracted profile insights and recommendations.</p>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-outline" id="btn-dash-full-cv-review" onclick="navigateTo('cv-review')">Full Scorecard ➔</button>
+            </div>
+
+            <div class="dash-cv-body">
+              <div class="dash-cv-score-row">
+                <div class="score-pill-box">
+                  <span class="dash-cv-score-num" id="dash-cv-score">78</span>
+                  <span class="dash-cv-score-lbl">CV Score / 100</span>
+                </div>
+                <div class="dash-cv-meta-info">
+                  <h4 id="dash-cv-name">Candidate Profile</h4>
+                  <span class="role-pill" id="dash-cv-role">Full Stack Developer</span>
+                  <div class="dash-cv-stats">
+                    <span id="dash-cv-exp">2+ Years Exp</span> • <span id="dash-cv-edu">B.S. Computer Science</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dash-cv-skills-section">
+                <h5>Detected Skills</h5>
+                <div class="skills-tags-cloud" id="dash-cv-skills">
+                  <span class="kw-pill">Python</span>
+                  <span class="kw-pill">FastAPI</span>
+                  <span class="kw-pill">Git</span>
+                </div>
+              </div>
+
+              <div class="dash-cv-quick-actions">
+                <button class="btn btn-sm btn-primary" onclick="proceedToInterviewFromCV()">🎯 Practice for this Role</button>
+                <button class="btn btn-sm btn-outline" onclick="startInterviewMode('mock')">🎙️ Launch Mock</button>
+                <button class="btn btn-sm btn-outline" onclick="navigateTo('ats')">⚡ ATS Scanner</button>
+              </div>
+            </div>
+          </div>
+
           <div class="glass-card recent-interviews-card">
             <div class="section-title-row">
               <div class="title-with-icon">

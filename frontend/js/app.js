@@ -222,29 +222,8 @@ async function loadDashboard() {
     renderInterviewsList(interviews);
     populateSetupResumeDropdown(resumes);
 
-    // Update Dashboard Active CV Widget
     if (resumes && resumes.length > 0) {
-      const activeRes = resumes[0];
-      state.activeResumeId = activeRes.id;
-      const parsed = activeRes.parsed_data || {};
-      
-      const scoreElem = document.getElementById('dash-cv-score');
-      const nameElem = document.getElementById('dash-cv-name');
-      const roleElem = document.getElementById('dash-cv-role');
-      const expElem = document.getElementById('dash-cv-exp');
-      const eduElem = document.getElementById('dash-cv-edu');
-      const skillsElem = document.getElementById('dash-cv-skills');
-
-      if (scoreElem) scoreElem.textContent = activeRes.score || 78;
-      if (nameElem) nameElem.textContent = parsed.name || state.user?.full_name || 'Candidate';
-      if (roleElem) roleElem.textContent = activeRes.target_role || 'Software Engineer';
-      if (expElem) expElem.textContent = `${parsed.experience_years || 2}+ Years Exp`;
-      if (eduElem) eduElem.textContent = parsed.education || 'Computer Science';
-      
-      if (skillsElem) {
-        const skills = parsed.skills || ['Python', 'FastAPI', 'Git'];
-        skillsElem.innerHTML = skills.slice(0, 8).map(s => `<span class="kw-pill">${s}</span>`).join('');
-      }
+      state.activeResumeId = resumes[0].id;
     }
   } catch (err) {
     console.error('Failed to load dashboard:', err);

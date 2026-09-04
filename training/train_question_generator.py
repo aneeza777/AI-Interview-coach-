@@ -152,14 +152,17 @@ def train():
     )
 
     # ── Trainer ──
-    trainer = Seq2SeqTrainer(
-        model=model,
-        args=training_args,
-        train_dataset=train_dataset,
-        eval_dataset=val_dataset,
-        data_collator=data_collator,
-        tokenizer=tokenizer,
-    )
+    trainer_kwargs = {
+        "model": model,
+        "args": training_args,
+        "train_dataset": train_dataset,
+        "eval_dataset": val_dataset,
+        "data_collator": data_collator,
+    }
+    try:
+        trainer = Seq2SeqTrainer(processing_class=tokenizer, **trainer_kwargs)
+    except TypeError:
+        trainer = Seq2SeqTrainer(tokenizer=tokenizer, **trainer_kwargs)
 
     # ── Train ──
     print("\n🚀 Starting training...")

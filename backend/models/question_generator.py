@@ -51,7 +51,7 @@ def _load_trained_model():
 
 
 def _generate_with_model(context: str) -> Optional[str]:
-    """Generate a question using the fine-tuned model."""
+    """Generate a question using the fine-tuned model with anti-repetition guards."""
     if not _load_trained_model():
         return None
 
@@ -60,12 +60,24 @@ def _generate_with_model(context: str) -> Optional[str]:
         inputs = _qg_tokenizer(input_text, return_tensors="pt", max_length=256, truncation=True)
         outputs = _qg_model.generate(
             **inputs,
-            max_length=128,
+            max_length=96,
             num_beams=3,
+            repetition_penalty=2.0,
+            no_repeat_ngram_size=3,
             do_sample=True,
-            temperature=0.8,
+            temperature=0.7,
         )
-        return _qg_tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+        gen_text = _qg_tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+        
+        # Validate that output is a genuine question
+        words = gen_text.split()
+        if len(words) < 5 or not gen_text.endswith("?"):
+            return None
+        # Check for repetition
+        if len(set(words)) / len(words) < 0.6:
+            return None
+            
+        return gen_text
     except Exception as e:
         print(f"[Question Generator] Model generation failed: {e}")
         return None

@@ -1,0 +1,7 @@
+{
+  "training_loss": 28.781277465820313,
+  "eval_loss": 21.311981201171875,
+  "num_train_samples": 139,
+  "num_epochs": 5,
+  "base_model": "google/flan-t5-small"
+}

@@ -865,10 +865,9 @@ async function startRecording() {
         // Request microphone with high-quality audio settings
         const stream = await navigator.mediaDevices.getUserMedia({
             audio: {
-                echoCancellation: false,  // Disable echo cancellation for better quality
-                noiseSuppression: false,  // Disable noise suppression to preserve voice
-                autoGainControl: true,    // Keep automatic gain control for consistent levels
-                sampleRate: 16000,        // Request 16kHz (Whisper optimal)
+                echoCancellation: true,   // Enable echo cancellation to eliminate room echo
+                noiseSuppression: true,   // Enable noise suppression to filter background noise
+                autoGainControl: true,    // Automatic gain control for clear, balanced voice levels
             },
         });
 

@@ -89,80 +89,52 @@ def _load_audio_array(audio_path: str) -> "np.ndarray":
             audio = audio.mean(axis=1)
         if sr != 16000:
             audio = librosa.resample(audio, orig_sr=sr, target_sr=16000)
-        return audio.astype("float32")
     except Exception:
         # Fallback for non-WAV formats
         audio, sr = librosa.load(str(audio_path), sr=16000, mono=True)
-        return audio.astype("float32")
+
+    # Audio peak normalization to amplify soft/quiet microphone inputs
+    if len(audio) > 0:
+        max_val = float(np.max(np.abs(audio)))
+        if max_val > 0.001:
+            audio = audio / max_val * 0.95
+
+    return audio.astype("float32")
+
+
+def _clean_repetitive_loops(text: str) -> str:
+    """Clean degenerate repetition loops from speech without discarding genuine responses."""
+    if not text:
+        return ""
+    # Remove single-char repeats like "m-m-m-m" or "m.m.m."
+    text = re.sub(r'\b([a-zA-Z])[-.\s]+\1(?:[-.\s]+\1)+\b', '', text)
+    # Deduplicate words repeating 3+ times in a row (e.g. "and and and and" -> "and")
+    text = re.sub(r'\b(\w+)(?:\s+\1){2,}\b', r'\1', text, flags=re.IGNORECASE)
+    # Clean redundant whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
 
 
 def _is_valid_transcription(text: str) -> bool:
-    """
-    Check if transcription looks valid (not corrupted/hallucinated).
-    
-    Flags suspicious patterns like:
-    - Repeated single characters (m-m-m-m or mmmmmm)
-    - All punctuation with no words
-    - Less than 2 words
-    - Too many repeated words (more than 50%)
-    """
-    if not text or len(text.strip()) < 2:
+    """Check if transcription has meaningful characters."""
+    if not text or not text.strip():
         return False
-    
-    text_lower = text.lower().strip()
-    words = text_lower.split()
-    
-    # Too short
-    if len(words) < 2:
-        return False
-    
-    # Check for repeated single character pattern (m-m-m or mmmm)
-    if re.search(r'^([a-z])-?\1(-?\1)+', text_lower):
-        return False
-    if re.search(r'^([a-z])\1{3,}', text_lower):  # mmmmmm pattern
-        return False
-    
-    # Check for repeated word sequences (and and and, the the the, etc)
-    for i in range(len(words) - 2):
-        if words[i] == words[i+1] == words[i+2]:
-            # Same word repeated 3+ times in a row
-            if words[i] in ['and', 'the', 'a', 'or', 'but', 'is', 'are', 'be', 'been']:
-                return False  # Common words repeated = corrupted
-            # Even for other words, 3+ repetitions is suspicious
-            return False
-    
-    # Check if mostly punctuation
-    alpha_ratio = sum(1 for c in text if c.isalpha()) / len(text) if text else 0
-    if alpha_ratio < 0.3:
-        return False
-    
-    # Check for excessive repetition of single words
-    if len(words) > 3:
-        # Count word frequency (only words longer than 1 character)
-        word_counts = {}
-        for word in words:
-            if len(word) > 1 and word not in ['and', 'the', 'of', 'is', 'a', 'in', 'to', 'for']:
-                word_counts[word] = word_counts.get(word, 0) + 1
-        
-        if word_counts:
-            max_count = max(word_counts.values())
-            max_ratio = max_count / len(words)
-            if max_ratio > 0.4:  # More than 40% same content word is suspicious
-                return False
-    
-    return True
+    # Valid if it contains at least one alphanumeric character
+    return any(c.isalnum() for c in text)
 
 
 def _sanitize_transcription(text: str) -> str:
     """
-    Sanitize obviously corrupted transcriptions.
-    Returns original if valid, otherwise returns placeholder.
+    Sanitize corrupted transcriptions while preserving genuine short answers.
     """
-    if _is_valid_transcription(text):
-        return text.strip()
+    if not text or not text.strip():
+        return "[No speech detected. Please speak clearly into your microphone and try again.]"
     
-    # Return a generic placeholder for invalid transcriptions
-    return "[Transcription error - could not capture speech clearly. Please try again.]"
+    cleaned = _clean_repetitive_loops(text.strip())
+    if _is_valid_transcription(cleaned):
+        return cleaned
+    
+    return text.strip()
 
 
 def transcribe_audio(
@@ -178,7 +150,7 @@ def transcribe_audio(
         audio_path: Path to the audio file.
         model_size: Whisper model size (tiny/base/small/medium/large).
         language: Language code (None for auto-detect, "en" for English).
-        prompt: Optional text prompt to guide transcription (e.g., the interview question).
+        prompt: Optional text prompt to guide transcription (e.g., domain keywords).
 
     Returns:
         {
@@ -193,7 +165,7 @@ def transcribe_audio(
     model = get_whisper_model(model_size)
 
     try:
-        # Load audio as numpy array (16 kHz mono) without ffmpeg
+        # Load audio as numpy array (16 kHz mono) with volume normalization
         audio_data = _load_audio_array(audio_path)
         duration = float(len(audio_data) / 16000)
 
@@ -202,13 +174,13 @@ def transcribe_audio(
             "language": language,
             "task": "transcribe",
             "verbose": False,
-            # Prevent Whisper from repeating the same phrase across segments
             "condition_on_previous_text": False,
-            # Temperature sampling to reduce hallucination
-            "temperature": 0.0,
+            "temperature": (0.0, 0.2, 0.4),
             "compression_ratio_threshold": 2.4,
             "logprob_threshold": -1.0,
             "no_speech_threshold": 0.6,
+            "best_of": 3,
+            "beam_size": 3,
         }
         if prompt:
             options["initial_prompt"] = prompt
@@ -228,7 +200,7 @@ def transcribe_audio(
         if not duration and segments:
             duration = segments[-1]["end"]
 
-        # Sanitize transcription text (detect/reject corrupted output like "m-m-m-m")
+        # Sanitize transcription text
         sanitized_text = _sanitize_transcription(result["text"].strip())
 
         return {

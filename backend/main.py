@@ -625,11 +625,14 @@ async def catch_all(full_path: str):
 # ═══════════════════════════════════════════════
 if __name__ == "__main__":
     import uvicorn
+    host = os.getenv("HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", "8000"))
     print("=" * 60)
     print("  AI Interview Coach v2 — Server Starting")
     print("=" * 60)
     print(f"  Frontend: {FRONTEND_DIR}")
     print(f"  Uploads:  {UPLOAD_DIR}")
     print(f"  Database: {BASE_DIR / 'data' / 'interview_coach.db'}")
+    print(f"  Listening: http://{host}:{port}")
     print("=" * 60)
-    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run(app, host=host, port=port)

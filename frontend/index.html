@@ -1,652 +1,1069 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>AI Interview Coach — Voice-Powered AI Mock Interviews</title>
-    <link rel="stylesheet" href="/static/css/style.css?v=4.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Interview Coach | Alibaba Cloud AI Hackathon 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-    <!-- ═══════════════════════════════════════ -->
-    <!-- AUTH SCREEN (Login / Register)         -->
-    <!-- ═══════════════════════════════════════ -->
-    <div id="screen-auth" class="screen active">
-        <nav class="navbar">
-            <div class="nav-brand">
-                <span class="logo-icon">🎯</span>
-                <span class="logo-text">AI Interview Coach</span>
-            </div>
-        </nav>
+<body class="theme-obsidian">
+  <!-- Top App Navigation -->
+  <header id="main-header" class="main-header hidden">
+    <div class="nav-container">
+      <div class="brand-logo" onclick="navigateTo('dashboard')">
+        <div class="logo-icon">
+          <span class="logo-spark">⚡</span>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">AI Interview <span class="gradient-text">Coach</span></span>
+          <span class="brand-tag">Alibaba Cloud 2026</span>
+        </div>
+      </div>
 
-        <section class="auth-container">
-            <div class="auth-card">
-                <div class="auth-tabs">
-                    <button class="auth-tab active" data-tab="login">Login</button>
-                    <button class="auth-tab" data-tab="register">Register</button>
-                </div>
+      <nav class="nav-links">
+        <button class="nav-btn active" data-nav="dashboard" onclick="navigateTo('dashboard')">
+          <span class="nav-icon">📊</span> Dashboard
+        </button>
+        <button class="nav-btn" data-nav="practice" onclick="startInterviewMode('practice')">
+          <span class="nav-icon">🎯</span> Practice Mode
+        </button>
+        <button class="nav-btn" data-nav="mock" onclick="startInterviewMode('mock')">
+          <span class="nav-icon">🎙️</span> Mock Interview
+        </button>
+        <button class="nav-btn" data-nav="ats" onclick="navigateTo('ats')">
+          <span class="nav-icon">📄</span> ATS Tailor
+        </button>
+        <button class="nav-btn" data-nav="salary" onclick="navigateTo('salary')">
+          <span class="nav-icon">💼</span> Salary Coach
+        </button>
+        <button class="nav-btn" data-nav="pitch" onclick="navigateTo('pitch')">
+          <span class="nav-icon">⚡</span> 60s Pitch
+        </button>
+        <button class="nav-btn" data-nav="questions" onclick="navigateTo('questions')">
+          <span class="nav-icon">💡</span> Question Bank
+        </button>
+      </nav>
 
-                <!-- Login Form -->
-                <form id="login-form" class="auth-form active">
-                    <h2>Welcome Back 👋</h2>
-                    <p class="auth-subtitle">Login to practice and ace your technical interviews</p>
-
-                    <div class="form-group">
-                        <label for="login-email">Email Address</label>
-                        <input type="email" id="login-email" placeholder="you@example.com" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="login-password">Password</label>
-                        <input type="password" id="login-password" placeholder="••••••••" required />
-                    </div>
-
-                    <button type="submit" class="btn-primary">
-                        <span class="btn-text">Login to Dashboard</span>
-                        <span class="btn-loader" hidden>Please wait...</span>
-                    </button>
-                </form>
-
-                <!-- Register Form -->
-                <form id="register-form" class="auth-form">
-                    <h2>Create Account 🚀</h2>
-                    <p class="auth-subtitle">Start your intelligent interview coaching journey</p>
-
-                    <div class="form-group">
-                        <label for="register-name">Full Name</label>
-                        <input type="text" id="register-name" placeholder="Ahmed Khan" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="register-email">Email Address</label>
-                        <input type="email" id="register-email" placeholder="you@example.com" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="register-password">Password</label>
-                        <input type="password" id="register-password" placeholder="Min 6 characters" required minlength="6" />
-                    </div>
-
-                    <button type="submit" class="btn-primary">
-                        <span class="btn-text">Create Account</span>
-                        <span class="btn-loader" hidden>Please wait...</span>
-                    </button>
-                </form>
-            </div>
-
-            <div class="auth-info">
-                <div class="badge-tag">Alibaba Cloud Hackathon 2026</div>
-                <h1>Master Your Next High-Stakes Tech Interview</h1>
-                <p class="auth-desc">Local AI intelligence that evaluates your technical depth, voice confidence, and CV alignment in real-time.</p>
-                <ul>
-                    <li>✅ <strong>CV Recruiter Review:</strong> Instant ATS breakdown & keyword gap finder</li>
-                    <li>🎤 <strong>Voice Mock Interview:</strong> Realistic audio session with neural voice scoring</li>
-                    <li>📊 <strong>Multi-Model Evaluation:</strong> Fine-tuned transformer scoring for content & speech</li>
-                    <li>💡 <strong>STAR Method Coaching:</strong> Actionable model answers and personalized feedback</li>
-                </ul>
-            </div>
-        </section>
+      <div class="user-profile-menu">
+        <div class="user-badge" id="nav-user-badge">
+          <div class="avatar-circle" id="user-avatar">JD</div>
+          <span class="user-display-name" id="user-display-name">Candidate</span>
+        </div>
+        <button class="btn-icon" id="btn-logout" title="Sign Out" onclick="logout()">
+          <span>🚪</span>
+        </button>
+      </div>
     </div>
+  </header>
 
-    <!-- ═══════════════════════════════════════ -->
-    <!-- DASHBOARD SCREEN                       -->
-    <!-- ═══════════════════════════════════════ -->
-    <div id="screen-dashboard" class="screen">
-        <nav class="navbar">
-            <div class="nav-brand">
-                <span class="logo-icon">🎯</span>
-                <span class="logo-text">AI Interview Coach</span>
-            </div>
-            <div class="nav-user">
-                <span id="user-greeting">Welcome</span>
-                <button class="btn-link" id="btn-logout">Logout</button>
-            </div>
-        </nav>
+  <!-- Global Notification / Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
 
-        <section class="dashboard-container">
-            <!-- Header with Quick Action Buttons -->
-            <div class="dashboard-header">
+  <!-- Main Container for Screens -->
+  <main class="app-main-content">
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         SCREEN 1: AUTHENTICATION (Login / Register)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="screen-auth" class="app-screen active">
+      <div class="auth-wrapper">
+        <div class="auth-hero">
+          <div class="auth-badge">🚀 Alibaba Cloud AI Hackathon Pakistan 2026</div>
+          <h1 class="auth-title">Next-Gen Voice AI <span class="gradient-text">Interview Coach</span></h1>
+          <p class="auth-subtitle">
+            Practice realistic AI mock interviews, get instant speech confidence metrics, tailor your resume for ATS, and master technical interview questions.
+          </p>
+
+          <div class="hero-feature-pills">
+            <div class="feature-pill"><span>🎙️</span> Real-time Whisper AI Voice</div>
+            <div class="feature-pill"><span>🎯</span> Dynamic Question Engine</div>
+            <div class="feature-pill"><span>📊</span> Librosa Acoustic Scoring</div>
+            <div class="feature-pill"><span>🏆</span> Verified Alibaba Certificate</div>
+          </div>
+        </div>
+
+        <div class="auth-card-container">
+          <div class="auth-card glass-panel">
+            <div class="auth-tabs">
+              <button class="auth-tab-btn active" id="tab-login" onclick="toggleAuthTab('login')">Sign In</button>
+              <button class="auth-tab-btn" id="tab-register" onclick="toggleAuthTab('register')">Create Account</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form active" onsubmit="handleLogin(event)">
+              <div class="form-group">
+                <label for="login-email">Work or Personal Email</label>
+                <div class="input-with-icon">
+                  <span class="input-icon">✉️</span>
+                  <input type="email" id="login-email" placeholder="name@example.com" required autocomplete="email">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="login-password">Password</label>
+                <div class="input-with-icon">
+                  <span class="input-icon">🔒</span>
+                  <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block btn-glow" id="btn-login-submit">
+                <span>Sign In to Dashboard</span> ➔
+              </button>
+              <div class="auth-footer-note">
+                <span>Demo test account? Register any instant email to start!</span>
+              </div>
+            </form>
+
+            <!-- Register Form -->
+            <form id="register-form" class="auth-form" onsubmit="handleRegister(event)">
+              <div class="form-group">
+                <label for="register-name">Full Name</label>
+                <div class="input-with-icon">
+                  <span class="input-icon">👤</span>
+                  <input type="text" id="register-name" placeholder="John Doe" required autocomplete="name">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="register-email">Email Address</label>
+                <div class="input-with-icon">
+                  <span class="input-icon">✉️</span>
+                  <input type="email" id="register-email" placeholder="name@example.com" required autocomplete="email">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="register-password">Create Password</label>
+                <div class="input-with-icon">
+                  <span class="input-icon">🔒</span>
+                  <input type="password" id="register-password" placeholder="Min 6 characters" required autocomplete="new-password">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block btn-glow" id="btn-register-submit">
+                <span>Create Free Account</span> ➔
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         SCREEN 2: DASHBOARD
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="screen-dashboard" class="app-screen">
+      <div class="dashboard-header-banner">
+        <div class="banner-content">
+          <div class="welcome-badge">👋 Welcome back, <span id="dash-user-name">Candidate</span></div>
+          <h2>Accelerate Your Career with <span class="gradient-text">Alibaba Cloud AI</span></h2>
+          <p>Choose between guided practice mode or full timed mock simulations, optimize your resume for ATS, and practice salary negotiation.</p>
+        </div>
+        <div class="banner-actions">
+          <button class="btn btn-outline" onclick="startInterviewMode('practice')">
+            <span>🎯</span> Guided Practice
+          </button>
+          <button class="btn btn-primary btn-glow" onclick="startInterviewMode('mock')">
+            <span>🎙️</span> Pro Mock Interview
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Feature Grid -->
+      <div class="feature-cards-grid">
+        <!-- Card 1: Practice Mode -->
+        <div class="glass-card feature-action-card highlight-cyan" onclick="startInterviewMode('practice')">
+          <div class="card-icon-box cyan-glow">🎯</div>
+          <div class="card-content">
+            <div class="card-badge-row">
+              <span class="pill-badge pill-cyan">Guided Learning</span>
+            </div>
+            <h3>Practice Interview</h3>
+            <p>Instant model answers, STAR method tips, and zero-pressure question-by-question coaching.</p>
+          </div>
+          <div class="card-footer-action">
+            <span>Start Practice</span> ➔
+          </div>
+        </div>
+
+        <!-- Card 2: Mock Interview -->
+        <div class="glass-card feature-action-card highlight-indigo" onclick="startInterviewMode('mock')">
+          <div class="card-icon-box indigo-glow">🎙️</div>
+          <div class="card-content">
+            <div class="card-badge-row">
+              <span class="pill-badge pill-indigo">Timed Simulation</span>
+            </div>
+            <h3>Pro Mock Interview</h3>
+            <p>Realistic high-stakes simulation with video proctoring, acoustic pace scoring, and scorecard.</p>
+          </div>
+          <div class="card-footer-action">
+            <span>Launch Mock</span> ➔
+          </div>
+        </div>
+
+        <!-- Card 3: ATS Resume Tailor -->
+        <div class="glass-card feature-action-card" onclick="navigateTo('ats')">
+          <div class="card-icon-box emerald-glow">📄</div>
+          <div class="card-content">
+            <div class="card-badge-row">
+              <span class="pill-badge pill-emerald">New Feature</span>
+            </div>
+            <h3>ATS Resume Tailor</h3>
+            <p>Scan resume against job descriptions, uncover missing keywords, and get tailored STAR bullets.</p>
+          </div>
+          <div class="card-footer-action">
+            <span>Open ATS Scanner</span> ➔
+          </div>
+        </div>
+
+        <!-- Card 4: Salary Negotiation -->
+        <div class="glass-card feature-action-card" onclick="navigateTo('salary')">
+          <div class="card-icon-box amber-glow">💼</div>
+          <div class="card-content">
+            <div class="card-badge-row">
+              <span class="pill-badge pill-amber">Roleplay AI</span>
+            </div>
+            <h3>Salary Negotiator</h3>
+            <p>Roleplay with an AI Recruiter, practice counter-offers, and maximize your total compensation package.</p>
+          </div>
+          <div class="card-footer-action">
+            <span>Start Roleplay</span> ➔
+          </div>
+        </div>
+
+        <!-- Card 5: 60s Pitch Arena -->
+        <div class="glass-card feature-action-card" onclick="navigateTo('pitch')">
+          <div class="card-icon-box rose-glow">⚡</div>
+          <div class="card-content">
+            <div class="card-badge-row">
+              <span class="pill-badge pill-rose">Pitch Arena</span>
+            </div>
+            <h3>60s Elevator Pitch</h3>
+            <p>Master your introduction with speech pacing (WPM), hook strength evaluation, and AI polish.</p>
+          </div>
+          <div class="card-footer-action">
+            <span>Test Pitch</span> ➔
+          </div>
+        </div>
+
+        <!-- Card 6: Question Bank -->
+        <div class="glass-card feature-action-card" onclick="navigateTo('questions')">
+          <div class="card-icon-box violet-glow">💡</div>
+          <div class="card-content">
+            <div class="card-badge-row">
+              <span class="pill-badge pill-violet">Flashcards</span>
+            </div>
+            <h3>Question Bank</h3>
+            <p>Explore curated system architecture, cloud, and behavioral questions with instant model answers.</p>
+          </div>
+          <div class="card-footer-action">
+            <span>Browse Bank</span> ➔
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Dashboard Content Layout -->
+      <div class="dashboard-split-layout">
+        <!-- Left: CV Upload & Review -->
+        <div class="dashboard-column">
+          <div class="glass-card cv-upload-card">
+            <div class="section-title-row">
+              <div class="title-with-icon">
+                <span class="sec-icon">📂</span>
                 <div>
-                    <h1>Candidate Dashboard</h1>
-                    <p class="subtitle">Upload your CV, target job titles, and launch realistic AI mock interviews.</p>
+                  <h3>Resume & Job Matcher</h3>
+                  <p class="sec-desc">Upload CV to generate personalized technical & behavioral interview questions.</p>
                 </div>
-                <div class="dashboard-actions">
-                    <button class="btn-primary" id="btn-quick-interview">+ Start AI Mock Interview</button>
-                </div>
+              </div>
             </div>
 
-            <div class="dashboard-grid">
-                <!-- Upload CV Card -->
-                <div class="card upload-card">
-                    <div class="card-header">
-                        <span class="card-icon">📄</span>
-                        <h2>Upload Resume / CV</h2>
-                    </div>
-                    <p class="card-desc">Upload your PDF CV for instant ATS scoring, skill extraction, and tailored questions.</p>
-
-                    <div class="upload-zone" id="upload-zone">
-                        <div class="upload-icon">☁️</div>
-                        <p>Drag & drop your PDF here or <span class="browse-link">browse</span></p>
-                        <input type="file" id="file-input" accept=".pdf" hidden />
-                        <p class="file-name" id="file-name"></p>
-                    </div>
-
-                    <div class="form-group" style="margin-top: 14px;">
-                        <label for="cv-job-title">Target Job Title (Optional)</label>
-                        <input type="text" id="cv-job-title" placeholder="e.g. Full Stack AI Developer" />
-                    </div>
-
-                    <!-- Job Description Matcher (Expandable) -->
-                    <details class="jd-matcher-toggle" id="jd-matcher-details">
-                        <summary>🎯 Match with Specific Job Description (Optional)</summary>
-                        <div class="form-group" style="margin-top: 10px;">
-                            <textarea id="cv-job-description" rows="3" placeholder="Paste the target job description or requirements here to check ATS match..."></textarea>
-                        </div>
-                    </details>
-
-                    <button class="btn-primary" id="btn-analyze-cv" disabled>
-                        <span class="btn-text">Analyze CV & Review</span>
-                        <span class="btn-loader" hidden>Analyzing...</span>
-                    </button>
+            <!-- Upload Drop Zone -->
+            <div class="upload-dropzone" id="upload-zone" onclick="triggerFileInput()">
+              <input type="file" id="file-input" accept=".pdf,.docx,.txt" style="display:none;" onchange="handleCVFileSelect(event)">
+              <div class="dropzone-inner">
+                <div class="drop-icon-pulse">📤</div>
+                <h4>Drop your Resume here, or <span class="browse-link">Browse Files</span></h4>
+                <p class="drop-hint">Supports PDF, DOCX, TXT (Up to 10MB)</p>
+                <div class="selected-file-badge hidden" id="selected-file-info">
+                  <span id="selected-file-name">filename.pdf</span>
+                  <button type="button" class="btn-remove-file" onclick="clearSelectedFile(event)">✕</button>
                 </div>
-
-                <!-- Past Resumes Card -->
-                <div class="card resumes-card">
-                    <div class="card-header">
-                        <span class="card-icon">📁</span>
-                        <h2>Saved Resumes</h2>
-                    </div>
-                    <p class="card-desc">Your parsed CVs and extracted skills profiles.</p>
-                    <div class="resume-list" id="resume-list">
-                        <p class="empty-state">No CVs uploaded yet. Upload one above!</p>
-                    </div>
-                </div>
+              </div>
             </div>
 
-            <!-- Past Interviews Section -->
-            <div class="card history-card">
-                <div class="card-header">
-                    <span class="card-icon">📈</span>
-                    <h2>Recent Mock Interviews</h2>
-                </div>
-                <div class="interview-list" id="interview-list">
-                    <p class="empty-state">No mock interviews completed yet. Start your first session!</p>
-                </div>
-            </div>
-        </section>
-    </div>
+            <div class="cv-target-role-inputs">
+              <div class="form-group">
+                <label for="cv-job-title">Target Role / Specialization</label>
+                <input type="text" id="cv-job-title" placeholder="e.g. Full Stack AI Developer, Cloud Engineer..." value="Full Stack AI Developer">
+              </div>
 
-    <!-- ═══════════════════════════════════════ -->
-    <!-- CV REVIEW SCREEN                       -->
-    <!-- ═══════════════════════════════════════ -->
-    <div id="screen-cv-review" class="screen">
-        <nav class="navbar">
-            <div class="nav-brand">
-                <span class="logo-icon">🎯</span>
-                <span class="logo-text">AI Interview Coach</span>
+              <details class="jd-accordion">
+                <summary>➕ Optional: Match with Job Description (JD)</summary>
+                <div class="accordion-body">
+                  <textarea id="cv-job-description" rows="3" placeholder="Paste the target job description here to calculate ATS match score and extract key skills..."></textarea>
+                </div>
+              </details>
             </div>
-            <div class="nav-user">
-                <button class="btn-link" id="btn-cv-back">← Dashboard</button>
-            </div>
-        </nav>
 
-        <section class="cv-review-container">
-            <div class="cv-review-header">
+            <button class="btn btn-primary btn-block btn-glow" id="btn-analyze-cv" onclick="uploadAndAnalyzeCV()" disabled>
+              <span>⚡ Analyze Resume with AI</span>
+            </button>
+          </div>
+
+          <!-- Stored Resumes List -->
+          <div class="glass-card stored-resumes-card">
+            <div class="section-title-row">
+              <h3>Parsed Resumes</h3>
+              <span class="badge-count" id="resumes-count-badge">0</span>
+            </div>
+            <div id="resume-list-container" class="resumes-list-scroll">
+              <div class="empty-state-card">
+                <p>No resumes uploaded yet. Upload a CV above to get started!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Recent Interviews & Readiness Score -->
+        <div class="dashboard-column">
+          <div class="glass-card recent-interviews-card">
+            <div class="section-title-row">
+              <div class="title-with-icon">
+                <span class="sec-icon">📈</span>
                 <div>
-                    <h1>CV Analysis & ATS Review</h1>
-                    <p class="subtitle" id="cv-candidate-name">Candidate Name</p>
+                  <h3>Interview History & Scores</h3>
+                  <p class="sec-desc">Track your progress across practice and mock sessions.</p>
                 </div>
-                <div class="score-badge-large" id="cv-overall-score">
-                    <span class="score-num">0</span>
-                    <span class="score-denom">/ 100</span>
-                    <span class="score-grade" id="cv-grade">Grade: B</span>
-                </div>
+              </div>
             </div>
 
-            <div class="cv-grid">
-                <!-- Skills Card -->
-                <div class="cv-card">
-                    <h3>🔧 Extracted Technical Skills</h3>
-                    <div class="skills-tags" id="cv-skills-list"></div>
-                </div>
-
-                <!-- Details Card -->
-                <div class="cv-card">
-                    <h3>📋 Profile Summary</h3>
-                    <div class="detail-rows">
-                        <div class="detail-row">
-                            <span class="detail-label">Experience:</span>
-                            <span class="detail-val" id="cv-exp-years">0 years</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Education:</span>
-                            <span class="detail-val" id="cv-education">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Target Role:</span>
-                            <span class="detail-val" id="cv-target-role">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Strengths Card -->
-                <div class="cv-card strengths-card">
-                    <h3>✅ CV Strengths</h3>
-                    <ul id="cv-strengths-list"></ul>
-                </div>
-
-                <!-- Improvements Card -->
-                <div class="cv-card improvements-card">
-                    <h3>⚠️ Recommended Improvements</h3>
-                    <ul id="cv-issues-list"></ul>
-                </div>
-
-                <!-- JD Match Card (Shown only if JD was provided) -->
-                <div class="cv-card jd-match-card" id="cv-jd-match-card" hidden style="grid-column: 1 / -1;">
-                    <h3>🎯 Job Description Match Analysis</h3>
-                    <div class="jd-match-content">
-                        <div class="jd-score-row">
-                            <div class="jd-score-circle">
-                                <span class="jd-score-val" id="cv-jd-match-score">0%</span>
-                                <span class="jd-score-label">Match Score</span>
-                            </div>
-                            <div class="jd-meta-info">
-                                <p id="cv-jd-match-summary">Matching against target job requirements.</p>
-                            </div>
-                        </div>
-                        <div class="jd-skills-row">
-                            <div class="jd-skills-col">
-                                <h4>✅ Matched Skills</h4>
-                                <div class="skills-tags" id="cv-jd-matched-skills"></div>
-                            </div>
-                            <div class="jd-skills-col">
-                                <h4>⚠️ Missing / Desired Skills</h4>
-                                <div class="skills-tags" id="cv-jd-missing-skills"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cv-actions">
-                    <button class="btn-primary" id="btn-start-interview">Start AI Mock Interview →</button>
-                    <button class="btn-secondary" id="btn-upload-another">Upload Another CV</button>
-                </div>
+            <div id="interview-list-container" class="interviews-list-scroll">
+              <div class="empty-state-card">
+                <p>No interviews completed yet. Launch a practice or mock interview above!</p>
+              </div>
             </div>
-        </section>
-    </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <!-- ═══════════════════════════════════════ -->
-    <!-- AI MOCK INTERVIEW SETUP SCREEN         -->
-    <!-- ═══════════════════════════════════════ -->
-    <div id="screen-interview-setup" class="screen">
-        <nav class="navbar">
-            <div class="nav-brand">
-                <span class="logo-icon">🎯</span>
-                <span class="logo-text">AI Interview Coach</span>
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         SCREEN 3: CV REVIEW / SCORECARD
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="screen-cv-review" class="app-screen">
+      <div class="screen-top-bar">
+        <button class="btn btn-ghost" onclick="navigateTo('dashboard')">➔ Back to Dashboard</button>
+        <div class="screen-title-badge">📄 AI Resume Breakdown</div>
+        <button class="btn btn-primary btn-glow" id="btn-cv-start-interview" onclick="proceedToInterviewFromCV()">
+          <span>Launch Interview for this Role</span> ➔
+        </button>
+      </div>
+
+      <div class="cv-review-grid">
+        <!-- Score Card -->
+        <div class="glass-card cv-score-summary-card">
+          <div class="candidate-header">
+            <div class="candidate-avatar-large">👤</div>
+            <div>
+              <h2 id="cv-candidate-name">Candidate Name</h2>
+              <span class="role-pill" id="cv-target-role">Full Stack Developer</span>
             </div>
-            <div class="nav-user">
-                <button class="btn-link" id="btn-interview-setup-back">← Dashboard</button>
+          </div>
+
+          <div class="score-circle-wrapper">
+            <div class="score-circle" id="cv-score-circle">
+              <span class="score-number" id="cv-overall-score">--</span>
+              <span class="score-label">CV Score / 100</span>
             </div>
-        </nav>
+            <div class="grade-badge" id="cv-grade-badge">Grade: --</div>
+          </div>
 
-        <section class="setup-container">
-            <h1>Configure Your AI Mock Interview</h1>
-            <p class="subtitle">Select your CV, enter target job role, and start your session.</p>
+          <div class="meta-stats-row">
+            <div class="meta-stat">
+              <span class="m-label">Experience</span>
+              <strong id="cv-exp-years">-- Years</strong>
+            </div>
+            <div class="meta-stat">
+              <span class="m-label">Education</span>
+              <strong id="cv-education">--</strong>
+            </div>
+          </div>
+        </div>
 
-            <div class="setup-card">
-                <div class="form-group">
-                    <label for="interview-resume-select">Select Candidate CV</label>
-                    <select id="interview-resume-select">
-                        <option value="">-- Choose a CV --</option>
-                    </select>
+        <!-- Skills & Breakdown -->
+        <div class="glass-card cv-details-card">
+          <h3>Detected Technical & Soft Skills</h3>
+          <div class="skills-tags-cloud" id="cv-skills-list">
+            <!-- Dynamic skills -->
+          </div>
+
+          <div class="cv-feedback-section">
+            <h4>AI Resume Strengths</h4>
+            <ul id="cv-strengths-list" class="styled-bullet-list"></ul>
+
+            <h4>Improvement Recommendations</h4>
+            <ul id="cv-improvements-list" class="styled-bullet-list warning-bullets"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         SCREEN 4: INTERVIEW SETUP (Practice vs Mock)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="screen-interview-setup" class="app-screen">
+      <div class="screen-top-bar">
+        <button class="btn btn-ghost" onclick="navigateTo('dashboard')">➔ Back to Dashboard</button>
+        <div class="screen-title-badge" id="setup-mode-badge">🎯 Guided Practice Setup</div>
+      </div>
+
+      <div class="interview-setup-container">
+        <div class="glass-card setup-card">
+          <div class="setup-header">
+            <h2 id="setup-title">Configure Your Interview Session</h2>
+            <p id="setup-subtitle">Customize questions, difficulty, and role focus for this session.</p>
+          </div>
+
+          <!-- Mode Toggle Cards -->
+          <div class="setup-mode-selector">
+            <div class="mode-card active" id="mode-opt-practice" onclick="setSetupMode('practice')">
+              <div class="mode-icon">🎯</div>
+              <div class="mode-info">
+                <h4>Practice Mode (Guided)</h4>
+                <p>Instant model answers, STAR tips after each question, unlimited retakes.</p>
+              </div>
+              <div class="mode-check">✓</div>
+            </div>
+
+            <div class="mode-card" id="mode-opt-mock" onclick="setSetupMode('mock')">
+              <div class="mode-icon">🎙️</div>
+              <div class="mode-info">
+                <h4>Pro Mock Interview</h4>
+                <p>Realistic timed simulation, speech acoustic analysis, comprehensive report.</p>
+              </div>
+              <div class="mode-check">✓</div>
+            </div>
+          </div>
+
+          <div class="setup-form-grid">
+            <div class="form-group">
+              <label for="setup-job-title">Target Job Title</label>
+              <input type="text" id="setup-job-title" placeholder="e.g. Full Stack AI Developer" value="Full Stack AI Developer">
+            </div>
+
+            <div class="form-group">
+              <label for="setup-resume-select">Select Parsed Resume (Optional)</label>
+              <select id="setup-resume-select">
+                <option value="">-- No Resume (Generic Questions) --</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="setup-question-count">Question Count</label>
+              <select id="setup-question-count">
+                <option value="3">3 Questions (Quick Sprint - 5 mins)</option>
+                <option value="5" selected>5 Questions (Standard - 12 mins)</option>
+                <option value="10">10 Questions (Comprehensive - 25 mins)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="setup-difficulty">Difficulty Level</label>
+              <select id="setup-difficulty">
+                <option value="Junior">Junior Engineer (Foundations & Behavioral)</option>
+                <option value="Mid-Level" selected>Mid-Level (System Concepts & Practical)</option>
+                <option value="Senior">Senior / Staff (Architecture & Deep Dive)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="setup-action-row">
+            <button class="btn btn-primary btn-block btn-glow btn-lg" id="btn-start-session" onclick="startInterviewSession()">
+              <span>🚀 Begin Interview Session</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         SCREEN 5: ACTIVE INTERVIEW ARENA
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="screen-interview" class="app-screen">
+      <!-- Top Interview Bar -->
+      <div class="interview-top-navbar">
+        <div class="interview-role-info">
+          <span class="mode-indicator-pill" id="interview-active-mode-pill">🎯 Practice Mode</span>
+          <h3 id="interview-role-display">Full Stack AI Developer</h3>
+        </div>
+
+        <div class="interview-progress-tracker">
+          <div class="progress-labels">
+            <span id="question-progress-text">Question 1 of 5</span>
+            <span id="interview-timer-display" class="timer-badge">⏱️ 00:00</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="question-progress-bar" style="width: 20%;"></div>
+          </div>
+        </div>
+
+        <div class="interview-exit-actions">
+          <button class="btn btn-sm btn-outline-danger" onclick="confirmExitInterview()">🚪 Exit Interview</button>
+        </div>
+      </div>
+
+      <!-- Main Interview Workspace -->
+      <div class="interview-arena-grid">
+        <!-- Left: Question & AI Model Answer Guidance -->
+        <div class="interview-left-col">
+          <div class="glass-card question-display-card">
+            <div class="question-header-row">
+              <span class="q-category-tag" id="q-category-tag">TECHNICAL</span>
+              <button class="btn-icon-sound" id="btn-tts-speak" onclick="playQuestionTTS()" title="Listen to question">
+                <span>🔊 Listen</span>
+              </button>
+            </div>
+
+            <h2 class="active-question-text" id="active-question-text">
+              Loading your tailored interview question...
+            </h2>
+
+            <!-- Practice Mode Accordion: Instant Model Answer & Tips -->
+            <div class="practice-model-answer-drawer" id="practice-guidance-box">
+              <button class="practice-drawer-toggle" onclick="togglePracticeGuidance()">
+                <span>💡 Instant Model Answer & STAR Framework (Practice Mode)</span>
+                <span id="practice-drawer-arrow">▼</span>
+              </button>
+              <div class="practice-drawer-content hidden" id="practice-drawer-body">
+                <div class="star-framework-tips">
+                  <strong>STAR Strategy:</strong>
+                  <span>State the <strong>Situation</strong>, explain your <strong>Task</strong>, describe your <strong>Action</strong>, and conclude with the measurable <strong>Result</strong>.</span>
                 </div>
-
-                <div class="form-group">
-                    <label for="interview-job-title">Target Job Title</label>
-                    <input type="text" id="interview-job-title" placeholder="e.g. Full Stack AI Developer" />
+                <div class="model-answer-box" id="model-answer-text">
+                  Fetching model answer breakdown...
                 </div>
+              </div>
+            </div>
+          </div>
 
-                <div class="form-group">
-                    <label>Interview Level & Answer Time Limit</label>
-                    <div class="difficulty-group" id="interview-diff-group">
-                        <button type="button" class="diff-btn" data-level="junior">🟢 Junior (120s)</button>
-                        <button type="button" class="diff-btn active" data-level="mid">🟡 Mid-Level (90s)</button>
-                        <button type="button" class="diff-btn" data-level="senior">🔴 Senior / Lead (60s)</button>
-                    </div>
-                </div>
+          <!-- Live Speech Transcription Box -->
+          <div class="glass-card transcript-preview-card">
+            <div class="transcript-header">
+              <div class="recording-indicator" id="rec-dot-indicator">
+                <span class="pulse-dot"></span>
+                <span id="rec-status-label">Mic Standby</span>
+              </div>
+              <button class="btn-link-sm" onclick="toggleFallbackTextInput()">⌨️ Type Answer Instead</button>
+            </div>
 
-                <div class="session-features-grid">
-                    <div class="feature-item">
-                        <span class="feat-icon">🎙️</span>
-                        <div>
-                            <strong>Audio Voice Intelligence</strong>
-                            <p>Analyzes pitch, pace, volume, and pauses</p>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feat-icon">🤖</span>
-                        <div>
-                            <strong>Instant Feedback & STAR Coaching</strong>
-                            <p>Content matching and model answers for each question</p>
-                        </div>
-                    </div>
-                </div>
+            <div class="transcript-box" id="live-transcript-box">
+              <p class="transcript-placeholder" id="transcript-placeholder">
+                Click "Start Recording" below and speak into your microphone. Your voice will be transcribed and analyzed here in real-time.
+              </p>
+              <p class="transcript-content" id="transcript-content"></p>
+            </div>
 
-                <button class="btn-primary" id="btn-start-interview-from-setup" disabled>
-                    <span class="btn-text">Launch AI Mock Interview 🚀</span>
-                    <span class="btn-loader" hidden>Generating questions...</span>
+            <!-- Fallback Text Drawer -->
+            <div class="fallback-text-drawer hidden" id="fallback-text-drawer">
+              <textarea id="manual-answer-input" rows="3" placeholder="Type your answer here if you don't have a microphone..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Camera / Audio Visualizer & Controls -->
+        <div class="interview-right-col">
+          <div class="glass-card media-stage-card">
+            <div class="video-preview-box">
+              <video id="webcam-preview" autoplay playsinline muted class="camera-feed"></video>
+              <div class="camera-overlay" id="camera-overlay">
+                <span class="cam-icon">📹</span>
+                <span>Camera Preview</span>
+              </div>
+              <button class="btn-cam-switch" id="btn-toggle-cam" onclick="toggleCamera()">
+                <span>📷</span>
+              </button>
+            </div>
+
+            <!-- Audio Waveform Visualizer -->
+            <div class="audio-wave-visualizer" id="wave-visualizer">
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+            </div>
+
+            <!-- Floating Silence Toast Alert -->
+            <div class="silence-alert-toast hidden" id="silence-alert-toast">
+              <div class="silence-toast-content">
+                <span class="silence-icon">🎙️</span>
+                <span>Listening... Speak whenever you are ready!</span>
+              </div>
+              <button class="btn-close-toast" onclick="hideSilenceToast()">✕</button>
+            </div>
+
+            <!-- Recording & Next Controls -->
+            <div class="interview-controls-panel">
+              <button class="btn btn-record btn-lg" id="btn-record-toggle" onclick="toggleAudioRecording()">
+                <span class="rec-icon">🎙️</span>
+                <span id="btn-record-label">Start Speaking</span>
+              </button>
+
+              <div class="secondary-controls-row">
+                <button class="btn btn-outline" id="btn-re-record" onclick="discardAndReRecord()" disabled>
+                  <span>🔄</span> Retry
                 </button>
+                <button class="btn btn-outline-warning" id="btn-skip-question" onclick="skipCurrentQuestion()">
+                  <span>⏭️</span> Pass / Skip
+                </button>
+                <button class="btn btn-primary btn-glow" id="btn-submit-answer" onclick="submitCurrentAnswer()" disabled>
+                  <span>Submit Answer</span> ➔
+                </button>
+              </div>
             </div>
-        </section>
-    </div>
-
-    <!-- ═══════════════════════════════════════ -->
-    <!-- INTERVIEW SCREEN                       -->
-    <!-- ═══════════════════════════════════════ -->
-    <div id="screen-interview" class="screen">
-        <nav class="navbar">
-            <div class="nav-brand">
-                <span class="logo-icon">🎯</span>
-                <span class="logo-text">AI Interview Coach</span>
-            </div>
-            <div class="nav-progress">
-                <span id="progress-text">Question 1 of 10</span>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill"></div>
-                </div>
-            </div>
-            <div class="nav-user">
-                <button class="btn-link" id="btn-exit-interview">Exit</button>
-            </div>
-        </nav>
-
-        <section class="interview-layout">
-            <!-- Left: Interview flow -->
-            <div class="interview-main">
-                <div class="interview-top-bar">
-                    <div class="top-bar-left">
-                        <div class="mode-badge" id="mode-badge">AI Mock Interview</div>
-                    </div>
-                    <div class="countdown-badge" id="countdown-badge" title="Time remaining for this question">
-                        <span class="countdown-icon">⏳</span>
-                        <span id="question-countdown-display">01:30</span>
-                    </div>
-                </div>
-
-                <!-- AI Interviewer Animated Avatar Card -->
-                <div class="ai-interviewer-card" id="ai-interviewer-card">
-                    <div class="ai-avatar-wrapper" id="ai-avatar-wrapper">
-                        <div class="ai-avatar-ring ring-3"></div>
-                        <div class="ai-avatar-ring ring-2"></div>
-                        <div class="ai-avatar-ring ring-1"></div>
-                        <div class="ai-avatar-core">🤖</div>
-                    </div>
-                    <div class="ai-interviewer-info">
-                        <div class="ai-name-row">
-                            <span class="ai-name">AI Recruiter & Coach</span>
-                            <span class="ai-state-badge" id="ai-state-badge">🟢 Ready</span>
-                        </div>
-                        <p class="ai-status-sub" id="ai-status-sub">Listening attentively to your response</p>
-                    </div>
-                </div>
-
-                <div class="question-card">
-                    <div class="question-meta">
-                        <span class="question-badge" id="question-badge">introduction</span>
-                        <div class="question-actions-row">
-                            <button class="btn-icon-speak" id="btn-speak-question" title="Listen to AI interviewer speak this question">
-                                <span class="speaker-icon">🔊</span> <span class="speak-btn-text">Listen</span>
-                            </button>
-                            <button class="btn-icon-skip" id="btn-pass-question" title="Skip/pass this question and move forward">
-                                <span>⏭️ Pass Question</span>
-                            </button>
-                            <span class="question-count" id="question-count">1 / 10</span>
-                        </div>
-                    </div>
-                    <h2 id="question-text">Loading question...</h2>
-                </div>
-
-                <!-- STAR Method Helper (Interactive) -->
-                <details class="star-helper-card" id="star-helper-details">
-                    <summary class="star-helper-summary">
-                        <span>💡 How to structure this answer (STAR Method)</span>
-                        <span class="star-arrow">▼</span>
-                    </summary>
-                    <div class="star-helper-content">
-                        <div class="star-item"><strong class="star-tag star-s">S (Situation)</strong> Set the brief context, project, or role.</div>
-                        <div class="star-item"><strong class="star-tag star-t">T (Task)</strong> Explain the core objective or problem.</div>
-                        <div class="star-item"><strong class="star-tag star-a">A (Action)</strong> Detail the specific tools, code, and decisions YOU made.</div>
-                        <div class="star-item"><strong class="star-tag star-r">R (Result)</strong> Share measurable impact and final outcomes.</div>
-                    </div>
-                </details>
-
-                <div class="recording-area" id="recording-area">
-                    <div class="mic-prompt" id="mic-prompt">
-                        <button class="mic-button" id="btn-record" title="Start Recording Answer">
-                            <span class="mic-icon">🎤</span>
-                        </button>
-                        <p class="recording-hint">Tap the microphone and speak your answer</p>
-                        <div class="quick-pass-link-row">
-                            <button class="btn-link-skip" id="btn-quick-skip">Don't know this answer? <span>Pass Question ⏭️</span></button>
-                        </div>
-                    </div>
-
-                    <div class="recording-active" id="recording-active" hidden>
-                        <div class="timer-row">
-                            <div class="timer-dot"></div>
-                            <span id="timer-display">00:00</span>
-                            <span class="live-pace-indicator" id="live-pace-indicator">🟢 Voice Active</span>
-                        </div>
-                        <canvas id="waveform-canvas" width="500" height="80"></canvas>
-                        <div class="recording-controls-row">
-                            <button class="btn-stop" id="btn-stop">⬛ Stop & Submit Answer</button>
-                            <button class="btn-skip-during-rec" id="btn-skip-during-rec">⏭️ Pass Question</button>
-                        </div>
-                    </div>
-
-                    <div class="processing" id="processing" hidden>
-                        <div class="spinner"></div>
-                        <p id="processing-status-text">AI is transcribing & evaluating your answer...</p>
-                    </div>
-                </div>
-
-                <!-- Real-time tip -->
-                <div class="realtime-tip" id="realtime-tip" hidden>
-                    <span class="tip-icon">💡</span>
-                    <span id="tip-text"></span>
-                </div>
-
-                <!-- Answer feedback -->
-                <div class="answer-result" id="answer-result" hidden>
-                    <div class="result-scores">
-                        <div class="score-circle">
-                            <svg viewBox="0 0 100 100">
-                                <circle cx="50" cy="50" r="45" class="score-bg" />
-                                <circle cx="50" cy="50" r="45" class="score-fill content-fill" id="content-circle" />
-                            </svg>
-                            <div class="score-label">
-                                <span class="score-value" id="content-score-display">0</span>
-                                <span class="score-name">Content</span>
-                            </div>
-                        </div>
-                        <div class="score-circle">
-                            <svg viewBox="0 0 100 100">
-                                <circle cx="50" cy="50" r="45" class="score-bg" />
-                                <circle cx="50" cy="50" r="45" class="score-fill confidence-fill" id="confidence-circle" />
-                            </svg>
-                            <div class="score-label">
-                                <span class="score-value" id="confidence-score-display">0</span>
-                                <span class="score-name">Confidence</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="transcription-box">
-                        <h4>📝 Your Answer</h4>
-                        <p id="transcription-text"></p>
-                    </div>
-
-                    <div class="feedback-box">
-                        <h4>💡 Evaluation & Tips</h4>
-                        <p id="feedback-text"></p>
-                        <ul id="tips-list"></ul>
-                    </div>
-
-                    <div class="model-answer-box" id="model-answer-box" hidden>
-                        <h4>✅ Recommended Model Answer</h4>
-                        <p id="model-answer-text"></p>
-                    </div>
-
-                    <div class="answer-actions">
-                        <button class="btn-secondary" id="btn-re-record" hidden>🔄 Re-record Answer</button>
-                        <button class="btn-primary btn-next" id="btn-next">Next Question →</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right: Sidebar -->
-            <aside class="interview-sidebar">
-                <div class="sidebar-card">
-                    <h4>🎯 Target Job Title</h4>
-                    <p id="sidebar-job-title">-</p>
-                </div>
-                <div class="sidebar-card">
-                    <h4>📊 Interview Progress</h4>
-                    <div class="mini-progress">
-                        <div class="mini-progress-fill" id="mini-progress-fill"></div>
-                    </div>
-                    <p id="sidebar-progress">0 / 10 answered</p>
-                </div>
-                <div class="sidebar-card webcam-card" id="webcam-card">
-                    <div class="webcam-header-row">
-                        <h4>📹 Live Candidate Feed</h4>
-                        <button class="btn-cam-toggle" id="btn-cam-toggle">Turn ON</button>
-                    </div>
-                    <div class="webcam-container" id="webcam-container">
-                        <video id="webcam-video" autoplay playsinline muted hidden></video>
-                        <div class="webcam-placeholder" id="webcam-placeholder">
-                            <span class="cam-icon">📷</span>
-                            <span class="cam-label">Camera is OFF</span>
-                            <small>Optional live camera preview</small>
-                        </div>
-                        <div class="webcam-overlay" id="webcam-overlay" hidden>
-                            <div class="face-target-box"></div>
-                            <span class="live-tag">🟢 LIVE CAM</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sidebar-card" id="sidebar-skills">
-                    <h4>🔧 Candidate Skills</h4>
-                    <div id="sidebar-skills-list"></div>
-                </div>
-                <div class="sidebar-card tips-card" id="sidebar-tips">
-                    <h4>🎤 Speaking Tips</h4>
-                    <ul>
-                        <li>Speak clearly and maintain steady volume</li>
-                        <li>Structure answers using Situation, Task, Action, Result</li>
-                        <li>Pause naturally instead of using filler words</li>
-                        <li>Back up technical claims with practical project examples</li>
-                    </ul>
-                </div>
-            </aside>
-        </section>
-    </div>
-
-    <!-- ═══════════════════════════════════════ -->
-    <!-- REPORT SCREEN                          -->
-    <!-- ═══════════════════════════════════════ -->
-    <div id="screen-report" class="screen">
-        <nav class="navbar">
-            <div class="nav-brand">
-                <span class="logo-icon">🎯</span>
-                <span class="logo-text">AI Interview Coach</span>
-            </div>
-            <div class="nav-user">
-                <button class="btn-link" id="btn-report-dashboard">← Dashboard</button>
-            </div>
-        </nav>
-
-        <section class="report-container">
-            <h1 class="report-title">📊 Comprehensive Performance Report</h1>
-
-            <div class="report-partial-banner" id="report-partial-banner" hidden>
-                ⚠️ This interview was completed partially. The analytics below reflect only the answered questions.
-            </div>
-
-            <div class="overall-score-card">
-                <div class="big-score">
-                    <span id="overall-score-value">0</span>
-                    <span class="out-of">/ 100</span>
-                </div>
-                <div class="grade-badge" id="grade-badge">Grade: B</div>
-
-                <div class="score-bars">
-                    <div class="score-bar-item">
-                        <span class="bar-label">Content Technical Depth</span>
-                        <div class="bar-track"><div class="bar-fill content-bar" id="content-bar"></div></div>
-                        <span class="bar-value" id="content-avg-value">0%</span>
-                    </div>
-                    <div class="score-bar-item">
-                        <span class="bar-label">Speaking & Voice Confidence</span>
-                        <div class="bar-track"><div class="bar-fill confidence-bar" id="confidence-bar"></div></div>
-                        <span class="bar-value" id="confidence-avg-value">0%</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="report-grid">
-                <div class="report-card strengths-card">
-                    <h3>✅ Key Strengths</h3>
-                    <ul id="strengths-list"></ul>
-                </div>
-                <div class="report-card weaknesses-card">
-                    <h3>⚠️ Recommended Areas of Focus</h3>
-                    <ul id="weaknesses-list"></ul>
-                </div>
-            </div>
-
-            <div class="report-card tips-card">
-                <h3>💡 Actionable Next Steps</h3>
-                <ul id="report-tips-list"></ul>
-            </div>
-
-            <div class="report-card breakdown-card">
-                <h3>📋 Question-by-Question Breakdown</h3>
-                <div id="question-breakdown-list"></div>
-            </div>
-
-            <div class="report-actions">
-                <button class="btn-primary" id="btn-download-pdf">📄 Download Official PDF Report</button>
-                <button class="btn-secondary" id="btn-export-report">Export JSON</button>
-                <button class="btn-secondary" id="btn-practice-again">Take Another Mock Interview</button>
-            </div>
-        </section>
-    </div>
-
-    <!-- Live Mic Speech / Silence Detection Floating Toast -->
-    <div class="live-mic-toast" id="live-mic-toast" hidden>
-        <div class="toast-left">
-            <span class="toast-pulse-icon">🎙️</span>
-            <div class="toast-text-wrap">
-                <strong>Microphone is active</strong>
-                <p>We haven't detected your voice yet. Start speaking or skip this question.</p>
-            </div>
+          </div>
         </div>
-        <div class="toast-actions">
-            <button type="button" class="btn-toast-pass" id="btn-toast-pass">⏭️ Pass Question</button>
-            <button type="button" class="btn-toast-close" id="btn-toast-close" title="Dismiss">✕</button>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         SCREEN 6: COMPREHENSIVE PERFORMANCE REPORT & CERTIFICATE
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="screen-report" class="app-screen">
+      <div class="screen-top-bar">
+        <button class="btn btn-ghost" onclick="navigateTo('dashboard')">➔ Back to Dashboard</button>
+        <div class="screen-title-badge">🏆 Session Scorecard</div>
+        <div class="report-header-actions">
+          <button class="btn btn-outline" onclick="openCertificateModal()">
+            <span>🎖️</span> View Certificate
+          </button>
+          <button class="btn btn-primary btn-glow" onclick="printOrDownloadReport()">
+            <span>🖨️</span> Save / Print PDF
+          </button>
         </div>
+      </div>
+
+      <div class="report-main-grid">
+        <!-- Score Summary Box -->
+        <div class="glass-card report-summary-card">
+          <div class="report-badge-top">AI Readiness Evaluation</div>
+          <h2 id="report-job-title">Full Stack AI Developer</h2>
+          <span class="report-date-badge" id="report-date">September 2026</span>
+
+          <div class="report-big-score">
+            <div class="score-radial-progress" id="report-score-radial">
+              <span class="radial-number" id="report-overall-score">--</span>
+              <span class="radial-sub">Score / 100</span>
+            </div>
+            <div class="grade-pill-large" id="report-grade-pill">Grade: --</div>
+          </div>
+
+          <div class="report-breakdown-metrics">
+            <div class="metric-row">
+              <span>Technical & Content Quality</span>
+              <div class="metric-bar"><div class="metric-fill" id="bar-content-score" style="width: 0%"></div></div>
+              <strong id="val-content-score">--/100</strong>
+            </div>
+            <div class="metric-row">
+              <span>Speaking Confidence & Tone</span>
+              <div class="metric-bar"><div class="metric-fill emerald" id="bar-confidence-score" style="width: 0%"></div></div>
+              <strong id="val-confidence-score">--/100</strong>
+            </div>
+            <div class="metric-row">
+              <span>Speech Pace & Clarity (WPM)</span>
+              <div class="metric-bar"><div class="metric-fill cyan" id="bar-pace-score" style="width: 0%"></div></div>
+              <strong id="val-pace-score">-- WPM</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Feedback & Questions Review -->
+        <div class="glass-card report-feedback-card">
+          <h3>Strengths & AI Recommendations</h3>
+          <div class="feedback-columns">
+            <div class="feedback-col">
+              <h4>🌟 Key Strengths</h4>
+              <ul id="report-strengths-list" class="styled-bullet-list"></ul>
+            </div>
+            <div class="feedback-col">
+              <h4>🎯 Actionable Improvement Areas</h4>
+              <ul id="report-improvements-list" class="styled-bullet-list warning-bullets"></ul>
+            </div>
+          </div>
+
+          <h3 class="mt-4">Question-by-Question Breakdown</h3>
+          <div id="report-questions-breakdown" class="questions-breakdown-list">
+            <!-- Dynamic questions list with candidate answer, score, and model answer -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         SCREEN 7: ATS RESUME TAILOR & KEYWORD MATCHER (NEW TOOL 1)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="screen-ats" class="app-screen">
+      <div class="screen-top-bar">
+        <button class="btn btn-ghost" onclick="navigateTo('dashboard')">➔ Back to Dashboard</button>
+        <div class="screen-title-badge">📄 ATS Resume Tailor & Keyword Matcher</div>
+      </div>
+
+      <div class="tool-layout-grid">
+        <!-- Input Column -->
+        <div class="glass-card tool-input-card">
+          <div class="tool-title-row">
+            <span class="tool-icon emerald-glow">📄</span>
+            <div>
+              <h3>Resume vs Job Description Scanner</h3>
+              <p>Compare your CV against any job posting to find missing technical keywords and generate tailored STAR bullets.</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="ats-resume-select">Select Stored Resume</label>
+            <select id="ats-resume-select" onchange="handleATSResumeChange()">
+              <option value="">-- Manual Text Input --</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="ats-job-title">Target Role</label>
+            <input type="text" id="ats-job-title" placeholder="e.g. Senior Cloud Architect" value="Full Stack AI Developer">
+          </div>
+
+          <div class="form-group">
+            <label for="ats-jd-input">Target Job Description (JD)</label>
+            <textarea id="ats-jd-input" rows="8" placeholder="Paste the job requirements, qualifications, and role description here..."></textarea>
+          </div>
+
+          <button class="btn btn-primary btn-block btn-glow" id="btn-run-ats" onclick="runATSScanner()">
+            <span>⚡ Run ATS Scan & Generate Bullets</span>
+          </button>
+        </div>
+
+        <!-- Output Column -->
+        <div class="glass-card tool-output-card" id="ats-results-panel">
+          <div class="empty-state-card" id="ats-empty-state">
+            <p>Paste a job description on the left and click "Run ATS Scan" to see your keyword match score and STAR recommendations.</p>
+          </div>
+
+          <div class="ats-results-content hidden" id="ats-results-content">
+            <div class="ats-score-hero">
+              <div class="ats-match-gauge">
+                <span class="match-pct" id="ats-match-score">85%</span>
+                <span class="match-lbl">ATS Match</span>
+              </div>
+              <div class="ats-summary-info">
+                <h4>Keyword Coverage</h4>
+                <p id="ats-summary-text">Your resume matches critical requirements.</p>
+              </div>
+            </div>
+
+            <!-- Matched vs Missing Badges -->
+            <div class="keywords-breakdown-row">
+              <div class="kw-box">
+                <span class="kw-header kw-matched">✓ Matched Keywords (<span id="ats-matched-count">0</span>)</span>
+                <div class="kw-tags" id="ats-matched-tags"></div>
+              </div>
+              <div class="kw-box">
+                <span class="kw-header kw-missing">⚠ Missing Skills (<span id="ats-missing-count">0</span>)</span>
+                <div class="kw-tags" id="ats-missing-tags"></div>
+              </div>
+            </div>
+
+            <!-- Tailored STAR Bullets -->
+            <div class="suggested-bullets-box">
+              <h4>🎯 Tailored Resume STAR Bullet Points</h4>
+              <p class="sub-hint">Copy and add these high-impact bullets to your resume:</p>
+              <div id="ats-bullets-container" class="bullets-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         SCREEN 8: SALARY NEGOTIATION ROLEPLAY COACH (NEW TOOL 2)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="screen-salary" class="app-screen">
+      <div class="screen-top-bar">
+        <button class="btn btn-ghost" onclick="navigateTo('dashboard')">➔ Back to Dashboard</button>
+        <div class="screen-title-badge">💼 Salary Negotiation Roleplay Coach</div>
+      </div>
+
+      <div class="tool-layout-grid">
+        <!-- Setup Column -->
+        <div class="glass-card tool-input-card">
+          <div class="tool-title-row">
+            <span class="tool-icon amber-glow">💼</span>
+            <div>
+              <h3>Negotiation Arena</h3>
+              <p>Practice counter-offering with an AI Talent Director before speaking with real recruiters.</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="salary-job-title">Target Job Title</label>
+            <input type="text" id="salary-job-title" placeholder="e.g. Staff Software Engineer" value="Full Stack AI Developer">
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="salary-initial-offer">Recruiter Offer ($)</label>
+              <input type="number" id="salary-initial-offer" value="95000">
+            </div>
+            <div class="form-group">
+              <label for="salary-target-offer">Your Target ($)</label>
+              <input type="number" id="salary-target-offer" value="120000">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="salary-strategy">Negotiation Tone / Strategy</label>
+            <select id="salary-strategy">
+              <option value="Balanced" selected>Balanced & Value-Focused (Recommended)</option>
+              <option value="Aggressive">High-Leverage / Competing Offers</option>
+              <option value="Friendly">Collaborative & Total Rewards (Bonus/Equity)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="salary-user-pitch">Your Counter-Offer Pitch</label>
+            <textarea id="salary-user-pitch" rows="4" placeholder="e.g. Based on my experience scaling microservices and current market data, I was aiming for $120,000..."></textarea>
+          </div>
+
+          <button class="btn btn-primary btn-block btn-glow" id="btn-run-salary" onclick="runSalaryNegotiator()">
+            <span>💬 Submit Counter-Offer</span>
+          </button>
+        </div>
+
+        <!-- Chat / Roleplay Output -->
+        <div class="glass-card tool-output-card" id="salary-results-panel">
+          <div class="empty-state-card" id="salary-empty-state">
+            <p>Enter your target offer and pitch on the left, then click "Submit Counter-Offer" to simulate the recruiter's response and tactical feedback.</p>
+          </div>
+
+          <div class="salary-results-content hidden" id="salary-results-content">
+            <!-- Recruiter Response Bubble -->
+            <div class="recruiter-chat-bubble">
+              <div class="recruiter-meta">
+                <span class="avatar-recruiter">👔</span>
+                <div>
+                  <strong>Alex Vance</strong>
+                  <span class="recruiter-sub">Head of Talent Acquisition</span>
+                </div>
+                <div class="current-offer-tag">
+                  Adjusted Offer: <strong id="salary-recruiter-offer">$105,000</strong>
+                </div>
+              </div>
+              <p class="recruiter-message" id="salary-recruiter-text">
+                "Thank you for sharing your perspective..."
+              </p>
+            </div>
+
+            <!-- Tactical Score & Advice -->
+            <div class="tactics-box">
+              <div class="tactic-header">
+                <h4>🧠 AI Coach Tactical Analysis</h4>
+                <span class="score-chip" id="salary-tactic-score">Score: 85/100</span>
+              </div>
+              <ul class="styled-bullet-list" id="salary-tips-list"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         SCREEN 9: 60-SECOND ELEVATOR PITCH ARENA (NEW TOOL 3)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="screen-pitch" class="app-screen">
+      <div class="screen-top-bar">
+        <button class="btn btn-ghost" onclick="navigateTo('dashboard')">➔ Back to Dashboard</button>
+        <div class="screen-title-badge">⚡ 60-Second Elevator Pitch Arena</div>
+      </div>
+
+      <div class="tool-layout-grid">
+        <!-- Input / Record Column -->
+        <div class="glass-card tool-input-card">
+          <div class="tool-title-row">
+            <span class="tool-icon rose-glow">⚡</span>
+            <div>
+              <h3>60s Introduction Mastery</h3>
+              <p>Practice your self-introduction. We measure your words-per-minute (WPM), first 10-second hook, and clarity.</p>
+            </div>
+          </div>
+
+          <div class="pitch-timer-display">
+            <div class="pitch-clock" id="pitch-clock">60s</div>
+            <span class="pitch-timer-label">Recommended Duration</span>
+          </div>
+
+          <div class="form-group">
+            <label for="pitch-job-title">Your Target Role</label>
+            <input type="text" id="pitch-job-title" value="Full Stack AI Developer">
+          </div>
+
+          <div class="form-group">
+            <label for="pitch-text-input">Your Elevator Pitch Script</label>
+            <textarea id="pitch-text-input" rows="6" placeholder="Hi, I'm a developer who specializes in building scalable AI systems. Over the past 3 years..."></textarea>
+          </div>
+
+          <button class="btn btn-primary btn-block btn-glow" id="btn-run-pitch" onclick="runPitchEvaluator()">
+            <span>⚡ Analyze My Pitch</span>
+          </button>
+        </div>
+
+        <!-- Output Column -->
+        <div class="glass-card tool-output-card" id="pitch-results-panel">
+          <div class="empty-state-card" id="pitch-empty-state">
+            <p>Type or paste your elevator pitch and click "Analyze My Pitch" to see pacing metrics and an AI-polished script.</p>
+          </div>
+
+          <div class="pitch-results-content hidden" id="pitch-results-content">
+            <div class="pitch-metrics-grid">
+              <div class="pitch-metric-card">
+                <span class="p-val" id="pitch-overall-val">--</span>
+                <span class="p-lbl">Overall Score</span>
+              </div>
+              <div class="pitch-metric-card">
+                <span class="p-val" id="pitch-wpm-val">--</span>
+                <span class="p-lbl">Speaking Pace (WPM)</span>
+              </div>
+              <div class="pitch-metric-card">
+                <span class="p-val" id="pitch-hook-val">--</span>
+                <span class="p-lbl">Hook Strength</span>
+              </div>
+              <div class="pitch-metric-card">
+                <span class="p-val" id="pitch-clarity-val">--</span>
+                <span class="p-lbl">Clarity Index</span>
+              </div>
+            </div>
+
+            <!-- Polished Script -->
+            <div class="polished-script-box">
+              <div class="script-header">
+                <h4>✨ AI-Polished 60-Second Script</h4>
+                <button class="btn btn-sm btn-outline" onclick="copyPolishedPitch()">📋 Copy Script</button>
+              </div>
+              <p class="script-text" id="pitch-polished-text">--</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         SCREEN 10: TECHNICAL QUESTION BANK & FLASHCARDS (NEW TOOL 4)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="screen-questions" class="app-screen">
+      <div class="screen-top-bar">
+        <button class="btn btn-ghost" onclick="navigateTo('dashboard')">➔ Back to Dashboard</button>
+        <div class="screen-title-badge">💡 Technical & Behavioral Question Bank</div>
+      </div>
+
+      <div class="qbank-container">
+        <!-- Controls & Filters -->
+        <div class="qbank-controls-bar">
+          <div class="filter-group">
+            <label>Select Target Role:</label>
+            <select id="qbank-role-select" onchange="loadQuestionBank()">
+              <option value="Full Stack AI Developer" selected>Full Stack AI Developer</option>
+              <option value="Cloud & DevOps Engineer">Cloud & DevOps Engineer</option>
+              <option value="Data Scientist / ML Engineer">Data Scientist / ML Engineer</option>
+              <option value="Backend Software Engineer">Backend Software Engineer</option>
+              <option value="Frontend Engineer">Frontend Engineer</option>
+            </select>
+          </div>
+
+          <div class="category-pills-row" id="qbank-category-filters">
+            <button class="cat-pill active" onclick="filterQuestionBank('All')">All Topics</button>
+            <button class="cat-pill" onclick="filterQuestionBank('System Architecture')">System Architecture</button>
+            <button class="cat-pill" onclick="filterQuestionBank('Frontend & Performance')">Frontend & UI</button>
+            <button class="cat-pill" onclick="filterQuestionBank('Security & Auth')">Security & Auth</button>
+            <button class="cat-pill" onclick="filterQuestionBank('Behavioral & Leadership')">Behavioral (STAR)</button>
+            <button class="cat-pill" onclick="filterQuestionBank('Data & State Management')">Data & State</button>
+          </div>
+        </div>
+
+        <!-- Question Cards Grid -->
+        <div class="qbank-grid" id="qbank-grid-cards">
+          <!-- Dynamic flashcards -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       MODAL: ALIBABA CLOUD VERIFIED READINESS CERTIFICATE (NEW TOOL 5)
+       ══════════════════════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="modal-certificate" onclick="closeCertificateModal(event)">
+    <div class="certificate-modal-card glass-panel" onclick="event.stopPropagation()">
+      <div class="cert-modal-header">
+        <button class="btn-close-modal" onclick="closeCertificateModal()">✕</button>
+      </div>
+
+      <!-- Printable Certificate Template -->
+      <div class="printable-certificate" id="printable-cert-node">
+        <div class="cert-gold-border">
+          <div class="cert-inner-frame">
+            <div class="cert-badge-row">
+              <span class="cert-logo-alibaba">☁️ ALIBABA CLOUD</span>
+              <span class="cert-hackathon-year">AI HACKATHON PAKISTAN 2026</span>
+            </div>
+
+            <h1 class="cert-heading">Certificate of Technical Interview Readiness</h1>
+            <p class="cert-subheading">This is to officially certify that</p>
+
+            <h2 class="cert-candidate-name" id="cert-candidate-name">Candidate Name</h2>
+
+            <p class="cert-statement">
+              has successfully completed an AI-proctored technical & behavioral interview simulation for the role of
+            </p>
+            <h3 class="cert-job-role" id="cert-job-role">Full Stack AI Developer</h3>
+
+            <div class="cert-stats-row">
+              <div class="cert-stat-item">
+                <span class="c-val" id="cert-score-val">92/100</span>
+                <span class="c-lbl">Overall Readiness</span>
+              </div>
+              <div class="cert-stat-item">
+                <span class="c-val" id="cert-grade-val">Grade A</span>
+                <span class="c-lbl">Proficiency Grade</span>
+              </div>
+              <div class="cert-stat-item">
+                <span class="c-val" id="cert-date-val">September 2026</span>
+                <span class="c-lbl">Issue Date</span>
+              </div>
+            </div>
+
+            <div class="cert-footer-row">
+              <div class="cert-seal-box">
+                <div class="hologram-seal">🛡️ VERIFIED</div>
+                <span class="cert-hash" id="cert-hash-val">ALIBABA-PK-2026-0001</span>
+              </div>
+              <div class="cert-signature-box">
+                <span class="sig-line">Alibaba Cloud AI Evaluation Engine</span>
+                <span class="sig-title">Automated Voice & Skill Verification</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cert-modal-actions">
+        <button class="btn btn-outline" onclick="closeCertificateModal()">Close</button>
+        <button class="btn btn-primary btn-glow" onclick="window.print()">
+          <span>🖨️ Print / Download PDF</span>
+        </button>
+      </div>
     </div>
+  </div>
 
-    <!-- Confetti Celebration Canvas -->
-    <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
-
-    <script src="/static/js/app.js?v=4.0"></script>
+  <!-- App Core JS -->
+  <script src="js/app.js"></script>
 </body>
 </html>

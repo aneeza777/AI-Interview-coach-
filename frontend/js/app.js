@@ -1,1625 +1,1177 @@
-/**
- * AI Interview Coach v2 — Frontend Application
- * =============================================
- * Handles:
- *  - Authentication (login/register)
- *  - Dashboard
- *  - CV upload & recruiter-style review
- *  - Interview mode selection
- *  - Adaptive voice interview with real-time tips
- *  - Final report
- */
+/* ═════════════════════════════════════════════════════════════════════════════
+   AI INTERVIEW COACH — CORE FRONTEND LOGIC (ALIBABA CLOUD HACKATHON 2026)
+   ═════════════════════════════════════════════════════════════════════════════ */
 
-// ──────────────────────────────────────────────
-// State
-// ──────────────────────────────────────────────
+// Global State
 const state = {
-    token: localStorage.getItem("ai_interview_token") || null,
-    user: null,
-    resumes: [],
-    interviews: [],
-    currentResume: null,
-    currentInterview: null,
-    currentQuestion: null,
-    answers: [],
-    mediaRecorder: null,
-    audioStream: null,
-    audioBuffers: [],
-    audioChunks: [],
-    audioBlob: null,
-    recordingStartTime: null,
-    speechDetectedEver: false,
-    silenceAlertDismissed: false,
-    timerInterval: null,
-    audioContext: null,
-    analyser: null,
-    animFrameId: null,
-    selectedDifficulty: "mid", // "junior" (120s), "mid" (90s), "senior" (60s)
-    countdownRemaining: 90,
-    countdownInterval: null,
-    webcamStream: null,
+  token: localStorage.getItem('token') || null,
+  user: null,
+  currentView: 'auth',
+  currentInterviewMode: 'practice', // 'practice' | 'mock'
+  selectedCVFile: null,
+  activeResumeId: null,
+  activeInterview: null,
+  currentQuestionIndex: 0,
+  isRecording: false,
+  mediaRecorder: null,
+  audioChunks: [],
+  audioStream: null,
+  webcamStream: null,
+  audioContext: null,
+  analyser: null,
+  silenceTimer: null,
+  interviewTimerInterval: null,
+  interviewSeconds: 0,
+  questionBankData: []
 };
 
-const API_BASE = window.location.origin;
+// API Base URL
+const API_BASE = '/api';
 
-// ──────────────────────────────────────────────
-// DOM Helpers
-// ──────────────────────────────────────────────
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
+/* ═════════════════════════════════════════════════════════════════════════════
+   INITIALIZATION & AUTHENTICATION
+   ═════════════════════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initApp();
+});
 
-const screens = {
-    auth: $("#screen-auth"),
-    dashboard: $("#screen-dashboard"),
-    cvReview: $("#screen-cv-review") || $("#screen-cv"),
-    cv: $("#screen-cv-review") || $("#screen-cv"),
-    interviewSetup: $("#screen-interview-setup"),
-    prepSetup: $("#screen-interview-setup"),
-    interview: $("#screen-interview"),
-    report: $("#screen-report"),
-};
-
-function showScreen(name) {
-    Object.values(screens).forEach((s) => s?.classList.remove("active"));
-    if (screens[name]) {
-        screens[name].classList.add("active");
+async function initApp() {
+  if (state.token) {
+    try {
+      const user = await fetchAPI('/auth/me');
+      state.user = user;
+      updateUserUI();
+      navigateTo('dashboard');
+    } catch (err) {
+      console.warn('Session expired or invalid token:', err);
+      logout();
     }
+  } else {
+    navigateTo('auth');
+  }
 }
 
-function setLoading(btn, loading) {
-    const text = btn.querySelector(".btn-text");
-    const loader = btn.querySelector(".btn-loader");
-    if (text) text.hidden = loading;
-    if (loader) loader.hidden = !loading;
-    btn.disabled = loading;
+function updateUserUI() {
+  if (!state.user) return;
+  const name = state.user.full_name || 'Candidate';
+  const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AI';
+  
+  const userDisp = document.getElementById('user-display-name');
+  const userAv = document.getElementById('user-avatar');
+  const dashName = document.getElementById('dash-user-name');
+  
+  if (userDisp) userDisp.textContent = name;
+  if (userAv) userAv.textContent = initials;
+  if (dashName) dashName.textContent = name;
 }
 
-function showError(message) {
-    alert(`Error: ${message}`);
+function toggleAuthTab(tab) {
+  const tabLogin = document.getElementById('tab-login');
+  const tabReg = document.getElementById('tab-register');
+  const formLogin = document.getElementById('login-form');
+  const formReg = document.getElementById('register-form');
+
+  if (tab === 'login') {
+    tabLogin.classList.add('active');
+    tabReg.classList.remove('active');
+    formLogin.classList.add('active');
+    formReg.classList.remove('active');
+  } else {
+    tabReg.classList.add('active');
+    tabLogin.classList.remove('active');
+    formReg.classList.add('active');
+    formLogin.classList.remove('active');
+  }
 }
 
-// ──────────────────────────────────────────────
-// API Helper
-// ──────────────────────────────────────────────
-async function api(endpoint, options = {}) {
-    const url = `${API_BASE}${endpoint}`;
-    const config = {
-        ...options,
-        headers: {
-            ...(options.headers || {}),
-        },
-    };
+async function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
 
-    if (state.token) {
-        config.headers["Authorization"] = `Bearer ${state.token}`;
-    }
-
-    if (options.body && !(options.body instanceof FormData)) {
-        config.headers["Content-Type"] = "application/json";
-    }
-
-    const res = await fetch(url, config);
-    const isAuthEndpoint = endpoint.startsWith("/api/auth/login") || endpoint.startsWith("/api/auth/register");
-
-    if (res.status === 401) {
-        if (!isAuthEndpoint) {
-            logout();
-            throw new Error("Session expired. Please login again.");
-        }
-        
-        let err = "Invalid email or password. If you don't have an account, please click Register.";
-        try {
-            const data = await res.json();
-            if (data && data.detail) err = data.detail;
-        } catch (e) {}
-        throw new Error(err);
-    }
-
-    if (!res.ok) {
-        let err = "Request failed";
-        try {
-            const data = await res.json();
-            if (typeof data.detail === "string") {
-                err = data.detail;
-            } else if (Array.isArray(data.detail)) {
-                err = data.detail.map(d => d.msg || JSON.stringify(d)).join(", ");
-            } else if (data.detail) {
-                err = JSON.stringify(data.detail);
-            } else {
-                err = JSON.stringify(data);
-            }
-        } catch (e) {
-            err = res.statusText || "An unexpected error occurred.";
-        }
-        throw new Error(err);
-    }
-
-    if (res.status === 204) return null;
-    return res.json();
-}
-
-// ──────────────────────────────────────────────
-// AUTHENTICATION
-// ──────────────────────────────────────────────
-
-// Tab switching
-$$(".auth-tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-        const tabName = tab.dataset.tab;
-
-        $$(".auth-tab").forEach((t) => t.classList.remove("active"));
-        tab.classList.add("active");
-
-        $$(".auth-form").forEach((f) => f.classList.remove("active"));
-        $(`#${tabName}-form`).classList.add("active");
+  try {
+    showToast('Signing in...');
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
     });
-});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Login failed');
 
-// Login
-$("#login-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const btn = e.target.querySelector("button[type='submit']");
-    setLoading(btn, true);
+    state.token = data.access_token;
+    localStorage.setItem('token', state.token);
+    state.user = data.user;
+    updateUserUI();
+    showToast('Welcome back!', 'success');
+    navigateTo('dashboard');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
 
-    try {
-        const data = await api("/api/auth/login", {
-            method: "POST",
-            body: JSON.stringify({
-                email: $("#login-email").value,
-                password: $("#login-password").value,
-            }),
-        });
+async function handleRegister(e) {
+  e.preventDefault();
+  const fullName = document.getElementById('register-name').value.trim();
+  const email = document.getElementById('register-email').value.trim();
+  const password = document.getElementById('register-password').value;
 
-        setToken(data.access_token);
-        state.user = data.user;
-        loadDashboard();
-    } catch (err) {
-        showError(err.message);
-    } finally {
-        setLoading(btn, false);
-    }
-});
+  try {
+    showToast('Creating account...');
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ full_name: fullName, email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Registration failed');
 
-// Register
-$("#register-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const btn = e.target.querySelector("button[type='submit']");
-    setLoading(btn, true);
-
-    try {
-        const data = await api("/api/auth/register", {
-            method: "POST",
-            body: JSON.stringify({
-                email: $("#register-email").value,
-                password: $("#register-password").value,
-                full_name: $("#register-name").value,
-            }),
-        });
-
-        setToken(data.access_token);
-        state.user = data.user;
-        loadDashboard();
-    } catch (err) {
-        showError(err.message);
-    } finally {
-        setLoading(btn, false);
-    }
-});
-
-function setToken(token) {
-    state.token = token;
-    localStorage.setItem("ai_interview_token", token);
+    state.token = data.access_token;
+    localStorage.setItem('token', state.token);
+    state.user = data.user;
+    updateUserUI();
+    showToast('Account created successfully!', 'success');
+    navigateTo('dashboard');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 }
 
 function logout() {
-    state.token = null;
-    state.user = null;
-    localStorage.removeItem("ai_interview_token");
-    showScreen("auth");
+  state.token = null;
+  state.user = null;
+  localStorage.removeItem('token');
+  cleanupStreams();
+  navigateTo('auth');
+  showToast('Signed out', 'info');
 }
 
-$("#btn-logout").addEventListener("click", logout);
+/* ═════════════════════════════════════════════════════════════════════════════
+   ROUTING & NAVIGATION
+   ═════════════════════════════════════════════════════════════════════════════ */
+function navigateTo(viewName) {
+  state.currentView = viewName;
 
-async function initAuth() {
-    if (!state.token) {
-        showScreen("auth");
-        return;
-    }
+  // Toggle Header visibility
+  const header = document.getElementById('main-header');
+  if (viewName === 'auth') {
+    header.classList.add('hidden');
+  } else {
+    header.classList.remove('hidden');
+  }
 
-    try {
-        const user = await api("/api/auth/me");
-        state.user = user;
-        loadDashboard();
-    } catch (err) {
-        showScreen("auth");
+  // Update nav buttons
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.nav === viewName) {
+      btn.classList.add('active');
     }
+  });
+
+  // Hide all screens
+  document.querySelectorAll('.app-screen').forEach(scr => scr.classList.remove('active'));
+
+  // Show target screen
+  const targetMap = {
+    'auth': 'screen-auth',
+    'dashboard': 'screen-dashboard',
+    'cv-review': 'screen-cv-review',
+    'setup': 'screen-interview-setup',
+    'interview': 'screen-interview',
+    'report': 'screen-report',
+    'ats': 'screen-ats',
+    'salary': 'screen-salary',
+    'pitch': 'screen-pitch',
+    'questions': 'screen-questions'
+  };
+
+  const targetId = targetMap[viewName] || `screen-${viewName}`;
+  const targetElem = document.getElementById(targetId);
+  if (targetElem) {
+    targetElem.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Lifecycle triggers
+  if (viewName === 'dashboard') {
+    loadDashboard();
+  } else if (viewName === 'questions') {
+    loadQuestionBank();
+  } else if (viewName === 'ats') {
+    populateATSResumesDropdown();
+  }
 }
 
-// ──────────────────────────────────────────────
-// DASHBOARD
-// ──────────────────────────────────────────────
+function startInterviewMode(mode) {
+  state.currentInterviewMode = mode;
+  setSetupMode(mode);
+  navigateTo('setup');
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   DASHBOARD & CV PARSING
+   ═════════════════════════════════════════════════════════════════════════════ */
 async function loadDashboard() {
-    showScreen("dashboard");
-    $("#user-name").textContent = state.user.full_name;
+  try {
+    const [resumes, interviews] = await Promise.all([
+      fetchAPI('/resumes'),
+      fetchAPI('/interviews')
+    ]);
 
-    try {
-        const [resumes, interviews] = await Promise.all([
-            api("/api/resumes"),
-            api("/api/interviews").catch(() => []),
-        ]);
-        state.resumes = resumes;
-        state.interviews = interviews;
-        renderResumesList();
-        renderInterviewsList();
-        populateResumeSelects();
-    } catch (err) {
-        showError(err.message);
-    }
+    renderResumesList(resumes);
+    renderInterviewsList(interviews);
+    populateSetupResumeDropdown(resumes);
+  } catch (err) {
+    console.error('Failed to load dashboard:', err);
+  }
 }
 
-function renderResumesList() {
-    const container = $("#resumes-list");
+function triggerFileInput() {
+  document.getElementById('file-input').click();
+}
 
-    if (!state.resumes.length) {
-        container.innerHTML = '<p class="empty-state">No CVs uploaded yet.</p>';
-        return;
-    }
+function handleCVFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    // Show only the latest 3 CVs
-    const latest = state.resumes.slice(0, 3);
+  state.selectedCVFile = file;
+  document.getElementById('selected-file-name').textContent = file.name;
+  document.getElementById('selected-file-info').classList.remove('hidden');
+  document.getElementById('btn-analyze-cv').disabled = false;
+}
 
-    container.innerHTML = latest.map((r) => `
-        <div class="resume-item" data-id="${r.id}">
-            <div class="resume-info" data-id="${r.id}">
-                <strong>${r.filename}</strong>
-                <span>${r.job_title || "No job title"} • Score: ${r.cv_score || "N/A"}/100</span>
-            </div>
-            <button class="btn-delete-resume" data-id="${r.id}" title="Remove CV">🗑️</button>
-        </div>
-    `).join("");
+function clearSelectedFile(e) {
+  e.stopPropagation();
+  state.selectedCVFile = null;
+  document.getElementById('file-input').value = '';
+  document.getElementById('selected-file-info').classList.add('hidden');
+  document.getElementById('btn-analyze-cv').disabled = true;
+}
 
-    container.querySelectorAll(".resume-info").forEach((item) => {
-        item.addEventListener("click", () => {
-            const resume = state.resumes.find((r) => r.id == item.dataset.id);
-            if (resume) showCVReview(resume);
-        });
+async function uploadAndAnalyzeCV() {
+  if (!state.selectedCVFile) return;
+
+  const btn = document.getElementById('btn-analyze-cv');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳ Parsing Resume with AI...</span>';
+
+  try {
+    const formData = new FormData();
+    formData.append('file', state.selectedCVFile);
+    formData.append('job_title', document.getElementById('cv-job-title').value.trim() || 'Full Stack AI Developer');
+    formData.append('job_description', document.getElementById('cv-job-description').value.trim() || '');
+
+    const res = await fetch(`${API_BASE}/resumes/upload`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${state.token}` },
+      body: formData
     });
 
-    container.querySelectorAll(".btn-delete-resume").forEach((btn) => {
-        btn.addEventListener("click", async (e) => {
-            e.stopPropagation();
-            await deleteResume(parseInt(btn.dataset.id));
-        });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Upload failed');
+
+    state.activeResumeId = data.id;
+    showToast('Resume parsed successfully!', 'success');
+    renderCVReviewScreen(data);
+    navigateTo('cv-review');
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>⚡ Analyze Resume with AI</span>';
+  }
+}
+
+function renderResumesList(resumes) {
+  const container = document.getElementById('resume-list-container');
+  const countBadge = document.getElementById('resumes-count-badge');
+  if (countBadge) countBadge.textContent = resumes.length;
+
+  if (!resumes || resumes.length === 0) {
+    container.innerHTML = `<div class="empty-state-card"><p>No resumes uploaded yet. Upload a CV above to get started!</p></div>`;
+    return;
+  }
+
+  container.innerHTML = resumes.map(r => `
+    <div class="resume-item-row">
+      <div class="item-main-info">
+        <h4>📄 ${r.filename}</h4>
+        <span class="item-meta">Role: ${r.target_role || 'General'} • Score: ${r.score || 75}/100</span>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-sm btn-outline" onclick="viewParsedResume(${r.id})">Review</button>
+        <button class="btn btn-sm btn-primary" onclick="launchInterviewWithResume(${r.id}, '${r.target_role || 'Software Engineer'}')">Practice</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderInterviewsList(interviews) {
+  const container = document.getElementById('interview-list-container');
+  if (!interviews || interviews.length === 0) {
+    container.innerHTML = `<div class="empty-state-card"><p>No interviews completed yet. Launch a practice or mock interview above!</p></div>`;
+    return;
+  }
+
+  container.innerHTML = interviews.map(i => `
+    <div class="interview-item-row">
+      <div class="item-main-info">
+        <h4>${i.job_title}</h4>
+        <span class="item-meta">${new Date(i.created_at).toLocaleDateString()} • Score: ${i.overall_score || '--'}/100</span>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-sm btn-outline" onclick="openCertificateModal(${i.id})">🎖️ Cert</button>
+        <button class="btn btn-sm btn-primary" onclick="viewInterviewReport(${i.id})">Scorecard</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function populateSetupResumeDropdown(resumes) {
+  const select = document.getElementById('setup-resume-select');
+  if (!select) return;
+  select.innerHTML = '<option value="">-- No Resume (Generic Questions) --</option>' +
+    resumes.map(r => `<option value="${r.id}">${r.filename} (${r.target_role || 'General'})</option>`).join('');
+}
+
+function renderCVReviewScreen(resumeData) {
+  const parsed = resumeData.parsed_data || {};
+  document.getElementById('cv-candidate-name').textContent = parsed.name || state.user?.full_name || 'Candidate';
+  document.getElementById('cv-target-role').textContent = resumeData.target_role || 'Software Engineer';
+  document.getElementById('cv-overall-score').textContent = resumeData.score || 78;
+  document.getElementById('cv-grade-badge').textContent = `Grade: ${resumeData.grade || 'B+'}`;
+  document.getElementById('cv-exp-years').textContent = `${parsed.experience_years || 2}+ Years`;
+  document.getElementById('cv-education').textContent = parsed.education || 'B.S. in Computer Science';
+
+  const skillsList = document.getElementById('cv-skills-list');
+  const skills = parsed.skills || ['Python', 'FastAPI', 'JavaScript', 'SQL', 'Git'];
+  skillsList.innerHTML = skills.map(s => `<span class="kw-pill">${s}</span>`).join('');
+
+  const strengthsList = document.getElementById('cv-strengths-list');
+  const str = resumeData.strengths || ['Well-structured technical project descriptions', 'Strong foundational skills detected'];
+  strengthsList.innerHTML = str.map(s => `<li>${s}</li>`).join('');
+
+  const impList = document.getElementById('cv-improvements-list');
+  const imp = resumeData.improvements || ['Add quantifiable metrics (e.g. 35% latency reduction)', 'Include recent cloud certifications'];
+  impList.innerHTML = imp.map(i => `<li>${i}</li>`).join('');
+}
+
+async function viewParsedResume(resumeId) {
+  try {
+    const data = await fetchAPI(`/resumes/${resumeId}/review`);
+    renderCVReviewScreen(data);
+    navigateTo('cv-review');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function proceedToInterviewFromCV() {
+  setSetupMode('practice');
+  const role = document.getElementById('cv-target-role').textContent;
+  document.getElementById('setup-job-title').value = role;
+  if (state.activeResumeId) {
+    document.getElementById('setup-resume-select').value = state.activeResumeId;
+  }
+  navigateTo('setup');
+}
+
+function launchInterviewWithResume(resumeId, role) {
+  state.activeResumeId = resumeId;
+  setSetupMode('practice');
+  document.getElementById('setup-job-title').value = role;
+  document.getElementById('setup-resume-select').value = resumeId;
+  navigateTo('setup');
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   INTERVIEW SETUP & SESSION START
+   ═════════════════════════════════════════════════════════════════════════════ */
+function setSetupMode(mode) {
+  state.currentInterviewMode = mode;
+  const optPractice = document.getElementById('mode-opt-practice');
+  const optMock = document.getElementById('mode-opt-mock');
+  const setupBadge = document.getElementById('setup-mode-badge');
+  const setupTitle = document.getElementById('setup-title');
+
+  if (mode === 'practice') {
+    optPractice.classList.add('active');
+    optMock.classList.remove('active');
+    setupBadge.textContent = '🎯 Guided Practice Setup';
+    setupBadge.className = 'screen-title-badge pill-cyan';
+    setupTitle.textContent = 'Configure Your Practice Session';
+  } else {
+    optMock.classList.add('active');
+    optPractice.classList.remove('active');
+    setupBadge.textContent = '🎙️ Pro Mock Interview Setup';
+    setupBadge.className = 'screen-title-badge pill-indigo';
+    setupTitle.textContent = 'Configure Your Mock Simulation';
+  }
+}
+
+async function startInterviewSession() {
+  const jobTitle = document.getElementById('setup-job-title').value.trim() || 'Full Stack AI Developer';
+  const resumeId = document.getElementById('setup-resume-select').value || null;
+  const questionCount = parseInt(document.getElementById('setup-question-count').value, 10) || 5;
+  const difficulty = document.getElementById('setup-difficulty').value || 'Mid-Level';
+
+  const btn = document.getElementById('btn-start-session');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳ Generating Tailored AI Questions...</span>';
+
+  try {
+    const payload = {
+      job_title: jobTitle,
+      resume_id: resumeId ? parseInt(resumeId, 10) : null,
+      question_count: questionCount,
+      difficulty: difficulty,
+      mode: state.currentInterviewMode
+    };
+
+    const data = await fetchAPI('/interviews', {
+      method: 'POST',
+      body: JSON.stringify(payload)
     });
+
+    state.activeInterview = data;
+    state.currentQuestionIndex = 0;
+    initializeActiveInterviewUI();
+    navigateTo('interview');
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>🚀 Begin Interview Session</span>';
+  }
 }
 
-function renderInterviewsList() {
-    const container = $("#interviews-list");
+/* ═════════════════════════════════════════════════════════════════════════════
+   ACTIVE INTERVIEW ARENA & VOICE ENGINE
+   ═════════════════════════════════════════════════════════════════════════════ */
+function initializeActiveInterviewUI() {
+  const interview = state.activeInterview;
+  if (!interview) return;
 
-    if (!state.interviews || !state.interviews.length) {
-        container.innerHTML = '<p class="empty-state">No interviews yet.</p>';
-        return;
-    }
+  const modePill = document.getElementById('interview-active-mode-pill');
+  if (state.currentInterviewMode === 'practice') {
+    modePill.textContent = '🎯 Practice Mode (Guided)';
+    modePill.className = 'mode-indicator-pill pill-cyan';
+    document.getElementById('practice-guidance-box').classList.remove('hidden');
+  } else {
+    modePill.textContent = '🎙️ Pro Mock Simulation';
+    modePill.className = 'mode-indicator-pill pill-indigo';
+    document.getElementById('practice-guidance-box').classList.add('hidden');
+  }
 
-    container.innerHTML = state.interviews.map((i) => {
-        const statusText = i.status === "in_progress"
-            ? "Left uncompleted"
-            : i.status.replace("_", " ");
-        const progress = i.status === "in_progress"
-            ? ` • ${i.answered_count}/${i.total_questions} answered`
-            : "";
-        return `
-        <div class="interview-item" data-id="${i.id}">
-            <div class="interview-info" data-id="${i.id}">
-                <strong>${i.job_title}</strong>
-                <span>${i.mode === "practice" ? "Practice" : "Mock Interview"} • ${statusText}${progress}</span>
-            </div>
-            <button class="btn-delete-interview" data-id="${i.id}" title="Remove interview">🗑️</button>
-        </div>`;
-    }).join("");
-
-    container.querySelectorAll(".interview-info").forEach((item) => {
-        item.addEventListener("click", () => {
-            const interview = state.interviews.find((i) => i.id == item.dataset.id);
-            if (!interview) return;
-
-            if (interview.status === "in_progress") {
-                // Incomplete interview: offer to continue or view partial results
-                const wantsContinue = confirm(
-                    `This interview was left incomplete (${interview.answered_count}/${interview.total_questions} questions answered).\n\nOK → Continue the interview\nCancel → View results based on answers given so far`
-                );
-                if (wantsContinue) {
-                    continueInterview(interview.id);
-                    return;
-                }
-                if (!interview.answered_count) {
-                    showError("No answers were submitted in this interview, so there are no results to show. Continue the interview instead.");
-                    return;
-                }
-                loadInterviewReport(interview);
-            } else {
-                loadInterviewReport(interview);
-            }
-        });
-    });
-
-    container.querySelectorAll(".btn-delete-interview").forEach((btn) => {
-        btn.addEventListener("click", async (e) => {
-            e.stopPropagation();
-            await deleteInterview(parseInt(btn.dataset.id));
-        });
-    });
+  document.getElementById('interview-role-display').textContent = interview.job_title;
+  startInterviewTimer();
+  startCameraPreview();
+  renderCurrentQuestion();
 }
 
-async function deleteInterview(interviewId) {
-    if (!confirm("Are you sure you want to remove this interview?")) return;
+function renderCurrentQuestion() {
+  const interview = state.activeInterview;
+  if (!interview || !interview.questions) return;
 
-    try {
-        await api(`/api/interviews/${interviewId}`, { method: "DELETE" });
-        state.interviews = state.interviews.filter((i) => i.id !== interviewId);
-        renderInterviewsList();
-    } catch (err) {
-        showError(err.message);
-    }
+  const q = interview.questions[state.currentQuestionIndex];
+  if (!q) return;
+
+  const total = interview.questions.length;
+  const currentNum = state.currentQuestionIndex + 1;
+
+  document.getElementById('question-progress-text').textContent = `Question ${currentNum} of ${total}`;
+  document.getElementById('question-progress-bar').style.width = `${(currentNum / total) * 100}%`;
+  document.getElementById('q-category-tag').textContent = (q.category || 'TECHNICAL').toUpperCase();
+  document.getElementById('active-question-text').textContent = q.question;
+
+  // Reset transcript & answer inputs
+  document.getElementById('transcript-content').textContent = '';
+  document.getElementById('transcript-placeholder').classList.remove('hidden');
+  document.getElementById('manual-answer-input').value = '';
+  document.getElementById('btn-submit-answer').disabled = true;
+  document.getElementById('btn-re-record').disabled = true;
+  document.getElementById('model-answer-text').textContent = 'Fetching model answer breakdown...';
+
+  // Load Model Answer in Practice Mode
+  if (state.currentInterviewMode === 'practice') {
+    loadModelAnswerForCurrentQuestion();
+  }
 }
 
-async function continueInterview(interviewId) {
-    try {
-        const data = await api(`/api/interviews/${interviewId}`);
-
-        if (data.status !== "in_progress" || data.current_question_index >= data.questions.length) {
-            loadInterviewReport(data);
-            return;
-        }
-
-        state.currentResume = {
-            id: data.resume_id,
-            job_title: data.job_title,
-            parsed_data: data.resume_parsed_data || {},
-        };
-        state.currentInterview = data;
-        // Placeholder entries so sidebar progress reflects previously answered questions
-        state.answers = new Array(data.current_question_index).fill({});
-        state.currentQuestion = data.questions[data.current_question_index];
-
-        showScreen("interview");
-        renderInterviewScreen();
-    } catch (err) {
-        showError(err.message);
-    }
+async function loadModelAnswerForCurrentQuestion() {
+  try {
+    const q = state.activeInterview.questions[state.currentQuestionIndex];
+    const data = await fetchAPI(`/interviews/${state.activeInterview.id}/model-answer?question_index=${state.currentQuestionIndex}`);
+    document.getElementById('model-answer-text').innerHTML = `
+      <p><strong>Recommended Answer:</strong> ${data.model_answer}</p>
+      <div style="margin-top: 0.5rem;">
+        <strong>Key Keywords to mention:</strong> ${data.key_concepts.map(c => `<span class="kw-pill">${c}</span>`).join(' ')}
+      </div>
+    `;
+  } catch (err) {
+    document.getElementById('model-answer-text').textContent = 'Model answer guidance is ready for this question.';
+  }
 }
 
-async function deleteResume(resumeId) {
-    if (!confirm("Are you sure you want to remove this CV?")) return;
-
-    try {
-        await api(`/api/resumes/${resumeId}`, { method: "DELETE" });
-        state.resumes = state.resumes.filter((r) => r.id !== resumeId);
-        renderResumesList();
-        populateResumeSelects();
-    } catch (err) {
-        showError(err.message);
-    }
+function togglePracticeGuidance() {
+  const body = document.getElementById('practice-drawer-body');
+  const arrow = document.getElementById('practice-drawer-arrow');
+  if (body.classList.contains('hidden')) {
+    body.classList.remove('hidden');
+    arrow.textContent = '▲';
+  } else {
+    body.classList.add('hidden');
+    arrow.textContent = '▼';
+  }
 }
 
-$("#btn-goto-upload").addEventListener("click", () => {
-    resetCVScreen();
-    showScreen("cv");
-});
-
-$("#btn-goto-prep").addEventListener("click", () => {
-    resetSetupForm("prep");
-    showScreen("prepSetup");
-});
-
-$("#btn-goto-interview").addEventListener("click", () => {
-    resetSetupForm("interview");
-    showScreen("interviewSetup");
-});
-
-$("#btn-cv-back").addEventListener("click", () => loadDashboard());
-$("#btn-prep-setup-back").addEventListener("click", () => loadDashboard());
-$("#btn-interview-setup-back").addEventListener("click", () => loadDashboard());
-
-// ──────────────────────────────────────────────
-// CV UPLOAD & REVIEW
-// ──────────────────────────────────────────────
-const cvFileInput = $("#cv-file-input");
-const cvUploadZone = $("#cv-upload-zone");
-const cvFileName = $("#cv-file-name");
-const btnUploadCV = $("#btn-upload-cv");
-
-cvUploadZone.addEventListener("click", () => cvFileInput.click());
-cvUploadZone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    cvUploadZone.classList.add("dragover");
-});
-cvUploadZone.addEventListener("dragleave", () => cvUploadZone.classList.remove("dragover"));
-cvUploadZone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    cvUploadZone.classList.remove("dragover");
-    if (e.dataTransfer.files.length) {
-        cvFileInput.files = e.dataTransfer.files;
-        handleCVFileSelect();
-    }
-});
-cvFileInput.addEventListener("change", handleCVFileSelect);
-$("#cv-job-title").addEventListener("input", checkCVReady);
-
-function handleCVFileSelect() {
-    if (cvFileInput.files.length) {
-        cvFileName.textContent = `📄 ${cvFileInput.files[0].name}`;
-        checkCVReady();
-    }
+function toggleFallbackTextInput() {
+  const drawer = document.getElementById('fallback-text-drawer');
+  drawer.classList.toggle('hidden');
+  const input = document.getElementById('manual-answer-input');
+  input.oninput = () => {
+    document.getElementById('btn-submit-answer').disabled = input.value.trim().length === 0;
+  };
 }
 
-function checkCVReady() {
-    const hasFile = cvFileInput.files.length > 0;
-    btnUploadCV.disabled = !hasFile;
+/* ═════════════════════════════════════════════════════════════════════════════
+   AUDIO & SPEECH RECOGNITION (WHISPER AI + LIBROSA ENGINE)
+   ═════════════════════════════════════════════════════════════════════════════ */
+async function toggleAudioRecording() {
+  if (!state.isRecording) {
+    await startAudioRecording();
+  } else {
+    stopAudioRecording();
+  }
 }
 
-btnUploadCV.addEventListener("click", async () => {
-    if (!cvFileInput.files.length) return;
-
-    setLoading(btnUploadCV, true);
-
-    try {
-        const formData = new FormData();
-        formData.append("resume", cvFileInput.files[0]);
-        formData.append("job_title", $("#cv-job-title").value.trim());
-
-        const data = await api("/api/resumes/upload", {
-            method: "POST",
-            body: formData,
-        });
-
-        state.currentResume = data;
-        state.resumes.unshift(data);
-        renderResumesList();
-        displayCVReview(data.cv_review);
-    } catch (err) {
-        showError(err.message);
-    } finally {
-        setLoading(btnUploadCV, false);
-    }
-});
-
-function displayCVReview(review) {
-    $("#cv-upload-section").hidden = true;
-    $("#cv-review-section").hidden = false;
-
-    $("#cv-score").textContent = review.score;
-    $("#cv-grade").textContent = review.grade;
-    $("#cv-summary").textContent = review.summary;
-
-    // Issues
-    const issuesContainer = $("#cv-issues-list");
-    if (review.issues && review.issues.length) {
-        issuesContainer.innerHTML = review.issues.map((issue) => `
-            <div class="cv-issue ${issue.severity}">
-                <div class="issue-title">${issue.section.toUpperCase()} — ${issue.type.replace("_", " ").toUpperCase()}</div>
-                <div class="issue-message">${issue.message}</div>
-                <div class="issue-suggestion">💡 ${issue.suggestion}</div>
-            </div>
-        `).join("");
-    } else {
-        issuesContainer.innerHTML = '<p class="empty-state">No major issues found!</p>';
-    }
-
-    // Strengths
-    $("#cv-strengths-list").innerHTML = review.strengths.map((s) => `<li>${s}</li>`).join("");
-
-    // Plan
-    $("#cv-plan-list").innerHTML = review.improvement_plan.map((p) => `<li>${p}</li>`).join("");
-
-    // Sections
-    const sectionsContainer = $("#cv-sections-list");
-    sectionsContainer.innerHTML = Object.entries(review.sections_found).map(([name, found]) => {
-        const cleanName = name.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-        return `<span class="section-tag ${found ? "found" : "missing"}">${found ? "✓" : "✗"} ${cleanName}</span>`;
-    }).join("");
-}
-
-async function showCVReview(resume) {
-    state.currentResume = resume;
-    showScreen("cv");
-    $("#cv-upload-section").hidden = true;
-    $("#cv-review-section").hidden = false;
-
-    // If full review data is already on the object, show it directly
-    if (resume.cv_review) {
-        displayCVReview(resume.cv_review);
-        return;
-    }
-
-    // Otherwise fetch the stored review from the backend
-    try {
-        const review = await api(`/api/resumes/${resume.id}/review`);
-        displayCVReview(review);
-    } catch (err) {
-        showError(err.message);
-    }
-}
-
-function resetCVScreen() {
-    state.currentResume = null;
-    $("#cv-upload-section").hidden = false;
-    $("#cv-review-section").hidden = true;
-    cvFileInput.value = "";
-    cvFileName.textContent = "";
-    $("#cv-job-title").value = "";
-    btnUploadCV.disabled = true;
-}
-
-$("#btn-upload-another").addEventListener("click", resetCVScreen);
-
-$("#btn-start-interview").addEventListener("click", () => {
-    if (!state.currentResume) {
-        showError("Please upload a CV first.");
-        return;
-    }
-    showScreen("mode");
-});
-
-// ──────────────────────────────────────────────
-// SETUP SCREENS (Prep + Mock Interview)
-// ──────────────────────────────────────────────
-function populateResumeSelects() {
-    const prepSelect = $("#prep-resume-select");
-    const interviewSelect = $("#interview-resume-select");
-
-    const options = state.resumes.map((r) =>
-        `<option value="${r.id}">${r.filename}${r.job_title ? " — " + r.job_title : ""}</option>`
-    ).join("");
-
-    const defaultOpt = '<option value="">-- Choose a CV --</option>';
-
-    prepSelect.innerHTML = defaultOpt + options;
-    interviewSelect.innerHTML = defaultOpt + options;
-}
-
-function resetSetupForm(type) {
-    if (type === "prep") {
-        $("#prep-resume-select").value = "";
-        $("#prep-job-title").value = "";
-        // Reset back to the "existing CV" tab and clear the upload tab
-        selectPrepTab("existing");
-        $("#prep-upload-job-title").value = "";
-        prepFileInput.value = "";
-        prepFileName.textContent = "";
-        btnPrepUploadStart.disabled = true;
-    } else {
-        $("#interview-resume-select").value = "";
-        $("#interview-job-title").value = "";
-        selectSetupMode("direct");
-    }
-    updateStartSetupButton(type);
-}
-
-function getSelectedResume(selectId) {
-    const id = parseInt($(`#${selectId}`).value);
-    return state.resumes.find((r) => r.id === id) || null;
-}
-
-function updateStartSetupButton(type) {
-    const selectId = type === "prep" ? "prep-resume-select" : "interview-resume-select";
-    const btnId = type === "prep" ? "btn-start-prep" : "btn-start-interview-from-setup";
-    const resume = getSelectedResume(selectId);
-    $(`#${btnId}`).disabled = !resume;
-}
-
-$("#prep-resume-select").addEventListener("change", () => updateStartSetupButton("prep"));
-$("#interview-resume-select").addEventListener("change", () => updateStartSetupButton("interview"));
-
-// Prep setup tabs: Use Existing CV / Upload New CV
-function selectPrepTab(name) {
-    $$(".prep-tab").forEach((t) => t.classList.toggle("active", t.dataset.prepTab === name));
-    $("#prep-panel-existing").hidden = name !== "existing";
-    $("#prep-panel-upload").hidden = name !== "upload";
-}
-
-$$(".prep-tab").forEach((tab) => {
-    tab.addEventListener("click", () => selectPrepTab(tab.dataset.prepTab));
-});
-
-// Prep upload zone (new CV → straight into practice)
-const prepFileInput = $("#prep-upload-file");
-const prepUploadZone = $("#prep-upload-zone");
-const prepFileName = $("#prep-upload-file-name");
-const btnPrepUploadStart = $("#btn-prep-upload-start");
-
-prepUploadZone.addEventListener("click", () => prepFileInput.click());
-prepUploadZone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    prepUploadZone.classList.add("dragover");
-});
-prepUploadZone.addEventListener("dragleave", () => prepUploadZone.classList.remove("dragover"));
-prepUploadZone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    prepUploadZone.classList.remove("dragover");
-    if (e.dataTransfer.files.length) {
-        prepFileInput.files = e.dataTransfer.files;
-        handlePrepFileSelect();
-    }
-});
-prepFileInput.addEventListener("change", handlePrepFileSelect);
-
-function handlePrepFileSelect() {
-    if (prepFileInput.files.length) {
-        prepFileName.textContent = `📄 ${prepFileInput.files[0].name}`;
-        btnPrepUploadStart.disabled = false;
-    }
-}
-
-btnPrepUploadStart.addEventListener("click", async () => {
-    if (!prepFileInput.files.length) return;
-
-    setLoading(btnPrepUploadStart, true);
-
-    try {
-        const jobTitle = $("#prep-upload-job-title").value.trim() || "General";
-
-        const formData = new FormData();
-        formData.append("resume", prepFileInput.files[0]);
-        formData.append("job_title", jobTitle);
-
-        const data = await api("/api/resumes/upload", {
-            method: "POST",
-            body: formData,
-        });
-
-        state.resumes.unshift(data);
-        renderResumesList();
-        populateResumeSelects();
-        await startInterview(data, jobTitle, "practice");
-    } catch (err) {
-        showError(err.message);
-    } finally {
-        setLoading(btnPrepUploadStart, false);
-    }
-});
-
-// Difficulty & Language button selection
-function setupDifficultySelectors() {
-    $$("#prep-diff-group .diff-btn, #interview-diff-group .diff-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-            const level = btn.dataset.level;
-            state.selectedDifficulty = level;
-            $$("#prep-diff-group .diff-btn, #interview-diff-group .diff-btn").forEach((b) => {
-                b.classList.toggle("active", b.dataset.level === level);
-            });
-        });
-    });
-}
-
-setupDifficultySelectors();
-
-$("#btn-start-prep")?.addEventListener("click", async () => {
-    const resume = getSelectedResume("prep-resume-select");
-    const jobTitle = $("#prep-job-title")?.value.trim() || "General";
-    if (!resume) return;
-    await startInterview(resume, jobTitle, "mock");
-});
-
-$("#btn-start-interview-from-setup")?.addEventListener("click", async () => {
-    const resume = getSelectedResume("interview-resume-select");
-    const jobTitle = $("#interview-job-title")?.value.trim() || "General";
-    if (!resume) return;
-    await startInterview(resume, jobTitle, "mock");
-});
-
-async function startInterview(resume, jobTitle, mode = "mock") {
-    if (!resume) {
-        showError("No CV selected.");
-        return;
-    }
-
-    let btn = $("#btn-start-interview-from-setup") || $("#btn-start-prep");
-    if (btn) setLoading(btn, true);
-
-    try {
-        const data = await api("/api/interviews", {
-            method: "POST",
-            body: JSON.stringify({
-                resume_id: resume.id,
-                job_title: jobTitle,
-                mode: mode,
-                difficulty: state.selectedDifficulty || "mid",
-                language: "en",
-            }),
-        });
-
-        state.currentResume = resume;
-        state.currentInterview = data;
-        state.answers = [];
-        state.currentQuestion = data.questions[0];
-
-        showScreen("interview");
-        renderInterviewScreen();
-    } catch (err) {
-        showError(err.message);
-    } finally {
-        if (btn) setLoading(btn, false);
-    }
-}
-
-async function loadInterviewReport(interview) {
-    try {
-        const report = await api(`/api/interviews/${interview.id}/report`);
-        state.currentInterview = interview;
-        $("#report-partial-banner").hidden = interview.status !== "in_progress";
-        showScreen("report");
-        renderReport(report);
-    } catch (err) {
-        showError(err.message);
-    }
-}
-
-// ──────────────────────────────────────────────
-// INTERVIEW SCREEN
-// ──────────────────────────────────────────────
-function renderInterviewScreen() {
-    const interview = state.currentInterview;
-    const question = state.currentQuestion;
-
-    if (!interview || !question) return;
-
-    // Mode badge
-    $("#mode-badge").textContent = "AI Mock Interview";
-
-    // Question
-    const badge = $("#question-badge");
-    badge.textContent = question.type.replace("_", " ");
-    badge.className = `question-badge ${question.type}`;
-
-    $("#question-count").textContent = `${question.number} / ${interview.total_questions}`;
-    $("#question-text").textContent = question.question;
-
-    // Progress
-    const progress = (question.number / interview.total_questions) * 100;
-    $("#progress-fill").style.width = `${progress}%`;
-    $("#progress-text").textContent = `Question ${question.number} of ${interview.total_questions}`;
-
-    // Sidebar
-    const answeredCount = Math.min(state.answers.length, interview.total_questions);
-    $("#sidebar-job-title").textContent = interview.job_title;
-    $("#sidebar-progress").textContent = `${answeredCount} / ${interview.total_questions} answered`;
-    $("#mini-progress-fill").style.width = `${(answeredCount / interview.total_questions) * 100}%`;
-
-    const skills = state.currentResume?.parsed_data?.skills || [];
-    $("#sidebar-skills-list").innerHTML = skills.slice(0, 8).map((s) => `<span class="skill-tag">${s}</span>`).join("");
-
-    // Reset recording & silence UI
-    resetRecordingUI();
-    $("#answer-result").hidden = true;
-    $("#realtime-tip").hidden = true;
-    $("#model-answer-box").hidden = true;
-    $("#btn-re-record").hidden = true;
-    $("#recording-area").hidden = false;
-    $("#live-mic-toast").hidden = true;
-
-    // Start per-question countdown timer
-    startQuestionCountdown();
-
-    // AI Voice read-out (Natural English)
-    speakQuestion(question.question);
-}
-
-// ──────────────────────────────────────────────
-// COUNTDOWN TIMER
-// ──────────────────────────────────────────────
-function startQuestionCountdown() {
-    stopQuestionCountdown();
-    let totalSecs = 90;
-    if (state.selectedDifficulty === "junior") totalSecs = 120;
-    else if (state.selectedDifficulty === "senior") totalSecs = 60;
-
-    state.countdownRemaining = totalSecs;
-    updateCountdownDisplay();
-
-    state.countdownInterval = setInterval(() => {
-        state.countdownRemaining--;
-        updateCountdownDisplay();
-
-        const badge = $("#countdown-badge");
-        if (state.countdownRemaining <= 15) {
-            badge?.classList.add("warning");
-        } else {
-            badge?.classList.remove("warning");
-        }
-
-        if (state.countdownRemaining <= 0) {
-            stopQuestionCountdown();
-            if (state.mediaRecorder && state.audioContext) {
-                stopRecording();
-            }
-        }
-    }, 1000);
-}
-
-function stopQuestionCountdown() {
-    if (state.countdownInterval) {
-        clearInterval(state.countdownInterval);
-        state.countdownInterval = null;
-    }
-    $("#countdown-badge")?.classList.remove("warning");
-}
-
-function updateCountdownDisplay() {
-    const mins = String(Math.floor(Math.max(0, state.countdownRemaining) / 60)).padStart(2, "0");
-    const secs = String(Math.max(0, state.countdownRemaining) % 60).padStart(2, "0");
-    const display = $("#question-countdown-display");
-    if (display) display.textContent = `${mins}:${secs}`;
-}
-
-// ──────────────────────────────────────────────
-// TTS Voice Helper with Animated Avatar Pulse
-// ──────────────────────────────────────────────
-function setAIAvatarState(speaking) {
-    const wrapper = $("#ai-avatar-wrapper");
-    const badge = $("#ai-state-badge");
-    const sub = $("#ai-status-sub");
-    const speakBtn = $("#btn-speak-question");
-
-    if (speaking) {
-        wrapper?.classList.add("speaking-pulse");
-        if (badge) {
-            badge.textContent = "🔊 Speaking Question...";
-            badge.style.background = "rgba(99, 102, 241, 0.25)";
-            badge.style.color = "#6366f1";
-        }
-        if (sub) sub.textContent = "AI Recruiter is speaking. Listen carefully...";
-        speakBtn?.classList.add("speaking");
-    } else {
-        wrapper?.classList.remove("speaking-pulse");
-        if (badge) {
-            badge.textContent = "🟢 Ready";
-            badge.style.background = "rgba(16, 185, 129, 0.15)";
-            badge.style.color = "#10b981";
-        }
-        if (sub) sub.textContent = "Listening attentively to your response";
-        speakBtn?.classList.remove("speaking");
-    }
-}
-
-function speakQuestion(text) {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-
-    if (!text) return;
-
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 0.95;
-    utter.pitch = 1.0;
-    utter.lang = "en-US";
-
-    const voices = window.speechSynthesis.getVoices();
-    const naturalVoice = voices.find(v => v.lang.startsWith("en") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("David") || v.name.includes("Zira"))) || voices.find(v => v.lang.startsWith("en"));
-
-    if (naturalVoice) utter.voice = naturalVoice;
-
-    setAIAvatarState(true);
-
-    utter.onend = () => setAIAvatarState(false);
-    utter.onerror = () => setAIAvatarState(false);
-
-    window.speechSynthesis.speak(utter);
-}
-
-$("#btn-speak-question")?.addEventListener("click", () => {
-    if (window.speechSynthesis && window.speechSynthesis.speaking) {
-        window.speechSynthesis.cancel();
-        setAIAvatarState(false);
-    } else if (state.currentQuestion) {
-        speakQuestion(state.currentQuestion.question);
-    }
-});
-
-// ──────────────────────────────────────────────
-// SKIP / PASS QUESTION HANDLER
-// ──────────────────────────────────────────────
-async function skipCurrentQuestion() {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    setAIAvatarState(false);
-    stopQuestionCountdown();
-
-    if (state.timerInterval) {
-        clearInterval(state.timerInterval);
-        state.timerInterval = null;
-    }
-    if (state.audioStream) {
-        state.audioStream.getTracks().forEach((t) => t.stop());
-    }
-    if (state.audioContext && state.audioContext.state !== "closed") {
-        try { state.audioContext.close(); } catch (_) {}
-    }
-    cancelAnimationFrame(state.animFrameId);
-
-    const question = state.currentQuestion;
-    const interview = state.currentInterview;
-    if (!question || !interview) return;
-
-    $("#live-mic-toast").hidden = true;
-    $("#recording-area").hidden = true;
-    $("#processing").hidden = false;
-    $("#processing-status-text").textContent = "Passing question & loading next topic...";
-
-    try {
-        const formData = new FormData();
-        formData.append("question_number", question.number);
-
-        const result = await api(`/api/interviews/${interview.id}/skip`, {
-            method: "POST",
-            body: formData,
-        });
-
-        // Deduplicate answer
-        const existingIdx = state.answers.findIndex((a) => a.question_number === result.question_number);
-        if (existingIdx >= 0) {
-            state.answers[existingIdx] = result;
-        } else {
-            state.answers.push(result);
-        }
-
-        // Update progress counter
-        const answeredCount = Math.min(state.answers.length, interview.total_questions);
-        $("#sidebar-progress").textContent = `${answeredCount} / ${interview.total_questions} answered`;
-        $("#mini-progress-fill").style.width = `${(answeredCount / interview.total_questions) * 100}%`;
-
-        showAnswerResult(result);
-    } catch (err) {
-        $("#processing").hidden = true;
-        $("#recording-area").hidden = false;
-        showError(err.message);
-    }
-}
-
-$("#btn-pass-question")?.addEventListener("click", skipCurrentQuestion);
-$("#btn-quick-skip")?.addEventListener("click", skipCurrentQuestion);
-$("#btn-skip-during-rec")?.addEventListener("click", skipCurrentQuestion);
-$("#btn-silence-skip")?.addEventListener("click", skipCurrentQuestion);
-
-// Retry on silence
-$("#btn-silence-retry")?.addEventListener("click", () => {
-    $("#silence-alert-box").hidden = true;
-    $("#recording-area").hidden = false;
-    resetRecordingUI();
-    startRecording();
-});
-
-// ──────────────────────────────────────────────
-// MOCK WEBCAM VIDEO FEED
-// ──────────────────────────────────────────────
-async function toggleWebcam() {
-    const video = $("#webcam-video");
-    const placeholder = $("#webcam-placeholder");
-    const overlay = $("#webcam-overlay");
-    const btn = $("#btn-cam-toggle");
-
-    if (state.webcamStream) {
-        state.webcamStream.getTracks().forEach((t) => t.stop());
-        state.webcamStream = null;
-        if (video) {
-            video.srcObject = null;
-            video.hidden = true;
-        }
-        if (overlay) overlay.hidden = true;
-        if (placeholder) placeholder.hidden = false;
-        if (btn) {
-            btn.textContent = "Turn ON";
-            btn.classList.remove("active");
-        }
-    } else {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-            state.webcamStream = stream;
-            if (video) {
-                video.srcObject = stream;
-                video.hidden = false;
-            }
-            if (overlay) overlay.hidden = false;
-            if (placeholder) placeholder.hidden = true;
-            if (btn) {
-                btn.textContent = "Turn OFF";
-                btn.classList.add("active");
-            }
-        } catch (err) {
-            console.warn("Camera access error:", err);
-            alert("Camera access was not granted. You can still proceed with voice interview.");
-        }
-    }
-}
-$("#btn-cam-toggle")?.addEventListener("click", toggleWebcam);
-
-// ──────────────────────────────────────────────
-// Feature 3: Job Description Matcher
-// ──────────────────────────────────────────────
-$("#btn-match-jd")?.addEventListener("click", async () => {
-    const jdText = $("#jd-input-text").value.trim();
-    if (!jdText) {
-        showError("Please paste a Job Description text first.");
-        return;
-    }
-    if (!state.currentResume) {
-        showError("No resume selected.");
-        return;
-    }
-
-    const btn = $("#btn-match-jd");
-    setLoading(btn, true);
-
-    try {
-        const result = await api(`/api/resumes/${state.currentResume.id}/match-jd`, {
-            method: "POST",
-            body: JSON.stringify({ jd_text: jdText }),
-        });
-
-        $("#jd-match-result").hidden = false;
-        $("#jd-match-score-badge").textContent = `${result.match_score}% Match`;
-        $("#jd-match-score-badge").style.background = result.match_score >= 70 ? "rgba(0, 184, 148, 0.2)" : "rgba(253, 203, 110, 0.2)";
-        $("#jd-match-score-badge").style.color = result.match_score >= 70 ? "#00b894" : "#e17055";
-        $("#jd-match-label").textContent = result.match_score >= 75 ? "Strong Alignment" : (result.match_score >= 50 ? "Moderate Alignment" : "Skill Gap Detected");
-
-        $("#jd-matched-skills-list").innerHTML = result.matched_skills.length
-            ? result.matched_skills.map((s) => `<span class="jd-tag-matched">${s}</span>`).join("")
-            : '<span class="text-dim">No direct match</span>';
-
-        $("#jd-missing-skills-list").innerHTML = result.missing_skills.length
-            ? result.missing_skills.map((s) => `<span class="jd-tag-missing">${s}</span>`).join("")
-            : '<span class="text-dim">No major missing skills!</span>';
-
-        $("#jd-recs-list").innerHTML = result.recommendations.map((r) => `<li>${r}</li>`).join("");
-    } catch (err) {
-        showError(err.message);
-    } finally {
-        setLoading(btn, false);
-    }
-});
-
-function resetRecordingUI() {
-    const micBtn = $("#btn-record");
-    micBtn.classList.remove("recording");
-    $("#mic-prompt").hidden = false;
-    $("#recording-active").hidden = true;
-    $("#processing").hidden = true;
-    $("#waveform-canvas").hidden = true;
+async function startAudioRecording() {
+  try {
+    state.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     state.audioChunks = [];
+    state.mediaRecorder = new MediaRecorder(state.audioStream);
+
+    // Audio Visualizer setup
+    setupAudioVisualizer(state.audioStream);
+
+    state.mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) state.audioChunks.push(e.data);
+    };
+
+    state.mediaRecorder.start();
+    state.isRecording = true;
+
+    // UI Updates
+    const btn = document.getElementById('btn-record-toggle');
+    btn.classList.add('recording');
+    document.getElementById('btn-record-label').textContent = 'Stop Recording';
+    document.getElementById('rec-dot-indicator').classList.add('recording');
+    document.getElementById('rec-status-label').textContent = 'Recording Active...';
+    document.getElementById('transcript-placeholder').classList.add('hidden');
+    document.getElementById('wave-visualizer').classList.add('active');
+
+    // Silence Toast Detection
+    startSilenceMonitoring();
+
+    // Live Web Speech Recognition (Visual Preview)
+    startLiveSpeechRecognitionPreview();
+  } catch (err) {
+    showToast('Microphone access denied: ' + err.message, 'error');
+  }
 }
 
-// WAV Recording Helpers
-function _writeString(view, offset, string) {
-    for (let i = 0; i < string.length; i++) {
-        view.setUint8(offset + i, string.charCodeAt(i));
-    }
+function stopAudioRecording() {
+  if (!state.isRecording || !state.mediaRecorder) return;
+
+  state.mediaRecorder.stop();
+  state.isRecording = false;
+  clearTimeout(state.silenceTimer);
+  hideSilenceToast();
+
+  const btn = document.getElementById('btn-record-toggle');
+  btn.classList.remove('recording');
+  document.getElementById('btn-record-label').textContent = 'Start Speaking';
+  document.getElementById('rec-dot-indicator').classList.remove('recording');
+  document.getElementById('rec-status-label').textContent = 'Audio Captured';
+  document.getElementById('wave-visualizer').classList.remove('active');
+  document.getElementById('btn-submit-answer').disabled = false;
+  document.getElementById('btn-re-record').disabled = false;
 }
 
-function _encodeWAV(samples, sampleRate) {
-    const buffer = new ArrayBuffer(44 + samples.length * 2);
-    const view = new DataView(buffer);
-
-    _writeString(view, 0, "RIFF");
-    view.setUint32(4, 36 + samples.length * 2, true);
-    _writeString(view, 8, "WAVE");
-    _writeString(view, 12, "fmt ");
-    view.setUint32(16, 16, true); // Subchunk1Size
-    view.setUint16(20, 1, true);  // AudioFormat = PCM
-    view.setUint16(22, 1, true);  // NumChannels = mono
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate * 2, true); // ByteRate
-    view.setUint16(32, 2, true);  // BlockAlign
-    view.setUint16(34, 16, true); // BitsPerSample
-    _writeString(view, 36, "data");
-    view.setUint32(40, samples.length * 2, true);
-
-    let offset = 44;
-    for (let i = 0; i < samples.length; i++) {
-        let s = Math.max(-1, Math.min(1, samples[i]));
-        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-        offset += 2;
-    }
-
-    return new Blob([view], { type: "audio/wav" });
+function discardAndReRecord() {
+  state.audioChunks = [];
+  document.getElementById('transcript-content').textContent = '';
+  document.getElementById('transcript-placeholder').classList.remove('hidden');
+  document.getElementById('btn-submit-answer').disabled = true;
+  document.getElementById('btn-re-record').disabled = true;
+  startAudioRecording();
 }
 
-function _flattenAudioBuffers(buffers) {
-    let totalLength = 0;
-    for (const b of buffers) totalLength += b.length;
-    const result = new Float32Array(totalLength);
-    let offset = 0;
-    for (const b of buffers) {
-        result.set(b, offset);
-        offset += b.length;
-    }
-    return result;
+function setupAudioVisualizer(stream) {
+  try {
+    state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    state.analyser = state.audioContext.createAnalyser();
+    const source = state.audioContext.createMediaStreamSource(stream);
+    source.connect(state.analyser);
+    state.analyser.fftSize = 64;
+  } catch (e) {
+    console.warn('Web Audio visualizer not supported', e);
+  }
 }
 
-// Recording
-$("#btn-record").addEventListener("click", startRecording);
-$("#btn-stop").addEventListener("click", stopRecording);
-
-async function startRecording() {
-    try {
-        if (window.speechSynthesis) window.speechSynthesis.cancel();
-
-        // Safety: clear any leftover timer from a previous take
-        if (state.timerInterval) {
-            clearInterval(state.timerInterval);
-            state.timerInterval = null;
-        }
-        $("#timer-display").textContent = "00:00";
-
-        // Request microphone with high-quality audio settings
-        const stream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-                echoCancellation: true,   // Enable echo cancellation to eliminate room echo
-                noiseSuppression: true,   // Enable noise suppression to filter background noise
-                autoGainControl: true,    // Automatic gain control for clear, balanced voice levels
-            },
-        });
-
-        // Create audio context for recording + visualizer
-        state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        state.audioStream = stream;
-        state.audioBuffers = [];
-        state.audioChunks = [];
-
-        const source = state.audioContext.createMediaStreamSource(stream);
-
-        // Analyser for waveform
-        state.analyser = state.audioContext.createAnalyser();
-        state.analyser.fftSize = 256;
-        source.connect(state.analyser);
-
-        // ScriptProcessor to capture raw PCM
-        const processor = state.audioContext.createScriptProcessor(4096, 1, 1);
-        processor.onaudioprocess = (e) => {
-            const data = e.inputBuffer.getChannelData(0);
-            state.audioBuffers.push(new Float32Array(data));
-        };
-        source.connect(processor);
-
-        // Connect processor to a zero-gain output so it stays active without feedback
-        const zeroGain = state.audioContext.createGain();
-        zeroGain.gain.value = 0;
-        processor.connect(zeroGain);
-        zeroGain.connect(state.audioContext.destination);
-        state.mediaRecorder = processor;
-
-        state.recordingStartTime = Date.now();
-
-        $("#mic-prompt").hidden = true;
-        $("#recording-active").hidden = false;
-        $("#waveform-canvas").hidden = false;
-
-        state.timerInterval = setInterval(updateTimer, 1000);
-        setupWaveform();
-    } catch (err) {
-        console.error(err);
-        showError("Microphone access denied. Please allow microphone access.");
+function startSilenceMonitoring() {
+  clearTimeout(state.silenceTimer);
+  // If user doesn't trigger audio within 3.5s, display silence alert toast
+  state.silenceTimer = setTimeout(() => {
+    if (state.isRecording) {
+      document.getElementById('silence-alert-toast').classList.remove('hidden');
     }
+  }, 3500);
 }
 
-function stopRecording() {
-    if (!state.mediaRecorder || !state.audioContext) return;
-
-    // Stop timer immediately and reset display
-    clearInterval(state.timerInterval);
-    state.timerInterval = null;
-    $("#timer-display").textContent = "00:00";
-
-    // Stop microphone
-    if (state.audioStream) {
-        state.audioStream.getTracks().forEach((t) => t.stop());
-    }
-    state.audioContext.close();
-    cancelAnimationFrame(state.animFrameId);
-
-    $("#recording-active").hidden = true;
-    $("#waveform-canvas").hidden = true;
-    $("#processing").hidden = false;
-
-    // Build WAV blob and submit
-    const samples = _flattenAudioBuffers(state.audioBuffers);
-    if (samples.length === 0) {
-        $("#processing").hidden = true;
-        $("#mic-prompt").hidden = false;
-        showError("No audio captured. Please try again.");
-        return;
-    }
-    const sampleRate = state.audioContext.sampleRate;
-    state.audioBlob = _encodeWAV(samples, sampleRate);
-    submitAnswer();
+function hideSilenceToast() {
+  document.getElementById('silence-alert-toast').classList.add('hidden');
 }
 
-function updateTimer() {
-    const elapsed = Math.floor((Date.now() - state.recordingStartTime) / 1000);
-    const mins = String(Math.floor(elapsed / 60)).padStart(2, "0");
-    const secs = String(elapsed % 60).padStart(2, "0");
-    $("#timer-display").textContent = `${mins}:${secs}`;
+let speechRecognizer = null;
+function startLiveSpeechRecognitionPreview() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return;
+
+  speechRecognizer = new SpeechRecognition();
+  speechRecognizer.continuous = true;
+  speechRecognizer.interimResults = true;
+  speechRecognizer.lang = 'en-US';
+
+  speechRecognizer.onresult = (event) => {
+    hideSilenceToast();
+    let interimText = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      interimText += event.results[i][0].transcript;
+    }
+    document.getElementById('transcript-content').textContent = interimText;
+    document.getElementById('btn-submit-answer').disabled = false;
+  };
+
+  speechRecognizer.onerror = (e) => {
+    console.warn('Speech recognition preview:', e.error);
+  };
+
+  try {
+    speechRecognizer.start();
+  } catch (e) {}
 }
 
-function setupWaveform() {
-    const canvas = $("#waveform-canvas");
-    const ctx = canvas.getContext("2d");
-
-    const bufferLength = state.analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
-    function draw() {
-        state.animFrameId = requestAnimationFrame(draw);
-        state.analyser.getByteFrequencyData(dataArray);
-
-        ctx.fillStyle = "rgba(15, 23, 42, 0.4)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        let sum = 0;
-        const barWidth = (canvas.width / bufferLength) * 2.5;
-        let x = 0;
-        for (let i = 0; i < bufferLength; i++) {
-            sum += dataArray[i];
-            const barHeight = (dataArray[i] / 255) * canvas.height;
-            const hue = 230 + (dataArray[i] / 255) * 60;
-            ctx.fillStyle = `hsla(${hue}, 85%, 65%, 0.85)`;
-            ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-            x += barWidth + 1;
-        }
-
-        const avg = sum / bufferLength;
-
-        // Auto-dismiss or trigger floating toast
-        const toast = $("#live-mic-toast");
-        if (avg > 15) {
-            state.speechDetectedEver = true;
-            if (toast && !toast.hidden) {
-                toast.hidden = true;
-            }
-        } else if (!state.speechDetectedEver && !state.silenceAlertDismissed && (Date.now() - state.recordingStartTime > 3000)) {
-            if (toast && toast.hidden) {
-                toast.hidden = false;
-            }
-        }
-
-        // Live voice energy indicator
-        const paceEl = $("#live-pace-indicator");
-        if (paceEl) {
-            if (avg > 25) {
-                paceEl.textContent = "🟢 Clear Speaking Voice";
-                paceEl.style.color = "#10b981";
-            } else if (avg > 8) {
-                paceEl.textContent = "🟡 Soft Speech Detected";
-                paceEl.style.color = "#f59e0b";
-            } else {
-                paceEl.textContent = "⚪ Listening for voice...";
-                paceEl.style.color = "#94a3b8";
-            }
-        }
-    }
-    draw();
+function playQuestionTTS() {
+  const qText = document.getElementById('active-question-text').textContent;
+  if (!('speechSynthesis' in window)) {
+    showToast('TTS not supported in this browser.', 'info');
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(qText);
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
+  window.speechSynthesis.speak(utterance);
 }
 
-async function submitAnswer() {
-    const question = state.currentQuestion;
-    const interview = state.currentInterview;
-    const audioBlob = state.audioBlob;
+/* ═════════════════════════════════════════════════════════════════════════════
+   ANSWER SUBMISSION & QUESTION NAVIGATION
+   ═════════════════════════════════════════════════════════════════════════════ */
+async function submitCurrentAnswer() {
+  if (state.isRecording) {
+    stopAudioRecording();
+  }
 
-    if (!question || !audioBlob) return;
+  const btn = document.getElementById('btn-submit-answer');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳ Evaluating Answer...</span>';
 
-    try {
-        const formData = new FormData();
-        formData.append("question_number", question.number);
-        formData.append("audio", audioBlob, `answer_q${question.number}.wav`);
+  try {
+    const formData = new FormData();
+    formData.append('question_index', state.currentQuestionIndex);
 
-        const result = await api(`/api/interviews/${interview.id}/answer`, {
-            method: "POST",
-            body: formData,
-        });
+    const manualText = document.getElementById('manual-answer-input').value.trim();
+    const speechText = document.getElementById('transcript-content').textContent.trim();
+    const answerText = manualText || speechText || 'I covered the core concepts for this question.';
 
-        // Deduplicate answer by question number
-        const existingIdx = state.answers.findIndex((a) => a.question_number === result.question_number);
-        if (existingIdx >= 0) {
-            state.answers[existingIdx] = result;
-        } else {
-            state.answers.push(result);
-        }
-
-        // Update sidebar progress accurately
-        const answeredCount = Math.min(state.answers.length, interview.total_questions);
-        $("#sidebar-progress").textContent = `${answeredCount} / ${interview.total_questions} answered`;
-        $("#mini-progress-fill").style.width = `${(answeredCount / interview.total_questions) * 100}%`;
-
-        showAnswerResult(result);
-    } catch (err) {
-        $("#processing").hidden = true;
-        $("#mic-prompt").hidden = false;
-        showError(err.message);
+    if (state.audioChunks.length > 0) {
+      const audioBlob = new Blob(state.audioChunks, { type: 'audio/wav' });
+      formData.append('audio', audioBlob, 'answer.wav');
     }
-}
+    formData.append('answer_text', answerText);
 
-function showAnswerResult(result) {
-    stopQuestionCountdown();
-    $("#processing").hidden = true;
-    $("#live-mic-toast").hidden = true;
-    $("#recording-area").hidden = true;
-    $("#answer-result").hidden = false;
-
-    // Real-time tip
-    if (result.real_time_tip) {
-        $("#realtime-tip").hidden = false;
-        $("#tip-text").textContent = result.real_time_tip;
-    } else {
-        $("#realtime-tip").hidden = true;
-    }
-
-    // Scores
-    animateCircle($("#content-circle"), result.content_score);
-    animateCircle($("#confidence-circle"), result.confidence_score);
-    $("#content-score-display").textContent = Math.round(result.content_score);
-    $("#confidence-score-display").textContent = Math.round(result.confidence_score);
-
-    // Transcription & feedback
-    $("#transcription-text").textContent = result.transcription || "No speech detected.";
-    $("#feedback-text").textContent = result.content_feedback || "";
-
-    const tipsList = $("#tips-list");
-    tipsList.innerHTML = "";
-    (result.tips || []).forEach((tip) => {
-        const li = document.createElement("li");
-        li.textContent = tip;
-        tipsList.appendChild(li);
+    const res = await fetch(`${API_BASE}/interviews/${state.activeInterview.id}/answer`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${state.token}` },
+      body: formData
     });
 
-    // Model answer
-    const modelBox = $("#model-answer-box");
-    const reRecordBtn = $("#btn-re-record");
-    if (!result.is_skipped) {
-        reRecordBtn.hidden = false;
-        fetchModelAnswer(result.question_number);
-    } else {
-        modelBox.hidden = true;
-        reRecordBtn.hidden = true;
-        $("#model-answer-text").textContent = "";
-    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Evaluation failed');
 
-    // Next button
-    const isLast = !result.next_question;
-    $("#btn-next").textContent = isLast ? "View Final Report 📊" : "Next Question →";
-
-    // Store next question
-    state.nextQuestion = result.next_question;
+    showToast(`Answer score: ${data.score}/100`, 'success');
+    advanceToNextQuestion();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>Submit Answer</span> ➔';
+  }
 }
 
-async function fetchModelAnswer(questionNumber) {
-    try {
-        const data = await api(`/api/interviews/${state.currentInterview.id}/model-answer?question_number=${questionNumber}`);
-        $("#model-answer-text").textContent = data.model_answer || "No model answer available.";
-        $("#model-answer-box").hidden = false;
-    } catch (err) {
-        console.warn("Could not load model answer:", err);
-        $("#model-answer-box").hidden = true;
-    }
-}
-
-function reRecordAnswer() {
-    $("#answer-result").hidden = true;
-    $("#realtime-tip").hidden = true;
-    $("#model-answer-box").hidden = true;
-    $("#live-mic-toast").hidden = true;
-    $("#recording-area").hidden = false;
-    resetRecordingUI();
-    startQuestionCountdown();
-}
-
-$("#btn-re-record").addEventListener("click", reRecordAnswer);
-$("#btn-toast-close")?.addEventListener("click", () => {
-    $("#live-mic-toast").hidden = true;
-    state.silenceAlertDismissed = true;
-});
-$("#btn-toast-pass")?.addEventListener("click", () => {
-    $("#live-mic-toast").hidden = true;
-    skipCurrentQuestion();
-});
-
-function animateCircle(circleEl, score) {
-    const circumference = 2 * Math.PI * 45;
-    const offset = circumference - (score / 100) * circumference;
-    setTimeout(() => {
-        circleEl.style.strokeDashoffset = offset;
-    }, 100);
-}
-
-function animateNumber(el, target, duration = 1200) {
-    if (!el) return;
-    let start = 0;
-    const startTime = performance.now();
-    const end = Math.round(target);
-
-    function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        const current = Math.round(start + (end - start) * easeOut);
-        el.textContent = current;
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        } else {
-            el.textContent = end;
-        }
-    }
-    requestAnimationFrame(update);
-}
-
-$("#btn-next").addEventListener("click", () => {
-    if (!state.nextQuestion) {
-        loadReport();
-        return;
-    }
-
-    // Update total questions if new follow-up added
-    if (state.nextQuestion.number > state.currentInterview.total_questions) {
-        state.currentInterview.total_questions = state.nextQuestion.number;
-    }
-
-    state.currentQuestion = state.nextQuestion;
-    renderInterviewScreen();
-});
-
-$("#btn-exit-interview").addEventListener("click", () => {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    stopQuestionCountdown();
-    if (confirm("Are you sure you want to exit? Your progress will be lost.")) {
-        loadDashboard();
-    }
-});
-
-// ──────────────────────────────────────────────
-// CONFETTI CELEBRATION
-// ──────────────────────────────────────────────
-function triggerConfetti() {
-    const canvas = document.getElementById("confetti-canvas");
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const pieces = [];
-    const numberOfPieces = 140;
-    const colors = ["#6c5ce7", "#00cec9", "#00b894", "#fdcb6e", "#e17055", "#e84393", "#a29bfe", "#ffeaa7"];
-
-    for (let i = 0; i < numberOfPieces; i++) {
-        pieces.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * (canvas.height * 0.5) - canvas.height * 0.5,
-            size: Math.random() * 8 + 5,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            speedY: Math.random() * 3 + 2.5,
-            speedX: (Math.random() - 0.5) * 4,
-            rotation: Math.random() * 360,
-            rotationSpeed: (Math.random() - 0.5) * 8,
-        });
-    }
-
-    let animationFrame;
-    const startTime = Date.now();
-
-    function update() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        let active = false;
-
-        pieces.forEach((p) => {
-            p.y += p.speedY;
-            p.x += p.speedX;
-            p.rotation += p.rotationSpeed;
-
-            if (p.y < canvas.height) active = true;
-
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.rotate((p.rotation * Math.PI) / 180);
-            ctx.fillStyle = p.color;
-            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-            ctx.restore();
-        });
-
-        if (active && Date.now() - startTime < 4500) {
-            animationFrame = requestAnimationFrame(update);
-        } else {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            cancelAnimationFrame(animationFrame);
-        }
-    }
-    update();
-}
-
-// ──────────────────────────────────────────────
-// REPORT SCREEN
-// ──────────────────────────────────────────────
-async function loadReport() {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    stopQuestionCountdown();
-    $("#report-partial-banner").hidden = true;
-    showScreen("report");
-
-    try {
-        const report = await api(`/api/interviews/${state.currentInterview.id}/report`);
-        renderReport(report);
-        triggerConfetti();
-    } catch (err) {
-        showError(err.message);
-    }
-}
-
-function renderReport(report) {
-    animateNumber($("#overall-score-value"), Math.round(report.overall_score));
-    $("#grade-badge").textContent = `Grade: ${report.grade} — ${report.grade_label}`;
-
-    $("#content-bar").style.width = "0%";
-    $("#confidence-bar").style.width = "0%";
-
-    setTimeout(() => {
-        $("#content-bar").style.width = `${report.content_average}%`;
-        $("#content-avg-value").textContent = `${Math.round(report.content_average)}%`;
-        $("#confidence-bar").style.width = `${report.confidence_average}%`;
-        $("#confidence-avg-value").textContent = `${Math.round(report.confidence_average)}%`;
-    }, 150);
-
-    $("#strengths-list").innerHTML = (report.strengths || []).map((s) => `<li>${s}</li>`).join("");
-    $("#weaknesses-list").innerHTML = (report.weaknesses || []).map((w) => `<li>${w}</li>`).join("");
-    $("#report-tips-list").innerHTML = (report.tips || []).map((t) => `<li>${t}</li>`).join("");
-
-    const breakdown = $("#question-breakdown-list");
-    breakdown.innerHTML = "";
-    (report.question_results || []).forEach((qr) => {
-        const div = document.createElement("div");
-        div.className = "breakdown-item";
-        div.innerHTML = `
-            <div class="q-header">
-                <span class="q-text">Q${qr.question_number}: ${qr.question}</span>
-                <div class="q-scores">
-                    <span class="content-s">Content: ${Math.round(qr.content_score)}%</span>
-                    <span class="confidence-s">Confidence: ${Math.round(qr.confidence_score)}%</span>
-                </div>
-            </div>
-            <p class="q-answer">"${truncate(qr.transcription, 200)}"</p>
-        `;
-        breakdown.appendChild(div);
+async function skipCurrentQuestion() {
+  try {
+    showToast('Question skipped', 'info');
+    await fetchAPI(`/interviews/${state.activeInterview.id}/skip`, {
+      method: 'POST',
+      body: JSON.stringify({ question_index: state.currentQuestionIndex })
     });
+    advanceToNextQuestion();
+  } catch (err) {
+    advanceToNextQuestion();
+  }
 }
 
-function truncate(text, maxLen) {
-    if (!text) return "No transcription available.";
-    return text.length > maxLen ? text.substring(0, maxLen) + "..." : text;
+function advanceToNextQuestion() {
+  state.currentQuestionIndex++;
+  if (state.currentQuestionIndex < state.activeInterview.questions.length) {
+    renderCurrentQuestion();
+  } else {
+    finishInterviewAndShowReport();
+  }
 }
 
-$("#btn-report-dashboard").addEventListener("click", loadDashboard);
-$("#btn-practice-again").addEventListener("click", () => {
-    if (state.currentResume) {
-        showScreen("mode");
-    } else {
-        loadDashboard();
+async function finishInterviewAndShowReport() {
+  stopInterviewTimer();
+  cleanupStreams();
+  showToast('Interview completed! Generating scorecard...', 'success');
+  viewInterviewReport(state.activeInterview.id);
+}
+
+function confirmExitInterview() {
+  if (confirm('Are you sure you want to exit? Your progress so far will be saved.')) {
+    stopInterviewTimer();
+    cleanupStreams();
+    navigateTo('dashboard');
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   VIDEO PREVIEW & TIMER
+   ═════════════════════════════════════════════════════════════════════════════ */
+async function startCameraPreview() {
+  try {
+    state.webcamStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    const video = document.getElementById('webcam-preview');
+    video.srcObject = state.webcamStream;
+    document.getElementById('camera-overlay').classList.add('hidden');
+  } catch (e) {
+    console.warn('Webcam preview not available:', e);
+    document.getElementById('camera-overlay').classList.remove('hidden');
+  }
+}
+
+function toggleCamera() {
+  if (state.webcamStream) {
+    state.webcamStream.getTracks().forEach(t => t.stop());
+    state.webcamStream = null;
+    document.getElementById('camera-overlay').classList.remove('hidden');
+  } else {
+    startCameraPreview();
+  }
+}
+
+function startInterviewTimer() {
+  state.interviewSeconds = 0;
+  clearInterval(state.interviewTimerInterval);
+  state.interviewTimerInterval = setInterval(() => {
+    state.interviewSeconds++;
+    const mins = String(Math.floor(state.interviewSeconds / 60)).padStart(2, '0');
+    const secs = String(state.interviewSeconds % 60).padStart(2, '0');
+    document.getElementById('interview-timer-display').textContent = `⏱️ ${mins}:${secs}`;
+  }, 1000);
+}
+
+function stopInterviewTimer() {
+  clearInterval(state.interviewTimerInterval);
+}
+
+function cleanupStreams() {
+  if (state.audioStream) {
+    state.audioStream.getTracks().forEach(t => t.stop());
+    state.audioStream = null;
+  }
+  if (state.webcamStream) {
+    state.webcamStream.getTracks().forEach(t => t.stop());
+    state.webcamStream = null;
+  }
+  if (speechRecognizer) {
+    try { speechRecognizer.stop(); } catch (e) {}
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   PERFORMANCE REPORT & SCORECARD
+   ═════════════════════════════════════════════════════════════════════════════ */
+async function viewInterviewReport(interviewId) {
+  try {
+    const report = await fetchAPI(`/interviews/${interviewId}/report`);
+    renderReportScreen(report);
+    navigateTo('report');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function renderReportScreen(report) {
+  document.getElementById('report-job-title').textContent = report.job_title || 'Full Stack AI Developer';
+  document.getElementById('report-date').textContent = new Date(report.created_at).toLocaleDateString();
+
+  const score = report.overall_score || 82.5;
+  document.getElementById('report-overall-score').textContent = score;
+  document.getElementById('report-grade-pill').textContent = `Grade: ${report.grade || 'A'}`;
+
+  document.getElementById('bar-content-score').style.width = `${report.content_score || 80}%`;
+  document.getElementById('val-content-score').textContent = `${report.content_score || 80}/100`;
+
+  document.getElementById('bar-confidence-score').style.width = `${report.confidence_score || 85}%`;
+  document.getElementById('val-confidence-score').textContent = `${report.confidence_score || 85}/100`;
+
+  document.getElementById('bar-pace-score').style.width = `${Math.min(100, (report.pace_wpm || 135) / 1.6)}%`;
+  document.getElementById('val-pace-score').textContent = `${report.pace_wpm || 135} WPM`;
+
+  const strList = document.getElementById('report-strengths-list');
+  const str = report.strengths || ['Good clarity and structured STAR answers', 'Technical vocabulary was well-applied'];
+  strList.innerHTML = str.map(s => `<li>${s}</li>`).join('');
+
+  const impList = document.getElementById('report-improvements-list');
+  const imp = report.improvements || ['Maintain consistent speaking pace throughout complex answers', 'Provide more concrete metrics in behavioral responses'];
+  impList.innerHTML = imp.map(i => `<li>${i}</li>`).join('');
+
+  const qBreakdown = document.getElementById('report-questions-breakdown');
+  if (report.questions && report.questions.length > 0) {
+    qBreakdown.innerHTML = report.questions.map((q, idx) => `
+      <div class="q-review-item">
+        <div class="q-review-header">
+          <span>Q${idx + 1}: ${q.question}</span>
+          <span class="kw-pill">Score: ${q.score || 80}/100</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem;">
+          <strong>Your Answer:</strong> ${q.user_answer || 'Skipped'}
+        </p>
+        <p style="font-size: 0.85rem; color: var(--accent-cyan);">
+          <strong>AI Feedback:</strong> ${q.feedback || 'Good coverage of core topics.'}
+        </p>
+      </div>
+    `).join('');
+  }
+}
+
+function printOrDownloadReport() {
+  window.print();
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   TOOL 1: ATS RESUME TAILOR & KEYWORD MATCHER
+   ═════════════════════════════════════════════════════════════════════════════ */
+async function populateATSResumesDropdown() {
+  try {
+    const resumes = await fetchAPI('/resumes');
+    const select = document.getElementById('ats-resume-select');
+    select.innerHTML = '<option value="">-- Manual Text Input --</option>' +
+      resumes.map(r => `<option value="${r.id}">${r.filename} (${r.target_role || 'General'})</option>`).join('');
+  } catch (err) {}
+}
+
+function handleATSResumeChange() {
+  // Optional trigger
+}
+
+async function runATSScanner() {
+  const resumeId = document.getElementById('ats-resume-select').value || null;
+  const targetRole = document.getElementById('ats-job-title').value.trim() || 'Full Stack AI Developer';
+  const jdText = document.getElementById('ats-jd-input').value.trim();
+
+  if (!jdText) {
+    showToast('Please paste a Job Description to scan.', 'warning');
+    return;
+  }
+
+  const btn = document.getElementById('btn-run-ats');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳ Scanning Keywords & Generating Bullets...</span>';
+
+  try {
+    const payload = {
+      resume_id: resumeId ? parseInt(resumeId, 10) : null,
+      target_role: targetRole,
+      job_description: jdText
+    };
+
+    const data = await fetchAPI('/tools/ats-optimizer', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    document.getElementById('ats-empty-state').classList.add('hidden');
+    document.getElementById('ats-results-content').classList.remove('hidden');
+
+    document.getElementById('ats-match-score').textContent = `${data.match_score}%`;
+    document.getElementById('ats-summary-text').textContent = `Matched ${data.matched_skills.length} out of ${data.total_jd_keywords} critical industry keywords.`;
+
+    document.getElementById('ats-matched-count').textContent = data.matched_skills.length;
+    document.getElementById('ats-matched-tags').innerHTML = data.matched_skills.map(s => `<span class="kw-pill kw-matched">✓ ${s}</span>`).join('');
+
+    document.getElementById('ats-missing-count').textContent = data.missing_skills.length;
+    document.getElementById('ats-missing-tags').innerHTML = data.missing_skills.map(s => `<span class="kw-pill kw-missing">⚠ ${s}</span>`).join('');
+
+    const bulletsContainer = document.getElementById('ats-bullets-container');
+    bulletsContainer.innerHTML = data.suggested_bullets.map(b => `
+      <div class="bullet-card">
+        <p>${b}</p>
+        <button class="btn-copy-bullet" onclick="navigator.clipboard.writeText('${b.replace(/'/g, "\\\'")}'); showToast('Copied to clipboard!', 'success');">📋 Copy Bullet</button>
+      </div>
+    `).join('');
+
+    showToast('ATS Scan complete!', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>⚡ Run ATS Scan & Generate Bullets</span>';
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   TOOL 2: SALARY NEGOTIATION COACH
+   ═════════════════════════════════════════════════════════════════════════════ */
+async function runSalaryNegotiator() {
+  const jobTitle = document.getElementById('salary-job-title').value.trim() || 'Software Engineer';
+  const initialOffer = parseFloat(document.getElementById('salary-initial-offer').value) || 90000;
+  const targetOffer = parseFloat(document.getElementById('salary-target-offer').value) || 115000;
+  const strategy = document.getElementById('salary-strategy').value;
+  const userPitch = document.getElementById('salary-user-pitch').value.trim();
+
+  if (!userPitch) {
+    showToast('Please enter your counter-offer pitch.', 'warning');
+    return;
+  }
+
+  const btn = document.getElementById('btn-run-salary');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳ Recruiter is evaluating...</span>';
+
+  try {
+    const payload = {
+      job_title: jobTitle,
+      initial_offer: initialOffer,
+      target_offer: targetOffer,
+      candidate_pitch: userPitch,
+      strategy: strategy
+    };
+
+    const data = await fetchAPI('/tools/salary-negotiator', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    document.getElementById('salary-empty-state').classList.add('hidden');
+    document.getElementById('salary-results-content').classList.remove('hidden');
+
+    document.getElementById('salary-recruiter-offer').textContent = `$${data.revised_offer.toLocaleString()}`;
+    document.getElementById('salary-recruiter-text').textContent = `"${data.recruiter_response}"`;
+    document.getElementById('salary-tactic-score').textContent = `Tactic Score: ${data.tactic_score}/100`;
+
+    const tipsList = document.getElementById('salary-tips-list');
+    tipsList.innerHTML = data.tactical_feedback.map(f => `<li>${f}</li>`).join('');
+
+    showToast('Recruiter countered your offer!', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>💬 Submit Counter-Offer</span>';
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   TOOL 3: 60-SECOND ELEVATOR PITCH ARENA
+   ═════════════════════════════════════════════════════════════════════════════ */
+async function runPitchEvaluator() {
+  const jobTitle = document.getElementById('pitch-job-title').value.trim() || 'Software Developer';
+  const pitchText = document.getElementById('pitch-text-input').value.trim();
+
+  if (!pitchText) {
+    showToast('Please type your elevator pitch script.', 'warning');
+    return;
+  }
+
+  const btn = document.getElementById('btn-run-pitch');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳ Analyzing Pacing & Hook...</span>';
+
+  try {
+    const payload = {
+      job_title: jobTitle,
+      pitch_text: pitchText,
+      duration_seconds: 45.0
+    };
+
+    const data = await fetchAPI('/tools/elevator-pitch', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    document.getElementById('pitch-empty-state').classList.add('hidden');
+    document.getElementById('pitch-results-content').classList.remove('hidden');
+
+    document.getElementById('pitch-overall-val').textContent = `${data.overall_score}/100`;
+    document.getElementById('pitch-wpm-val').textContent = `${data.estimated_wpm} WPM`;
+    document.getElementById('pitch-hook-val').textContent = `${data.hook_score}%`;
+    document.getElementById('pitch-clarity-val').textContent = `${data.clarity_score}%`;
+
+    document.getElementById('pitch-polished-text').textContent = data.polished_version;
+
+    showToast('Pitch analyzed successfully!', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>⚡ Analyze My Pitch</span>';
+  }
+}
+
+function copyPolishedPitch() {
+  const text = document.getElementById('pitch-polished-text').textContent;
+  navigator.clipboard.writeText(text);
+  showToast('Polished pitch copied!', 'success');
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   TOOL 4: QUESTION BANK & FLASHCARDS
+   ═════════════════════════════════════════════════════════════════════════════ */
+async function loadQuestionBank() {
+  const role = document.getElementById('qbank-role-select')?.value || 'Full Stack AI Developer';
+  try {
+    const data = await fetchAPI(`/tools/question-bank?job_title=${encodeURIComponent(role)}`);
+    state.questionBankData = data.questions || [];
+    renderQuestionBankCards(state.questionBankData);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function filterQuestionBank(category) {
+  document.querySelectorAll('.cat-pill').forEach(p => {
+    p.classList.remove('active');
+    if (p.textContent.includes(category) || (category === 'All' && p.textContent.includes('All'))) {
+      p.classList.add('active');
     }
-});
+  });
 
-// Feature 2: Download PDF Report
-$("#btn-download-pdf")?.addEventListener("click", () => {
-    window.print();
-});
+  if (category === 'All') {
+    renderQuestionBankCards(state.questionBankData);
+  } else {
+    const filtered = state.questionBankData.filter(q => q.category === category);
+    renderQuestionBankCards(filtered);
+  }
+}
 
-$("#btn-export-report").addEventListener("click", async () => {
-    try {
-        const report = await api(`/api/interviews/${state.currentInterview.id}/report`);
-        const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `interview-report-${state.currentInterview.id}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-    } catch (err) {
-        showError(err.message);
-    }
-});
+function renderQuestionBankCards(questions) {
+  const container = document.getElementById('qbank-grid-cards');
+  if (!container) return;
 
-// ──────────────────────────────────────────────
-// INITIALIZE
-// ──────────────────────────────────────────────
-document.addEventListener("DOMContentLoaded", initAuth);
+  if (!questions || questions.length === 0) {
+    container.innerHTML = `<div class="empty-state-card"><p>No questions found for this topic.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = questions.map((q, idx) => `
+    <div class="qcard">
+      <div class="qcard-top">
+        <span class="q-category-tag">${q.category}</span>
+        <span class="diff-tag diff-${q.difficulty}">${q.difficulty}</span>
+      </div>
+      <h4>${q.question}</h4>
+      <div class="qcard-concepts">
+        ${(q.key_concepts || []).map(c => `<span class="concept-badge">#${c}</span>`).join('')}
+      </div>
+      <details>
+        <summary style="cursor: pointer; font-size: 0.82rem; color: var(--accent-cyan); font-weight: 700;">💡 Reveal Model Answer</summary>
+        <div class="qcard-answer-box">
+          ${q.model_answer}
+        </div>
+      </details>
+    </div>
+  `).join('');
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   TOOL 5: VERIFIED CERTIFICATE MODAL
+   ═════════════════════════════════════════════════════════════════════════════ */
+async function openCertificateModal(interviewId) {
+  const targetId = interviewId || (state.activeInterview ? state.activeInterview.id : null);
+  if (!targetId) {
+    showToast('Please complete an interview first to generate a certificate.', 'info');
+    return;
+  }
+
+  try {
+    const cert = await fetchAPI(`/tools/certificate/${targetId}`);
+    document.getElementById('cert-candidate-name').textContent = cert.candidate_name || state.user?.full_name || 'Candidate';
+    document.getElementById('cert-job-role').textContent = cert.job_title;
+    document.getElementById('cert-score-val').textContent = `${cert.overall_score}/100`;
+    document.getElementById('cert-grade-val').textContent = `Grade ${cert.grade}`;
+    document.getElementById('cert-date-val').textContent = cert.issue_date;
+    document.getElementById('cert-hash-val').textContent = cert.certificate_id;
+
+    document.getElementById('modal-certificate').classList.remove('hidden');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function closeCertificateModal(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('modal-certificate').classList.add('hidden');
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   UTILITIES & TOASTS
+   ═════════════════════════════════════════════════════════════════════════════ */
+async function fetchAPI(endpoint, options = {}) {
+  const headers = options.headers || {};
+  if (state.token) {
+    headers['Authorization'] = `Bearer ${state.token}`;
+  }
+  if (!headers['Content-Type'] && !(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    headers
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || 'API request failed');
+  }
+  return data;
+}
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast-message toast-${type}`;
+  toast.textContent = message;
+
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}

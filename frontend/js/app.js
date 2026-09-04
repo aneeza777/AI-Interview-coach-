@@ -507,9 +507,10 @@ function displayCVReview(review) {
 
     // Sections
     const sectionsContainer = $("#cv-sections-list");
-    sectionsContainer.innerHTML = Object.entries(review.sections_found).map(([name, found]) => `
-        <span class="section-tag ${found ? "found" : "missing"}">${found ? "✓" : "✗"} ${name}</span>
-    `).join("");
+    sectionsContainer.innerHTML = Object.entries(review.sections_found).map(([name, found]) => {
+        const cleanName = name.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+        return `<span class="section-tag ${found ? "found" : "missing"}">${found ? "✓" : "✗"} ${cleanName}</span>`;
+    }).join("");
 }
 
 async function showCVReview(resume) {

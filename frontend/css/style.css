@@ -627,27 +627,38 @@ body {
     color: var(--text-dim);
 }
 
+#cv-sections-list,
 .cv-sections-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
 }
 
 .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: 6px 14px;
-    border-radius: 12px;
-    font-size: 12px;
+    border-radius: 20px;
+    font-size: 13px;
     font-weight: 600;
+    white-space: nowrap;
+    text-transform: capitalize;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .section-tag.found {
-    background: rgba(0, 184, 148, 0.15);
-    color: var(--success);
+    background: #e6f9f0;
+    color: #00875a;
+    border: 1px solid #b3eccd;
 }
 
 .section-tag.missing {
-    background: rgba(225, 112, 85, 0.15);
-    color: var(--danger);
+    background: #ffebe6;
+    color: #de350b;
+    border: 1px solid #ffbdad;
 }
 
 .cv-actions {

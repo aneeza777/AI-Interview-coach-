@@ -451,48 +451,11 @@ def build_interview_plan(
         random.shuffle(middle)
         plan = [plan[0]] + middle[:total_questions - 2] + [plan[-1]]
 
-    # Assign question numbers and attach Urdu/Roman Urdu translations
+    # Assign question numbers
     for i, q in enumerate(plan):
         q["number"] = i + 1
-        _enrich_with_bilingual_translation(q, job_title)
 
     return plan
-
-
-def _enrich_with_bilingual_translation(q: Dict, job_title: str):
-    """Attach Urdu and Roman Urdu representations to a question."""
-    q_type = q.get("type", "general")
-    q_text = q.get("question", "")
-    target_skill = q.get("target_skill")
-
-    if q_type == "introduction":
-        q["question_ur"] = "براہ کرم اپنا تعارف کروائیں اور اپنے تعلیمی و پیشہ ورانہ پس منظر کا مختصر جائزہ پیش کریں۔"
-        q["question_roman_ur"] = "Apna introduction karwaye aur apne academic aur professional background ka brief overview dein."
-    elif q_type == "technical" and target_skill:
-        q["question_ur"] = f"کیا آپ بتا سکتے ہیں کہ آپ نے {target_skill} کو کسی پروجیکٹ میں کس طرح استعمال کیا ہے اور کیا چیلنجز حل کیے؟"
-        q["question_roman_ur"] = f"Ap ne {target_skill} ko kisi real-world project mein kaisay use kiya aur kya technical challenges solve kiye?"
-    elif q_type == "projects":
-        q["question_ur"] = "اپنے کسی اہم پروجیکٹ کے بارے میں بتائیں جس کے آرکیٹیکچر اور چیلنجز پر آپ نے خود کام کیا ہو۔"
-        q["question_roman_ur"] = "Apne kisi impactful project ke architecture aur technical challenges ke baray mein tafseel se btaiye."
-    elif q_type == "experience":
-        q["question_ur"] = "اپنے پچھلے تجربے اور اس دوران حاصل کی گئی اہم کامیابیوں کے بارے میں بتائیں۔"
-        q["question_roman_ur"] = "Apne pichlay professional experience aur key achievements ke baray mein btaiye."
-    elif q_type == "behavioral":
-        if "deadline" in q_text.lower():
-            q["question_ur"] = "کسی ایسے وقت کی مثال دیں جب آپ کو سخت ڈیڈ لائن کا سامنا تھا اور آپ نے اسے کیسے مکمل کیا؟"
-            q["question_roman_ur"] = "Kisi aisay waqt ki misaal dein jab ap ko tight deadline ka samna tha aur ap ne time kaisay manage kiya?"
-        elif "conflict" in q_text.lower() or "disagree" in q_text.lower():
-            q["question_ur"] = "ٹیم میں کسی اختلاف رائے یا بحث کی صورت میں آپ نے اسے کس طرح سلجھایا؟"
-            q["question_roman_ur"] = "Team mein kisi disagreement ko ap ne communication aur logic ke zariye kaisay resolve kiya?"
-        else:
-            q["question_ur"] = "کسی مشکل تکنیکی مسئلے کی مثال دیں جسے آپ نے تنقیدی سوچ کے ذریعے حل کیا۔"
-            q["question_roman_ur"] = "Kisi complex technical problem ki misaal dein jo ap ne critical thinking ke sath solve ki."
-    elif q_type == "closing":
-        q["question_ur"] = f"کیا آپ کے پاس {job_title} رول یا کمپنی کے متعلق ہم سے کوئی سوال ہے؟"
-        q["question_roman_ur"] = f"Kya ap ka {job_title} role ya company ke baray mein hum se koi sawaal hai?"
-    else:
-        q["question_ur"] = f"اس جاب رول ({job_title}) کے تقاضوں کے مطابق اپنے کام کرنے کے انداز پر روشنی ڈالیں۔"
-        q["question_roman_ur"] = f"Is {job_title} role ke hawalay se apne work approach aur experience par roshni dalain."
 
 
 # ──────────────────────────────────────────────

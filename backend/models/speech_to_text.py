@@ -130,16 +130,28 @@ def _is_valid_transcription(text: str) -> bool:
 
 def _sanitize_transcription(text: str) -> str:
     """
-    Sanitize corrupted transcriptions while preserving genuine short answers.
+    Sanitize corrupted transcriptions while preserving genuine answers.
+    Rejects non-Latin hallucinations (like Devanagari/Hindi chants) and repetitive loops.
     """
     if not text or not text.strip():
         return "[No speech detected. Please speak clearly into your microphone and try again.]"
     
-    cleaned = _clean_repetitive_loops(text.strip())
-    if _is_valid_transcription(cleaned):
-        return cleaned
+    raw = text.strip()
+    # Check for foreign script hallucinations (e.g. Devanagari, Arabic, etc.) on low volume/noise
+    devanagari_chars = len(re.findall(r'[\u0900-\u097F]', raw))
+    if devanagari_chars > 2 or (devanagari_chars > 0 and len(raw) < 20):
+        return "[No speech detected. Please speak clearly into your microphone and try again.]"
+
+    cleaned = _clean_repetitive_loops(raw)
     
-    return text.strip()
+    # Strip any stray non-ASCII symbols from hallucination
+    cleaned = re.sub(r'[^\x00-\x7F]+', ' ', cleaned).strip()
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+
+    if not cleaned or not any(c.isalnum() for c in cleaned):
+        return "[No speech detected. Please speak clearly into your microphone and try again.]"
+    
+    return cleaned
 
 
 def transcribe_audio(
@@ -154,7 +166,7 @@ def transcribe_audio(
     Args:
         audio_path: Path to the audio file.
         model_size: Whisper model size (tiny/base/small/medium/large).
-        language: Language code (None for auto-detect, "en" for English).
+        language: Language code ("en" for English).
         prompt: Optional text prompt to guide transcription (e.g., domain keywords).
 
     Returns:
@@ -176,7 +188,7 @@ def transcribe_audio(
 
         # Run transcription on the audio array
         options = {
-            "language": language,
+            "language": language or "en",
             "task": "transcribe",
             "verbose": False,
             "condition_on_previous_text": False,

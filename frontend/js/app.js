@@ -28,13 +28,13 @@ const state = {
     audioChunks: [],
     audioBlob: null,
     recordingStartTime: null,
+    speechDetectedEver: false,
+    silenceAlertDismissed: false,
     timerInterval: null,
     audioContext: null,
     analyser: null,
     animFrameId: null,
-    selectedSetupMode: "direct",
     selectedDifficulty: "mid", // "junior" (120s), "mid" (90s), "senior" (60s)
-    selectedLanguage: "ur", // "en" (English) or "ur" (Urdu / Bilingual)
     countdownRemaining: 90,
     countdownInterval: null,
     webcamStream: null,
@@ -51,17 +51,19 @@ const $$ = (sel) => document.querySelectorAll(sel);
 const screens = {
     auth: $("#screen-auth"),
     dashboard: $("#screen-dashboard"),
-    cv: $("#screen-cv"),
-    mode: $("#screen-mode"),
-    prepSetup: $("#screen-prep-setup"),
+    cvReview: $("#screen-cv-review") || $("#screen-cv"),
+    cv: $("#screen-cv-review") || $("#screen-cv"),
     interviewSetup: $("#screen-interview-setup"),
+    prepSetup: $("#screen-interview-setup"),
     interview: $("#screen-interview"),
     report: $("#screen-report"),
 };
 
 function showScreen(name) {
-    Object.values(screens).forEach((s) => s.classList.remove("active"));
-    screens[name].classList.add("active");
+    Object.values(screens).forEach((s) => s?.classList.remove("active"));
+    if (screens[name]) {
+        screens[name].classList.add("active");
+    }
 }
 
 function setLoading(btn, loading) {
@@ -690,57 +692,29 @@ function setupDifficultySelectors() {
     });
 }
 
-function setupLanguageSelectors() {
-    $$("#prep-lang-group .lang-btn, #interview-lang-group .lang-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-            const lang = btn.dataset.lang;
-            state.selectedLanguage = lang;
-            $$("#prep-lang-group .lang-btn, #interview-lang-group .lang-btn").forEach((b) => {
-                b.classList.toggle("active", b.dataset.lang === lang);
-            });
-        });
-    });
-}
 setupDifficultySelectors();
-setupLanguageSelectors();
 
-// Interview setup mode cards
-function selectSetupMode(mode) {
-    state.selectedSetupMode = mode;
-    $("#setup-mode-practice").classList.toggle("selected", mode === "practice");
-    $("#setup-mode-direct").classList.toggle("selected", mode === "direct");
-}
-
-$("#setup-mode-practice").addEventListener("click", () => selectSetupMode("practice"));
-$("#setup-mode-direct").addEventListener("click", () => selectSetupMode("direct"));
-
-$("#btn-start-prep").addEventListener("click", async () => {
+$("#btn-start-prep")?.addEventListener("click", async () => {
     const resume = getSelectedResume("prep-resume-select");
-    const jobTitle = $("#prep-job-title").value.trim() || "General";
+    const jobTitle = $("#prep-job-title")?.value.trim() || "General";
     if (!resume) return;
-    await startInterview(resume, jobTitle, "practice");
+    await startInterview(resume, jobTitle, "mock");
 });
 
-$("#btn-start-interview-from-setup").addEventListener("click", async () => {
+$("#btn-start-interview-from-setup")?.addEventListener("click", async () => {
     const resume = getSelectedResume("interview-resume-select");
-    const jobTitle = $("#interview-job-title").value.trim() || "General";
+    const jobTitle = $("#interview-job-title")?.value.trim() || "General";
     if (!resume) return;
-    await startInterview(resume, jobTitle, state.selectedSetupMode);
+    await startInterview(resume, jobTitle, "mock");
 });
 
-// Legacy mode selection screen (from CV review "Continue to Interview")
-$("#mode-practice").addEventListener("click", () => startInterview(state.currentResume, state.currentResume?.job_title || $("#cv-job-title").value.trim() || "General", "practice"));
-$("#mode-direct").addEventListener("click", () => startInterview(state.currentResume, state.currentResume?.job_title || $("#cv-job-title").value.trim() || "General", "direct"));
-
-async function startInterview(resume, jobTitle, mode) {
+async function startInterview(resume, jobTitle, mode = "mock") {
     if (!resume) {
         showError("No CV selected.");
         return;
     }
 
-    let btn = null;
-    if (document.activeElement?.id === "btn-start-prep") btn = $("#btn-start-prep");
-    else if (document.activeElement?.id === "btn-start-interview-from-setup") btn = $("#btn-start-interview-from-setup");
+    let btn = $("#btn-start-interview-from-setup") || $("#btn-start-prep");
     if (btn) setLoading(btn, true);
 
     try {
@@ -751,7 +725,7 @@ async function startInterview(resume, jobTitle, mode) {
                 job_title: jobTitle,
                 mode: mode,
                 difficulty: state.selectedDifficulty || "mid",
-                language: state.selectedLanguage || "ur",
+                language: "en",
             }),
         });
 
@@ -791,24 +765,7 @@ function renderInterviewScreen() {
     if (!interview || !question) return;
 
     // Mode badge
-    const modeText = interview.mode === "practice" ? "Practice Mode" : "Direct Interview";
-    $("#mode-badge").textContent = modeText;
-    $("#mode-badge").style.background = interview.mode === "practice"
-        ? "rgba(108, 92, 231, 0.15)"
-        : "rgba(0, 206, 201, 0.15)";
-
-    // Update language toggle in header
-    const langLabel = $("#interview-lang-label");
-    const langFlag = $("#interview-lang-flag");
-    if (langLabel && langFlag) {
-        if (state.selectedLanguage === "ur") {
-            langFlag.textContent = "🇵🇰";
-            langLabel.textContent = "Urdu / Bilingual";
-        } else {
-            langFlag.textContent = "🇬🇧";
-            langLabel.textContent = "English";
-        }
-    }
+    $("#mode-badge").textContent = "AI Mock Interview";
 
     // Question
     const badge = $("#question-badge");
@@ -817,18 +774,6 @@ function renderInterviewScreen() {
 
     $("#question-count").textContent = `${question.number} / ${interview.total_questions}`;
     $("#question-text").textContent = question.question;
-
-    // Bilingual Urdu & Roman Urdu card
-    const biCard = $("#bilingual-translation-card");
-    const urScript = $("#question-urdu-script");
-    const urRoman = $("#question-urdu-roman");
-    if (question.question_ur && question.question_roman_ur) {
-        if (urScript) urScript.textContent = question.question_ur;
-        if (urRoman) urRoman.textContent = `🗣️ "${question.question_roman_ur}"`;
-        if (biCard) biCard.hidden = false;
-    } else if (biCard) {
-        biCard.hidden = true;
-    }
 
     // Progress
     const progress = (question.number / interview.total_questions) * 100;
@@ -846,28 +791,19 @@ function renderInterviewScreen() {
 
     // Reset recording & silence UI
     resetRecordingUI();
-    $("#silence-alert-box").hidden = true;
     $("#answer-result").hidden = true;
     $("#realtime-tip").hidden = true;
     $("#model-answer-box").hidden = true;
     $("#btn-re-record").hidden = true;
     $("#recording-area").hidden = false;
+    $("#live-mic-toast").hidden = true;
 
     // Start per-question countdown timer
     startQuestionCountdown();
 
-    // Feature 1: AI Interviewer Voice (TTS) - Speaks in English or Urdu based on mode
-    const textToSpeak = (state.selectedLanguage === "ur" && question.question_roman_ur)
-        ? question.question_roman_ur
-        : question.question;
-    speakQuestion(textToSpeak);
+    // AI Voice read-out (Natural English)
+    speakQuestion(question.question);
 }
-
-// Language toggle during interview
-$("#btn-interview-lang-toggle")?.addEventListener("click", () => {
-    state.selectedLanguage = state.selectedLanguage === "ur" ? "en" : "ur";
-    renderInterviewScreen();
-});
 
 // ──────────────────────────────────────────────
 // COUNTDOWN TIMER
@@ -919,8 +855,6 @@ function updateCountdownDisplay() {
 // ──────────────────────────────────────────────
 // TTS Voice Helper with Animated Avatar Pulse
 // ──────────────────────────────────────────────
-let currentUtterance = null;
-
 function setAIAvatarState(speaking) {
     const wrapper = $("#ai-avatar-wrapper");
     const badge = $("#ai-state-badge");
@@ -930,20 +864,20 @@ function setAIAvatarState(speaking) {
     if (speaking) {
         wrapper?.classList.add("speaking-pulse");
         if (badge) {
-            badge.textContent = state.selectedLanguage === "ur" ? "🔊 بول رہا ہے (Speaking...)" : "🔊 Speaking...";
-            badge.style.background = "rgba(108, 92, 231, 0.25)";
-            badge.style.color = "#6c5ce7";
+            badge.textContent = "🔊 Speaking Question...";
+            badge.style.background = "rgba(99, 102, 241, 0.25)";
+            badge.style.color = "#6366f1";
         }
-        if (sub) sub.textContent = state.selectedLanguage === "ur" ? "AI انٹرویو لینے والا سوال پوچھ رہا ہے۔ غور سے سنیں..." : "AI Interviewer is speaking. Listen carefully...";
+        if (sub) sub.textContent = "AI Recruiter is speaking. Listen carefully...";
         speakBtn?.classList.add("speaking");
     } else {
         wrapper?.classList.remove("speaking-pulse");
         if (badge) {
-            badge.textContent = state.selectedLanguage === "ur" ? "🟢 تیار (Ready)" : "🟢 Ready";
-            badge.style.background = "rgba(0, 184, 148, 0.15)";
-            badge.style.color = "#00b894";
+            badge.textContent = "🟢 Ready";
+            badge.style.background = "rgba(16, 185, 129, 0.15)";
+            badge.style.color = "#10b981";
         }
-        if (sub) sub.textContent = state.selectedLanguage === "ur" ? "مائیک دبا کر جواب دیں یا سوال پاس کریں" : "Tap microphone to answer or pass question";
+        if (sub) sub.textContent = "Listening attentively to your response";
         speakBtn?.classList.remove("speaking");
     }
 }
@@ -955,25 +889,20 @@ function speakQuestion(text) {
     if (!text) return;
 
     const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = state.selectedLanguage === "ur" ? 0.9 : 0.95;
+    utter.rate = 0.95;
     utter.pitch = 1.0;
-    utter.lang = state.selectedLanguage === "ur" ? "ur-PK" : "en-US";
+    utter.lang = "en-US";
 
     const voices = window.speechSynthesis.getVoices();
-    // Try finding matching voice for Urdu or English
-    const matchingVoice = voices.find((v) =>
-        (state.selectedLanguage === "ur" && (v.lang.startsWith("ur") || v.lang.startsWith("hi"))) ||
-        (state.selectedLanguage === "en" && v.lang.startsWith("en") && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("David") || v.name.includes("Zira")))
-    ) || voices.find(v => v.lang.startsWith("en"));
+    const naturalVoice = voices.find(v => v.lang.startsWith("en") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("David") || v.name.includes("Zira"))) || voices.find(v => v.lang.startsWith("en"));
 
-    if (matchingVoice) utter.voice = matchingVoice;
+    if (naturalVoice) utter.voice = naturalVoice;
 
     setAIAvatarState(true);
 
     utter.onend = () => setAIAvatarState(false);
     utter.onerror = () => setAIAvatarState(false);
 
-    currentUtterance = utter;
     window.speechSynthesis.speak(utter);
 }
 
@@ -982,10 +911,7 @@ $("#btn-speak-question")?.addEventListener("click", () => {
         window.speechSynthesis.cancel();
         setAIAvatarState(false);
     } else if (state.currentQuestion) {
-        const textToSpeak = (state.selectedLanguage === "ur" && state.currentQuestion.question_roman_ur)
-            ? state.currentQuestion.question_roman_ur
-            : state.currentQuestion.question;
-        speakQuestion(textToSpeak);
+        speakQuestion(state.currentQuestion.question);
     }
 });
 
@@ -1013,7 +939,7 @@ async function skipCurrentQuestion() {
     const interview = state.currentInterview;
     if (!question || !interview) return;
 
-    $("#silence-alert-box").hidden = true;
+    $("#live-mic-toast").hidden = true;
     $("#recording-area").hidden = true;
     $("#processing").hidden = false;
     $("#processing-status-text").textContent = "Passing question & loading next topic...";
@@ -1323,7 +1249,7 @@ function setupWaveform() {
         state.animFrameId = requestAnimationFrame(draw);
         state.analyser.getByteFrequencyData(dataArray);
 
-        ctx.fillStyle = "rgba(26, 26, 46, 0.3)";
+        ctx.fillStyle = "rgba(15, 23, 42, 0.4)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         let sum = 0;
@@ -1332,25 +1258,39 @@ function setupWaveform() {
         for (let i = 0; i < bufferLength; i++) {
             sum += dataArray[i];
             const barHeight = (dataArray[i] / 255) * canvas.height;
-            const hue = 260 + (dataArray[i] / 255) * 60;
-            ctx.fillStyle = `hsla(${hue}, 70%, 60%, 0.8)`;
+            const hue = 230 + (dataArray[i] / 255) * 60;
+            ctx.fillStyle = `hsla(${hue}, 85%, 65%, 0.85)`;
             ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
             x += barWidth + 1;
         }
 
-        // Feature 4: Live voice energy indicator
         const avg = sum / bufferLength;
+
+        // Auto-dismiss or trigger floating toast
+        const toast = $("#live-mic-toast");
+        if (avg > 15) {
+            state.speechDetectedEver = true;
+            if (toast && !toast.hidden) {
+                toast.hidden = true;
+            }
+        } else if (!state.speechDetectedEver && !state.silenceAlertDismissed && (Date.now() - state.recordingStartTime > 3000)) {
+            if (toast && toast.hidden) {
+                toast.hidden = false;
+            }
+        }
+
+        // Live voice energy indicator
         const paceEl = $("#live-pace-indicator");
         if (paceEl) {
-            if (avg > 30) {
+            if (avg > 25) {
                 paceEl.textContent = "🟢 Clear Speaking Voice";
-                paceEl.style.color = "#00b894";
-            } else if (avg > 10) {
+                paceEl.style.color = "#10b981";
+            } else if (avg > 8) {
                 paceEl.textContent = "🟡 Soft Speech Detected";
-                paceEl.style.color = "#fdcb6e";
+                paceEl.style.color = "#f59e0b";
             } else {
-                paceEl.textContent = "⚪ Listening for speech...";
-                paceEl.style.color = "#a0a0b0";
+                paceEl.textContent = "⚪ Listening for voice...";
+                paceEl.style.color = "#94a3b8";
             }
         }
     }
@@ -1374,22 +1314,7 @@ async function submitAnswer() {
             body: formData,
         });
 
-        // Silence / No speech detection check
-        const cleanTrans = (result.transcription || "").trim();
-        if (!cleanTrans || cleanTrans === "No speech detected." || cleanTrans.length < 2) {
-            $("#processing").hidden = true;
-            $("#recording-area").hidden = true;
-            $("#silence-alert-box").hidden = false;
-            setAIAvatarState(false);
-            const badge = $("#ai-state-badge");
-            if (badge) {
-                badge.textContent = "⚠️ No Voice Detected";
-                badge.style.color = "#ff7675";
-            }
-            return;
-        }
-
-        // Deduplicate answer by question number (fixes 14/10 answered issue)
+        // Deduplicate answer by question number
         const existingIdx = state.answers.findIndex((a) => a.question_number === result.question_number);
         if (existingIdx >= 0) {
             state.answers[existingIdx] = result;
@@ -1413,14 +1338,16 @@ async function submitAnswer() {
 function showAnswerResult(result) {
     stopQuestionCountdown();
     $("#processing").hidden = true;
-    $("#silence-alert-box").hidden = true;
+    $("#live-mic-toast").hidden = true;
     $("#recording-area").hidden = true;
     $("#answer-result").hidden = false;
 
     // Real-time tip
-    if (result.real_time_tip && state.currentInterview.mode === "practice") {
+    if (result.real_time_tip) {
         $("#realtime-tip").hidden = false;
         $("#tip-text").textContent = result.real_time_tip;
+    } else {
+        $("#realtime-tip").hidden = true;
     }
 
     // Scores
@@ -1441,15 +1368,15 @@ function showAnswerResult(result) {
         tipsList.appendChild(li);
     });
 
-    // Model answer (practice mode only)
+    // Model answer
     const modelBox = $("#model-answer-box");
     const reRecordBtn = $("#btn-re-record");
-    if (state.currentInterview.mode === "practice" && !result.is_skipped) {
+    if (!result.is_skipped) {
         reRecordBtn.hidden = false;
         fetchModelAnswer(result.question_number);
     } else {
         modelBox.hidden = true;
-        reRecordBtn.hidden = result.is_skipped ? true : false;
+        reRecordBtn.hidden = true;
         $("#model-answer-text").textContent = "";
     }
 
@@ -1476,12 +1403,21 @@ function reRecordAnswer() {
     $("#answer-result").hidden = true;
     $("#realtime-tip").hidden = true;
     $("#model-answer-box").hidden = true;
-    $("#silence-alert-box").hidden = true;
+    $("#live-mic-toast").hidden = true;
     $("#recording-area").hidden = false;
     resetRecordingUI();
+    startQuestionCountdown();
 }
 
 $("#btn-re-record").addEventListener("click", reRecordAnswer);
+$("#btn-toast-close")?.addEventListener("click", () => {
+    $("#live-mic-toast").hidden = true;
+    state.silenceAlertDismissed = true;
+});
+$("#btn-toast-pass")?.addEventListener("click", () => {
+    $("#live-mic-toast").hidden = true;
+    skipCurrentQuestion();
+});
 
 function animateCircle(circleEl, score) {
     const circumference = 2 * Math.PI * 45;

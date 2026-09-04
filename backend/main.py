@@ -446,9 +446,9 @@ async def submit_answer(
         f.write(content)
 
     try:
-        # Run AI pipeline with bilingual / multilingual support
-        clean_vocab_prompt = "Technical software engineering interview answer covering skills, projects, and architecture in English or Urdu."
-        transcription = transcribe_audio(str(audio_path), language=None, prompt=clean_vocab_prompt)
+        # Run AI pipeline with English domain vocabulary
+        clean_vocab_prompt = "Technical software engineering mock interview answer covering skills, projects, and architecture."
+        transcription = transcribe_audio(str(audio_path), language="en", prompt=clean_vocab_prompt)
         content_eval = evaluate_answer(
             answer_text=transcription["text"],
             question=question["question"],

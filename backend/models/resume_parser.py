@@ -233,6 +233,48 @@ def extract_education(text: str) -> List[str]:
 
 
 # ──────────────────────────────────────────────
+# Project extraction
+# ──────────────────────────────────────────────
+def extract_projects(text: str) -> List[str]:
+    """Extract project titles or significant project descriptions from resume."""
+    project_lines = []
+    lines = text.split("\n")
+    in_project_section = False
+    
+    project_headers = ["projects", "personal projects", "academic projects", "key projects", "notable projects"]
+    stop_headers = ["skills", "technical skills", "education", "experience", "work experience", "certifications", "interests", "awards", "references"]
+
+    for line in lines:
+        line_stripped = line.strip()
+        if not line_stripped:
+            continue
+        line_lower = line_stripped.lower()
+
+        # Check section header
+        if any(line_lower == h or line_lower.startswith(h + ":") or line_lower == h.upper() for h in project_headers):
+            in_project_section = True
+            continue
+        elif in_project_section and any(line_lower == h or line_lower.startswith(h + ":") or line_lower == h.upper() for h in stop_headers):
+            in_project_section = False
+
+        if in_project_section:
+            # Bullet point or project title line
+            cleaned = re.sub(r'^[•\-\*\d\.\)\s]+', '', line_stripped).strip()
+            if len(cleaned) > 4 and not cleaned.lower().startswith(("github.com", "http", "www")):
+                # Filter out pure tech stack lists (e.g. "Tech: React, Node")
+                if not cleaned.lower().startswith(("technologies:", "tech stack:", "tools:")):
+                    project_lines.append(cleaned)
+        else:
+            # Look for explicit project indicators in single lines
+            if any(term in line_lower for term in ["developed an app", "built a platform", "created a system", "designed a portal", "full stack project", "machine learning project"]):
+                cleaned = re.sub(r'^[•\-\*\d\.\)\s]+', '', line_stripped).strip()
+                if cleaned:
+                    project_lines.append(cleaned)
+
+    return project_lines[:5]
+
+
+# ──────────────────────────────────────────────
 # Name extraction via spaCy NER
 # ──────────────────────────────────────────────
 def _is_valid_name(text: str) -> bool:
@@ -384,6 +426,7 @@ def parse_resume(pdf_path: str) -> Dict:
         "skills": extract_skills(raw_text),
         "experience": extract_experience(raw_text),
         "education": extract_education(raw_text),
+        "projects": extract_projects(raw_text),
     }
 
 

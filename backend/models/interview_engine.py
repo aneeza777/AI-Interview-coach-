@@ -208,67 +208,83 @@ def _paraphrase(template_q: Dict) -> str:
 
 
 def _generate_cv_questions(resume_data: Dict, job_title: str) -> List[Dict]:
-    """Generate questions based on resume content."""
+    """Generate questions based on resume content with rich contextual awareness."""
     questions = []
 
-    # Experience-based questions
     experience = resume_data.get("experience", {})
     companies = experience.get("companies", [])
-    total_years = experience.get("total_years", 0)
+    total_years = experience.get("total_years", 0) or 0
+    company = _pick_valid_company(companies)
+    projects = resume_data.get("projects", [])
 
+    # 1. Experience-based questions
     if total_years > 0:
         questions.append({
-            "question": f"I see you have {total_years}+ years of experience. Could you walk me through your career journey so far?",
+            "question": f"I see you have {total_years}+ years of experience in the field. Could you walk me through your career progression and key milestones so far?",
             "type": "experience",
-            "expected_keywords": ["role", "company", "project", "responsibility", "learn", "growth", "experience"],
+            "expected_keywords": ["role", "company", "project", "responsibility", "learn", "growth", "experience", "milestone"],
+            "difficulty": "easy",
+        })
+    else:
+        questions.append({
+            "question": "Could you tell me about your academic journey and any hands-on internship or coursework projects you've worked on?",
+            "type": "experience",
+            "expected_keywords": ["education", "project", "internship", "learn", "hands-on", "experience", "coursework"],
             "difficulty": "easy",
         })
 
-    # Use validated company name (filters out phone numbers, emails, etc)
-    company = _pick_valid_company(companies)
     if company:
         questions.append({
-            "question": f"Tell me more about your time at {company}. What were you responsible for, and what did you achieve?",
+            "question": f"Tell me more about your responsibilities during your time at {company}. What were your primary contributions and achievements?",
             "type": "experience",
             "expected_keywords": ["responsibility", "achieve", "result", "project", "team", "contribute", company.lower()],
             "difficulty": "medium",
         })
 
-    # Project-based questions
-    if resume_data.get("projects") or resume_data.get("raw_text", "").lower().count("project") > 0:
+    # 2. Project-based questions (specifically referencing candidate's project name if available)
+    if projects:
+        best_project = projects[0][:50]
         questions.append({
-            "question": "Can you describe a project from your resume that you're particularly proud of?",
+            "question": f"I noticed your project '{best_project}'. Can you describe the system architecture, your individual role, and the main technical challenge you solved?",
+            "type": "projects",
+            "expected_keywords": ["project", "architecture", "build", "develop", "result", "challenge", "solution", "impact"],
+            "difficulty": "medium",
+            "target_project": best_project,
+        })
+    elif resume_data.get("raw_text", "").lower().count("project") > 0:
+        questions.append({
+            "question": "Can you describe a technical project from your resume that you are particularly proud of, including the challenges you overcame?",
             "type": "projects",
             "expected_keywords": ["project", "proud", "build", "develop", "result", "learn", "challenge", "impact"],
             "difficulty": "medium",
         })
 
-    # Education-based questions
+    # 3. Education-based questions
     education = resume_data.get("education", [])
     if education:
         questions.append({
-            "question": "How has your education prepared you for this role?",
+            "question": "How has your academic background and coursework prepared you for the technical demands of this role?",
             "type": "education",
             "expected_keywords": ["education", "university", "degree", "course", "skill", "prepare", "learn", "foundation"],
             "difficulty": "easy",
         })
 
-    # Skill-based questions
+    # 4. Skill-based questions (tailored to specific extracted skills)
     skills = resume_data.get("skills", [])
     if skills:
         top_skills = skills[:3]
         for skill in top_skills:
             paraphrases = [
-                f"Could you tell me about your experience working with {skill}?",
-                f"How would you rate your proficiency in {skill}, and where have you used it?",
-                f"What's a project where {skill} played a major role?",
-                f"Walk me through how you'd solve a typical problem using {skill}.",
+                f"Could you walk me through how you've used {skill} in a real-world project, and what challenges you solved with it?",
+                f"How would you rate your hands-on proficiency in {skill}, and what architecture patterns have you applied using it?",
+                f"What is a memorable feature or bug fix where {skill} played a crucial role in your implementation?",
             ]
             questions.append({
                 "question": random.choice(paraphrases),
                 "type": "technical",
-                "expected_keywords": [skill.lower(), "project", "experience", "use", "build", "develop"],
+                "expected_keywords": [skill.lower(), "project", "experience", "use", "build", "develop", "implement"],
                 "difficulty": "medium",
+                "target_skill": skill,
             })
 
     return questions
@@ -567,97 +583,155 @@ def _sanitize_name(name: Optional[str]) -> str:
         return "the candidate"
     
     return name_stripped
-    # Reject if very short or very long
-    if len(name_stripped) < 2 or len(name_stripped) > 100:
-        return "the candidate"
-    
-    return name_stripped
 
 
 def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> str:
     """
     Generate a sample / model answer for a given interview question.
-    Uses resume data to personalize the answer.
-    Sanitizes all inputs to prevent malformed answers.
+    Uses resume data and STAR methodology (Situation, Task, Action, Result)
+    to provide high quality, contextual, and realistic responses.
     """
     q_type = question.get("type", "general")
+    q_text = question.get("question", "").lower()
     name = _sanitize_name(resume_data.get("name"))
     skills = resume_data.get("skills", [])
-    top_skills = ", ".join(skills[:3]) if skills else "relevant technical skills"
+    top_skills = ", ".join(skills[:3]) if skills else "modern software engineering practices and tools"
+    primary_skill = question.get("target_skill") or (skills[0] if skills else "technical problem solving")
+    
     education_list = resume_data.get("education", [])
-    education = education_list[0] if education_list else "my degree"
+    education = education_list[0] if education_list else "Computer Science"
+    
     experience = resume_data.get("experience", {})
     total_years = experience.get("total_years", 0) or 0
     company = _pick_valid_company(experience.get("companies", []))
+    projects = resume_data.get("projects", [])
+    target_proj = question.get("target_project") or (projects[0][:40] if projects else None)
 
+    # 1. Introduction
     if q_type == "introduction":
-        exp_phrase = f"including work at {company}. " if company else ""
-        return (
-            f"Hello, my name is {name}. I recently completed {education}. "
-            f"I have around {total_years} years of experience, {exp_phrase}"
-            f"and my core skills include {top_skills}. "
-            f"I am excited about this {job_title} role because it lets me use these skills "
-            f"to build products that make a real impact."
-        )
-
-    if q_type == "experience":
-        if company:
+        if total_years > 0:
+            exp_phrase = f"with notable experience at {company}, " if company else ""
             return (
-                f"At {company}, I spent about {total_years} years working on meaningful projects. "
-                f"My responsibilities included developing features, debugging issues, and collaborating with the team. "
-                f"For example, I used {top_skills} to deliver a feature that improved the product. "
-                f"This experience taught me how to balance quality with deadlines."
+                f"Hello, my name is {name}. I hold a background in {education} and bring {total_years}+ years "
+                f"of professional experience in the field, {exp_phrase}specializing in {top_skills}. "
+                f"Throughout my career, I have focused on engineering scalable, high-performance systems and "
+                f"collaborating across teams to deliver user-centric products. I am excited about this {job_title} "
+                f"position because it directly aligns with my technical background and allows me to contribute to impactful initiatives."
             )
-        return (
-            f"Over the last {total_years} years I have worked on meaningful projects in a professional setting. "
-            f"My responsibilities included developing features, debugging issues, and collaborating with the team. "
-            f"For example, I used {top_skills} to deliver a feature that improved the product. "
-            f"This experience taught me how to balance quality with deadlines."
-        )
+        else:
+            return (
+                f"Hello, my name is {name}. I graduated with a degree in {education}, where I built a strong "
+                f"foundation in software engineering principles and computer science fundamentals. "
+                f"Through intensive academic and hands-on projects, I have developed solid proficiency in {top_skills}. "
+                f"I am eager to begin my career as a {job_title}, applying my problem-solving skills, curiosity, "
+                f"and passion for clean code to make a positive impact on your team."
+            )
 
+    # 2. Experience-based (STAR method)
+    if q_type == "experience":
+        if company and total_years > 0:
+            return (
+                f"During my time at {company} (as part of my {total_years}+ years of experience), "
+                f"I worked on core technical deliverables. [Situation & Task] Our team was tasked with building and "
+                f"scaling reliable software components under fast-paced release cycles. [Action] I utilized {top_skills} "
+                f"to design clean modular architectures, implement automated tests, and collaborate closely in daily agile sprints. "
+                f"[Result] As a result, we enhanced overall system throughput, minimized post-release defects, and consistently "
+                f"delivered major milestones on schedule."
+            )
+        elif total_years > 0:
+            return (
+                f"Over my {total_years}+ years of industry experience, I have developed and maintained several production-grade applications. "
+                f"[Situation & Task] In a recent role, our primary challenge was optimizing delivery workflows and implementing key business features. "
+                f"[Action] I applied {top_skills} to develop scalable modules, streamline API communication, and maintain strict code quality standards. "
+                f"[Result] This approach led to smoother deployments, reduced latency, and positive feedback from stakeholders."
+            )
+        else:
+            return (
+                f"During my academic journey in {education}, I engaged in multiple comprehensive coursework and capstone projects. "
+                f"[Situation & Task] Our objective was to architect and deliver real-world software solutions from scratch. "
+                f"[Action] I took charge of the technical design using {top_skills}, establishing coding conventions, git workflows, and unit testing. "
+                f"[Result] We successfully presented fully working prototypes on time, earning top academic evaluations and providing me with "
+                f"practical, hands-on development experience."
+            )
+
+    # 3. Project-based (STAR method)
     if q_type == "projects":
+        proj_name = f"'{target_proj}'" if target_proj else "a full-stack application"
         return (
-            f"One project I am proud of involved {top_skills}. I handled the implementation from planning to deployment, "
-            f"faced real-world constraints, and delivered a working solution. "
-            f"It strengthened my problem-solving skills and showed me the value of user feedback."
+            f"In my project {proj_name}, [Situation & Task] the goal was to build an efficient, user-friendly solution addressing a practical need. "
+            f"[Action] I took ownership of the technical implementation using {top_skills}, structuring the database and backend logic, "
+            f"integrating RESTful interfaces, and optimizing performance bottlenecks through systematic debugging. "
+            f"[Result] The project successfully achieved high responsiveness and reliability, demonstrating my ability to manage the complete "
+            f"software lifecycle from concept to deployment."
         )
 
-    if q_type == "education":
-        return (
-            f"My time at {education} gave me a strong foundation in problem-solving and software development. "
-            f"I also completed practical projects using {top_skills}, which prepared me well for a {job_title} role."
-        )
-
+    # 4. Technical / Skill-based
     if q_type == "technical":
         return (
-            f"I have hands-on experience with {top_skills}. In my recent work, I used them to build features, "
-            f"fix bugs, and optimize performance. I also keep learning through personal projects and online courses."
+            f"I have extensive hands-on experience utilizing {primary_skill} in real-world scenarios. "
+            f"[Situation & Task] When implementing complex features, choosing the appropriate design patterns in {primary_skill} is essential for maintainability and performance. "
+            f"[Action] I focus on writing modular, self-documenting code, enforcing type safety and automated testing, and following ecosystem best practices. "
+            f"[Result] This disciplined approach ensures that components built with {primary_skill} remain robust, easily testable, and straightforward for the team to scale."
         )
 
+    # 5. Behavioral (STAR method tailored to theme)
     if q_type == "behavioral":
+        if any(w in q_text for w in ["conflict", "disagree", "teammate", "difficult"]):
+            return (
+                "[Situation] In a previous project, a teammate and I had differing opinions on technical architecture choices for a critical feature. "
+                "[Task] Our objective was to reach a decision quickly without compromising product quality or team dynamics. "
+                "[Action] I scheduled a dedicated discussion where we mapped both approaches against key metrics—scalability, delivery timeline, and maintenance cost. "
+                "[Result] We synthesized the best aspects of both approaches into a unified plan, which delivered the feature on time and strengthened our collaboration."
+            )
+        elif any(w in q_text for w in ["mistake", "fail", "error", "wrong"]):
+            return (
+                "[Situation] Early in a major release, an edge-case validation bug reached the staging environment due to a missing boundary test. "
+                "[Task] I took direct accountability for fixing the defect and ensuring it could not happen again. "
+                "[Action] I promptly patched the validation logic, wrote exhaustive regression tests covering the edge cases, and updated our CI test suite. "
+                "[Result] The patch passed validation seamlessly, and the improved automated test suite prevented similar edge-case regressions in subsequent sprints."
+            )
+        else:  # Deadline, pressure, challenge, or general behavioral
+            return (
+                "[Situation] During a critical release cycle, unexpected requirement changes compressed our delivery timeline significantly. "
+                "[Task] I needed to ensure all essential functionalities were completed without sacrificing test coverage or code reliability. "
+                "[Action] I prioritized the core deliverables, broke complex tasks into bite-sized milestones, and maintained transparent daily communication with the team. "
+                "[Result] We delivered the release on schedule with zero high-severity production defects, proving the effectiveness of structured prioritization and clear communication."
+            )
+
+    # 6. Education
+    if q_type == "education":
         return (
-            "In my previous role, I once faced a tight deadline on an important feature. "
-            "I broke the task into smaller pieces, prioritized the critical parts, and communicated daily with the team. "
-            "We delivered on time, and I learned the value of planning and transparent communication."
+            f"My education in {education} gave me a comprehensive grounding in data structures, algorithms, and system design. "
+            f"Beyond theory, I actively applied these principles through practical assignments using {top_skills}. "
+            f"This academic foundation equipped me with the analytical mindset and problem-solving discipline required to succeed in a {job_title} role."
         )
 
+    # 7. Job-specific
     if q_type == "job_specific":
         return (
-            f"As a {job_title}, I focus on writing clean, maintainable code and working closely with the team. "
-            f"For any task, I start by understanding the requirements, then design a simple solution, "
-            f"and finally test it thoroughly before deployment."
+            f"As a {job_title}, my core focus is on engineering clean, scalable, and maintainable solutions that directly support user needs. "
+            f"When approaching a new problem, I start by clarifying requirements and edge cases, then design a modular architecture leveraging {top_skills}. "
+            f"Throughout development, I emphasize automated testing, continuous integration, and clear documentation to ensure long-term stability."
         )
 
+    # 8. Follow-up
+    if q_type == "follow_up":
+        return (
+            f"To elaborate on that: when working with {primary_skill}, I pay close attention to architectural separation, exception handling, and performance trade-offs. "
+            f"In practice, this means writing clean unit and integration tests, monitoring runtime metrics, and iterating based on real user feedback."
+        )
+
+    # 9. Closing
     if q_type == "closing":
         return (
-            "Thank you for the opportunity. I'd love to learn more about the team structure, "
-            "the current projects, and what success looks like in this role in the first 90 days."
+            f"Thank you very much for this opportunity. I would love to learn more about the team's upcoming engineering priorities, "
+            f"the tech stack roadmap, and what key milestones success would look like for a {job_title} in the first 90 days."
         )
 
-    # Fallback for any other question type
+    # Fallback
     return (
-        f"For this question, I would focus on my experience with {top_skills}, "
-        f"give a specific example, and connect it clearly to the {job_title} role."
+        f"For this question, I would structure my answer using the STAR method: outlining the Situation and Task, "
+        f"explaining how I applied {top_skills} during the Action phase, and highlighting the measurable business Result."
     )
 
 

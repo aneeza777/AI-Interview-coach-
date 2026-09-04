@@ -86,6 +86,12 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 # ── Static files ──
 if FRONTEND_DIR.exists():
+    css_dir = FRONTEND_DIR / "css"
+    js_dir = FRONTEND_DIR / "js"
+    if css_dir.exists():
+        app.mount("/css", StaticFiles(directory=str(css_dir)), name="css")
+    if js_dir.exists():
+        app.mount("/js", StaticFiles(directory=str(js_dir)), name="js")
     app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 
 
@@ -986,7 +992,11 @@ async def get_certificate_endpoint(
 
 @app.get("/{full_path:path}")
 async def catch_all(full_path: str):
-    """Serve the frontend for any non-API path."""
+    """Serve static files (CSS, JS, images) or index.html for SPA."""
+    if full_path:
+        file_path = FRONTEND_DIR / full_path
+        if file_path.is_file():
+            return FileResponse(str(file_path))
     index_file = FRONTEND_DIR / "index.html"
     if index_file.exists():
         return FileResponse(str(index_file))

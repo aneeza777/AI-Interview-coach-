@@ -123,12 +123,9 @@ flowchart TD
 |:---:|:---:|
 | ![Dashboard Screenshot](screenshots/dashboard.png) | ![CV Review Screenshot](screenshots/cv_review.png) |
 
-| 🎙️ Live Voice Interview | 📈 Comprehensive Final Report |
+| 🎙️ Live Voice Interview | 🏆 Verified Skill Certificate |
 |:---:|:---:|
-| ![Interview Session](screenshots/interview.png) | ![Report Screenshot](screenshots/final_report.png) |
-
-*(Add your screenshots to the `screenshots/` directory to display here)*
-
+| ![Interview Session](screenshots/interview.png) | ![Certificate](screenshots/certificate.png) |
 </div>
 
 ---
@@ -158,8 +155,8 @@ flowchart TD
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/ai-interview-coach.git
-   cd ai-interview-coach
+   git clone https://github.com/aneeza777/AI-Interview-coach-.git
+   cd AI-Interview-coach-
    ```
 
 2. **Create and activate a virtual environment:**
@@ -220,8 +217,8 @@ ssh root@<your-ecs-public-ip>
 sudo apt update && sudo apt install -y python3-pip python3-venv ffmpeg git nginx
 
 # Clone repository and setup venv
-git clone https://github.com/your-username/ai-interview-coach.git
-cd ai-interview-coach
+git clone https://github.com/aneeza777/AI-Interview-coach-.git
+cd AI-Interview-coach-
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt

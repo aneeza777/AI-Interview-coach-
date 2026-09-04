@@ -70,6 +70,7 @@ class InterviewCreate(BaseModel):
     resume_id: int
     job_title: str
     mode: str = "direct"  # 'practice' or 'direct'
+    difficulty: Optional[str] = "mid"  # 'junior', 'mid', 'senior'
 
 
 class QuestionResponse(BaseModel):

@@ -391,6 +391,7 @@ def build_interview_plan(
     job_title: str,
     mode: str = "direct",  # "practice" or "direct"
     total_questions: int = 10,
+    difficulty: str = "mid",  # "junior", "mid", "senior"
 ) -> List[Dict]:
     """
     Build a complete adaptive interview question plan.

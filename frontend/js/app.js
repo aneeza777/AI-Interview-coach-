@@ -33,6 +33,10 @@ const state = {
     analyser: null,
     animFrameId: null,
     selectedSetupMode: "direct",
+    selectedDifficulty: "mid", // "junior" (120s), "mid" (90s), "senior" (60s)
+    countdownRemaining: 90,
+    countdownInterval: null,
+    webcamStream: null,
 };
 
 const API_BASE = window.location.origin;
@@ -672,6 +676,20 @@ btnPrepUploadStart.addEventListener("click", async () => {
     }
 });
 
+// Difficulty button selection
+function setupDifficultySelectors() {
+    $$("#prep-diff-group .diff-btn, #interview-diff-group .diff-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const level = btn.dataset.level;
+            state.selectedDifficulty = level;
+            $$("#prep-diff-group .diff-btn, #interview-diff-group .diff-btn").forEach((b) => {
+                b.classList.toggle("active", b.dataset.level === level);
+            });
+        });
+    });
+}
+setupDifficultySelectors();
+
 // Interview setup mode cards
 function selectSetupMode(mode) {
     state.selectedSetupMode = mode;
@@ -718,6 +736,7 @@ async function startInterview(resume, jobTitle, mode) {
                 resume_id: resume.id,
                 job_title: jobTitle,
                 mode: mode,
+                difficulty: state.selectedDifficulty || "mid",
             }),
         });
 
@@ -785,28 +804,105 @@ function renderInterviewScreen() {
     const skills = state.currentResume?.parsed_data?.skills || [];
     $("#sidebar-skills-list").innerHTML = skills.slice(0, 8).map((s) => `<span class="skill-tag">${s}</span>`).join("");
 
-    // Reset recording UI
+    // Reset recording & silence UI
     resetRecordingUI();
+    $("#silence-alert-box").hidden = true;
     $("#answer-result").hidden = true;
     $("#realtime-tip").hidden = true;
     $("#model-answer-box").hidden = true;
     $("#btn-re-record").hidden = true;
     $("#recording-area").hidden = false;
 
+    // Start per-question countdown timer
+    startQuestionCountdown();
+
     // Feature 1: AI Interviewer Voice (TTS)
     speakQuestion(question.question);
 }
 
 // ──────────────────────────────────────────────
-// TTS Voice Helper
+// COUNTDOWN TIMER
+// ──────────────────────────────────────────────
+function startQuestionCountdown() {
+    stopQuestionCountdown();
+    let totalSecs = 90;
+    if (state.selectedDifficulty === "junior") totalSecs = 120;
+    else if (state.selectedDifficulty === "senior") totalSecs = 60;
+
+    state.countdownRemaining = totalSecs;
+    updateCountdownDisplay();
+
+    state.countdownInterval = setInterval(() => {
+        state.countdownRemaining--;
+        updateCountdownDisplay();
+
+        const badge = $("#countdown-badge");
+        if (state.countdownRemaining <= 15) {
+            badge?.classList.add("warning");
+        } else {
+            badge?.classList.remove("warning");
+        }
+
+        if (state.countdownRemaining <= 0) {
+            stopQuestionCountdown();
+            if (state.mediaRecorder && state.audioContext) {
+                stopRecording();
+            }
+        }
+    }, 1000);
+}
+
+function stopQuestionCountdown() {
+    if (state.countdownInterval) {
+        clearInterval(state.countdownInterval);
+        state.countdownInterval = null;
+    }
+    $("#countdown-badge")?.classList.remove("warning");
+}
+
+function updateCountdownDisplay() {
+    const mins = String(Math.floor(Math.max(0, state.countdownRemaining) / 60)).padStart(2, "0");
+    const secs = String(Math.max(0, state.countdownRemaining) % 60).padStart(2, "0");
+    const display = $("#question-countdown-display");
+    if (display) display.textContent = `${mins}:${secs}`;
+}
+
+// ──────────────────────────────────────────────
+// TTS Voice Helper with Animated Avatar Pulse
 // ──────────────────────────────────────────────
 let currentUtterance = null;
+
+function setAIAvatarState(speaking) {
+    const wrapper = $("#ai-avatar-wrapper");
+    const badge = $("#ai-state-badge");
+    const sub = $("#ai-status-sub");
+    const speakBtn = $("#btn-speak-question");
+
+    if (speaking) {
+        wrapper?.classList.add("speaking-pulse");
+        if (badge) {
+            badge.textContent = "🔊 Speaking...";
+            badge.style.background = "rgba(108, 92, 231, 0.25)";
+            badge.style.color = "#6c5ce7";
+        }
+        if (sub) sub.textContent = "AI Interviewer is speaking. Listen carefully...";
+        speakBtn?.classList.add("speaking");
+    } else {
+        wrapper?.classList.remove("speaking-pulse");
+        if (badge) {
+            badge.textContent = "🟢 Ready";
+            badge.style.background = "rgba(0, 184, 148, 0.15)";
+            badge.style.color = "#00b894";
+        }
+        if (sub) sub.textContent = "Tap microphone to answer or pass question";
+        speakBtn?.classList.remove("speaking");
+    }
+}
 
 function speakQuestion(text) {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
 
-    const btn = $("#btn-speak-question");
     if (!text) return;
 
     const utter = new SpeechSynthesisUtterance(text);
@@ -818,14 +914,10 @@ function speakQuestion(text) {
     const naturalVoice = voices.find((v) => v.lang.startsWith("en") && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("David") || v.name.includes("Zira")));
     if (naturalVoice) utter.voice = naturalVoice;
 
-    if (btn) btn.classList.add("speaking");
+    setAIAvatarState(true);
 
-    utter.onend = () => {
-        if (btn) btn.classList.remove("speaking");
-    };
-    utter.onerror = () => {
-        if (btn) btn.classList.remove("speaking");
-    };
+    utter.onend = () => setAIAvatarState(false);
+    utter.onerror = () => setAIAvatarState(false);
 
     currentUtterance = utter;
     window.speechSynthesis.speak(utter);
@@ -834,11 +926,127 @@ function speakQuestion(text) {
 $("#btn-speak-question")?.addEventListener("click", () => {
     if (window.speechSynthesis && window.speechSynthesis.speaking) {
         window.speechSynthesis.cancel();
-        $("#btn-speak-question").classList.remove("speaking");
+        setAIAvatarState(false);
     } else if (state.currentQuestion) {
         speakQuestion(state.currentQuestion.question);
     }
 });
+
+// ──────────────────────────────────────────────
+// SKIP / PASS QUESTION HANDLER
+// ──────────────────────────────────────────────
+async function skipCurrentQuestion() {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    setAIAvatarState(false);
+    stopQuestionCountdown();
+
+    if (state.timerInterval) {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+    }
+    if (state.audioStream) {
+        state.audioStream.getTracks().forEach((t) => t.stop());
+    }
+    if (state.audioContext && state.audioContext.state !== "closed") {
+        try { state.audioContext.close(); } catch (_) {}
+    }
+    cancelAnimationFrame(state.animFrameId);
+
+    const question = state.currentQuestion;
+    const interview = state.currentInterview;
+    if (!question || !interview) return;
+
+    $("#silence-alert-box").hidden = true;
+    $("#recording-area").hidden = true;
+    $("#processing").hidden = false;
+    $("#processing-status-text").textContent = "Passing question & loading next topic...";
+
+    try {
+        const formData = new FormData();
+        formData.append("question_number", question.number);
+
+        const result = await api(`/api/interviews/${interview.id}/skip`, {
+            method: "POST",
+            body: formData,
+        });
+
+        // Deduplicate answer
+        const existingIdx = state.answers.findIndex((a) => a.question_number === result.question_number);
+        if (existingIdx >= 0) {
+            state.answers[existingIdx] = result;
+        } else {
+            state.answers.push(result);
+        }
+
+        // Update progress counter
+        const answeredCount = Math.min(state.answers.length, interview.total_questions);
+        $("#sidebar-progress").textContent = `${answeredCount} / ${interview.total_questions} answered`;
+        $("#mini-progress-fill").style.width = `${(answeredCount / interview.total_questions) * 100}%`;
+
+        showAnswerResult(result);
+    } catch (err) {
+        $("#processing").hidden = true;
+        $("#recording-area").hidden = false;
+        showError(err.message);
+    }
+}
+
+$("#btn-pass-question")?.addEventListener("click", skipCurrentQuestion);
+$("#btn-quick-skip")?.addEventListener("click", skipCurrentQuestion);
+$("#btn-skip-during-rec")?.addEventListener("click", skipCurrentQuestion);
+$("#btn-silence-skip")?.addEventListener("click", skipCurrentQuestion);
+
+// Retry on silence
+$("#btn-silence-retry")?.addEventListener("click", () => {
+    $("#silence-alert-box").hidden = true;
+    $("#recording-area").hidden = false;
+    resetRecordingUI();
+    startRecording();
+});
+
+// ──────────────────────────────────────────────
+// MOCK WEBCAM VIDEO FEED
+// ──────────────────────────────────────────────
+async function toggleWebcam() {
+    const video = $("#webcam-video");
+    const placeholder = $("#webcam-placeholder");
+    const overlay = $("#webcam-overlay");
+    const btn = $("#btn-cam-toggle");
+
+    if (state.webcamStream) {
+        state.webcamStream.getTracks().forEach((t) => t.stop());
+        state.webcamStream = null;
+        if (video) {
+            video.srcObject = null;
+            video.hidden = true;
+        }
+        if (overlay) overlay.hidden = true;
+        if (placeholder) placeholder.hidden = false;
+        if (btn) {
+            btn.textContent = "Turn ON";
+            btn.classList.remove("active");
+        }
+    } else {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            state.webcamStream = stream;
+            if (video) {
+                video.srcObject = stream;
+                video.hidden = false;
+            }
+            if (overlay) overlay.hidden = false;
+            if (placeholder) placeholder.hidden = true;
+            if (btn) {
+                btn.textContent = "Turn OFF";
+                btn.classList.add("active");
+            }
+        } catch (err) {
+            console.warn("Camera access error:", err);
+            alert("Camera access was not granted. You can still proceed with voice interview.");
+        }
+    }
+}
+$("#btn-cam-toggle")?.addEventListener("click", toggleWebcam);
 
 // ──────────────────────────────────────────────
 // Feature 3: Job Description Matcher
@@ -1109,6 +1317,21 @@ async function submitAnswer() {
             body: formData,
         });
 
+        // Silence / No speech detection check
+        const cleanTrans = (result.transcription || "").trim();
+        if (!cleanTrans || cleanTrans === "No speech detected." || cleanTrans.length < 2) {
+            $("#processing").hidden = true;
+            $("#recording-area").hidden = true;
+            $("#silence-alert-box").hidden = false;
+            setAIAvatarState(false);
+            const badge = $("#ai-state-badge");
+            if (badge) {
+                badge.textContent = "⚠️ No Voice Detected";
+                badge.style.color = "#ff7675";
+            }
+            return;
+        }
+
         // Deduplicate answer by question number (fixes 14/10 answered issue)
         const existingIdx = state.answers.findIndex((a) => a.question_number === result.question_number);
         if (existingIdx >= 0) {
@@ -1131,7 +1354,9 @@ async function submitAnswer() {
 }
 
 function showAnswerResult(result) {
+    stopQuestionCountdown();
     $("#processing").hidden = true;
+    $("#silence-alert-box").hidden = true;
     $("#recording-area").hidden = true;
     $("#answer-result").hidden = false;
 
@@ -1153,7 +1378,7 @@ function showAnswerResult(result) {
 
     const tipsList = $("#tips-list");
     tipsList.innerHTML = "";
-    result.tips.forEach((tip) => {
+    (result.tips || []).forEach((tip) => {
         const li = document.createElement("li");
         li.textContent = tip;
         tipsList.appendChild(li);
@@ -1162,12 +1387,12 @@ function showAnswerResult(result) {
     // Model answer (practice mode only)
     const modelBox = $("#model-answer-box");
     const reRecordBtn = $("#btn-re-record");
-    if (state.currentInterview.mode === "practice") {
+    if (state.currentInterview.mode === "practice" && !result.is_skipped) {
         reRecordBtn.hidden = false;
         fetchModelAnswer(result.question_number);
     } else {
         modelBox.hidden = true;
-        reRecordBtn.hidden = true;
+        reRecordBtn.hidden = result.is_skipped ? true : false;
         $("#model-answer-text").textContent = "";
     }
 
@@ -1194,6 +1419,7 @@ function reRecordAnswer() {
     $("#answer-result").hidden = true;
     $("#realtime-tip").hidden = true;
     $("#model-answer-box").hidden = true;
+    $("#silence-alert-box").hidden = true;
     $("#recording-area").hidden = false;
     resetRecordingUI();
 }
@@ -1206,6 +1432,27 @@ function animateCircle(circleEl, score) {
     setTimeout(() => {
         circleEl.style.strokeDashoffset = offset;
     }, 100);
+}
+
+function animateNumber(el, target, duration = 1200) {
+    if (!el) return;
+    let start = 0;
+    const startTime = performance.now();
+    const end = Math.round(target);
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(start + (end - start) * easeOut);
+        el.textContent = current;
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            el.textContent = end;
+        }
+    }
+    requestAnimationFrame(update);
 }
 
 $("#btn-next").addEventListener("click", () => {
@@ -1225,43 +1472,110 @@ $("#btn-next").addEventListener("click", () => {
 
 $("#btn-exit-interview").addEventListener("click", () => {
     if (window.speechSynthesis) window.speechSynthesis.cancel();
+    stopQuestionCountdown();
     if (confirm("Are you sure you want to exit? Your progress will be lost.")) {
         loadDashboard();
     }
 });
 
 // ──────────────────────────────────────────────
+// CONFETTI CELEBRATION
+// ──────────────────────────────────────────────
+function triggerConfetti() {
+    const canvas = document.getElementById("confetti-canvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const pieces = [];
+    const numberOfPieces = 140;
+    const colors = ["#6c5ce7", "#00cec9", "#00b894", "#fdcb6e", "#e17055", "#e84393", "#a29bfe", "#ffeaa7"];
+
+    for (let i = 0; i < numberOfPieces; i++) {
+        pieces.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * (canvas.height * 0.5) - canvas.height * 0.5,
+            size: Math.random() * 8 + 5,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            speedY: Math.random() * 3 + 2.5,
+            speedX: (Math.random() - 0.5) * 4,
+            rotation: Math.random() * 360,
+            rotationSpeed: (Math.random() - 0.5) * 8,
+        });
+    }
+
+    let animationFrame;
+    const startTime = Date.now();
+
+    function update() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+
+        pieces.forEach((p) => {
+            p.y += p.speedY;
+            p.x += p.speedX;
+            p.rotation += p.rotationSpeed;
+
+            if (p.y < canvas.height) active = true;
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            ctx.restore();
+        });
+
+        if (active && Date.now() - startTime < 4500) {
+            animationFrame = requestAnimationFrame(update);
+        } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            cancelAnimationFrame(animationFrame);
+        }
+    }
+    update();
+}
+
+// ──────────────────────────────────────────────
 // REPORT SCREEN
 // ──────────────────────────────────────────────
 async function loadReport() {
     if (window.speechSynthesis) window.speechSynthesis.cancel();
+    stopQuestionCountdown();
     $("#report-partial-banner").hidden = true;
     showScreen("report");
 
     try {
         const report = await api(`/api/interviews/${state.currentInterview.id}/report`);
         renderReport(report);
+        triggerConfetti();
     } catch (err) {
         showError(err.message);
     }
 }
 
 function renderReport(report) {
-    $("#overall-score-value").textContent = Math.round(report.overall_score);
+    animateNumber($("#overall-score-value"), Math.round(report.overall_score));
     $("#grade-badge").textContent = `Grade: ${report.grade} — ${report.grade_label}`;
 
-    $("#content-bar").style.width = `${report.content_average}%`;
-    $("#content-avg-value").textContent = `${Math.round(report.content_average)}%`;
-    $("#confidence-bar").style.width = `${report.confidence_average}%`;
-    $("#confidence-avg-value").textContent = `${Math.round(report.confidence_average)}%`;
+    $("#content-bar").style.width = "0%";
+    $("#confidence-bar").style.width = "0%";
 
-    $("#strengths-list").innerHTML = report.strengths.map((s) => `<li>${s}</li>`).join("");
-    $("#weaknesses-list").innerHTML = report.weaknesses.map((w) => `<li>${w}</li>`).join("");
-    $("#report-tips-list").innerHTML = report.tips.map((t) => `<li>${t}</li>`).join("");
+    setTimeout(() => {
+        $("#content-bar").style.width = `${report.content_average}%`;
+        $("#content-avg-value").textContent = `${Math.round(report.content_average)}%`;
+        $("#confidence-bar").style.width = `${report.confidence_average}%`;
+        $("#confidence-avg-value").textContent = `${Math.round(report.confidence_average)}%`;
+    }, 150);
+
+    $("#strengths-list").innerHTML = (report.strengths || []).map((s) => `<li>${s}</li>`).join("");
+    $("#weaknesses-list").innerHTML = (report.weaknesses || []).map((w) => `<li>${w}</li>`).join("");
+    $("#report-tips-list").innerHTML = (report.tips || []).map((t) => `<li>${t}</li>`).join("");
 
     const breakdown = $("#question-breakdown-list");
     breakdown.innerHTML = "";
-    report.question_results.forEach((qr) => {
+    (report.question_results || []).forEach((qr) => {
         const div = document.createElement("div");
         div.className = "breakdown-item";
         div.innerHTML = `

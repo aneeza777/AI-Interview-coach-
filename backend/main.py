@@ -306,6 +306,7 @@ async def create_interview(
         job_title=data.job_title,
         mode=data.mode,
         total_questions=10,
+        difficulty=data.difficulty or "mid",
     )
 
     interview = Interview(
@@ -541,6 +542,99 @@ async def submit_answer(
 
     except Exception as e:
         raise HTTPException(500, f"Answer processing failed: {str(e)}")
+
+
+@app.post("/api/interviews/{interview_id}/skip")
+async def skip_question(
+    interview_id: int,
+    question_number: int = Form(...),
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Skip / Pass the current question without requiring voice answer."""
+    interview = db.query(Interview).filter(Interview.id == interview_id, Interview.user_id == user.id).first()
+    if not interview:
+        raise HTTPException(404, "Interview not found")
+
+    if interview.status == "completed":
+        raise HTTPException(400, "Interview already completed")
+
+    # Find question
+    question = None
+    for q in interview.questions:
+        if q["number"] == question_number:
+            question = q
+            break
+
+    if not question:
+        raise HTTPException(404, "Question not found")
+
+    # Remove any previous answer for this question
+    db.query(Answer).filter(
+        Answer.interview_id == interview.id,
+        Answer.question_number == question_number,
+    ).delete(synchronize_session=False)
+
+    # Save skipped answer to DB
+    skipped_tips = [
+        "In a live interview, try to explain your thought process even if you don't know the full answer.",
+        "Break down technical questions into smaller components using the STAR technique.",
+    ]
+    answer = Answer(
+        interview_id=interview.id,
+        question_number=question_number,
+        question=question["question"],
+        question_type=question["type"],
+        transcription="[Question skipped / passed by candidate]",
+        audio_path="",
+        content_score=0.0,
+        confidence_score=0.0,
+        combined_score=0.0,
+        content_feedback="Question was skipped. Tip: When unsure, articulating your problem-solving approach makes a better impression than passing entirely.",
+        confidence_feedback="Skipped without audio recording.",
+        tips=skipped_tips,
+    )
+    db.add(answer)
+
+    # Update interview progress
+    interview.current_question_index = question_number
+
+    # Check if interview completed
+    if question_number >= len(interview.questions):
+        interview.status = "completed"
+        interview.completed_at = datetime.datetime.utcnow()
+
+    db.commit()
+    db.refresh(answer)
+
+    # Find next question
+    next_question = None
+    if question_number < len(interview.questions):
+        next_q = interview.questions[question_number]
+        next_question = {
+            "number": next_q["number"],
+            "question": next_q["question"],
+            "type": next_q["type"],
+            "difficulty": next_q["difficulty"],
+            "expected_keywords": next_q.get("expected_keywords", []),
+            "is_follow_up": next_q.get("is_follow_up", False),
+        }
+
+    return {
+        "question_number": question_number,
+        "question": question["question"],
+        "question_type": question["type"],
+        "transcription": "[Question skipped / passed by candidate]",
+        "content_score": 0.0,
+        "confidence_score": 0.0,
+        "combined_score": 0.0,
+        "content_feedback": "Question was skipped.",
+        "confidence_feedback": "Skipped without audio recording.",
+        "tips": skipped_tips,
+        "real_time_tip": "Tip: In technical interviews, attempting partial solutions demonstrates resilience and analytical thinking.",
+        "next_question": next_question,
+        "is_skipped": True,
+    }
 
 
 @app.get("/api/interviews/{interview_id}/report")

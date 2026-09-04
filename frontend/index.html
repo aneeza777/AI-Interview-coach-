@@ -327,6 +327,15 @@
                         <input type="text" id="prep-job-title" placeholder="e.g. Flutter Developer" />
                     </div>
 
+                    <div class="form-group">
+                        <label>Difficulty & Target Level</label>
+                        <div class="difficulty-group" id="prep-diff-group">
+                            <button type="button" class="diff-btn" data-level="junior">🟢 Junior (120s)</button>
+                            <button type="button" class="diff-btn active" data-level="mid">🟡 Mid-Level (90s)</button>
+                            <button type="button" class="diff-btn" data-level="senior">🔴 Senior / Lead (60s)</button>
+                        </div>
+                    </div>
+
                     <button class="btn-primary" id="btn-start-prep" disabled>
                         <span class="btn-text">Start Preparation</span>
                         <span class="btn-loader" hidden>Preparing...</span>
@@ -387,6 +396,15 @@
                     <input type="text" id="interview-job-title" placeholder="e.g. Flutter Developer" />
                 </div>
 
+                <div class="form-group">
+                    <label>Interview Level & Speed</label>
+                    <div class="difficulty-group" id="interview-diff-group">
+                        <button type="button" class="diff-btn" data-level="junior">🟢 Junior (120s)</button>
+                        <button type="button" class="diff-btn active" data-level="mid">🟡 Mid-Level (90s)</button>
+                        <button type="button" class="diff-btn" data-level="senior">🔴 Senior / Lead (60s)</button>
+                    </div>
+                </div>
+
                 <div class="setup-mode-grid">
                     <div class="setup-mode-card" id="setup-mode-practice" data-mode="practice">
                         <div class="mode-icon">📚</div>
@@ -431,7 +449,30 @@
         <section class="interview-layout">
             <!-- Left: Interview flow -->
             <div class="interview-main">
-                <div class="mode-badge" id="mode-badge">Practice Mode</div>
+                <div class="interview-top-bar">
+                    <div class="mode-badge" id="mode-badge">Practice Mode</div>
+                    <div class="countdown-badge" id="countdown-badge" title="Time remaining for this question">
+                        <span class="countdown-icon">⏳</span>
+                        <span id="question-countdown-display">01:30</span>
+                    </div>
+                </div>
+
+                <!-- AI Interviewer Animated Avatar Card -->
+                <div class="ai-interviewer-card" id="ai-interviewer-card">
+                    <div class="ai-avatar-wrapper" id="ai-avatar-wrapper">
+                        <div class="ai-avatar-ring ring-3"></div>
+                        <div class="ai-avatar-ring ring-2"></div>
+                        <div class="ai-avatar-ring ring-1"></div>
+                        <div class="ai-avatar-core">🤖</div>
+                    </div>
+                    <div class="ai-interviewer-info">
+                        <div class="ai-name-row">
+                            <span class="ai-name">AI Recruiter & Coach</span>
+                            <span class="ai-state-badge" id="ai-state-badge">🟢 Ready</span>
+                        </div>
+                        <p class="ai-status-sub" id="ai-status-sub">Listening attentively to your response</p>
+                    </div>
+                </div>
 
                 <div class="question-card">
                     <div class="question-meta">
@@ -439,6 +480,9 @@
                         <div class="question-actions-row">
                             <button class="btn-icon-speak" id="btn-speak-question" title="Listen to AI interviewer speak this question">
                                 <span class="speaker-icon">🔊</span> <span class="speak-btn-text">Listen</span>
+                            </button>
+                            <button class="btn-icon-skip" id="btn-pass-question" title="Skip/pass this question and move forward">
+                                <span>⏭️ Pass Question</span>
                             </button>
                             <span class="question-count" id="question-count">1 / 10</span>
                         </div>
@@ -460,12 +504,28 @@
                     </div>
                 </details>
 
+                <!-- Silence / No Speech Detected Alert Box -->
+                <div class="silence-alert-box" id="silence-alert-box" hidden>
+                    <div class="silence-icon-badge">⚠️ 🎙️</div>
+                    <div class="silence-text-content">
+                        <h3>Koi Awaaz Detect Nahi Hui! (No Speech Detected)</h3>
+                        <p>Microphone ne koi clear voice record nahi ki. Barah-e-karam microphone ke kareeb ho kar bolain ya ye question pass kar dein.</p>
+                    </div>
+                    <div class="silence-actions">
+                        <button class="btn-primary btn-sm" id="btn-silence-retry">🎤 Dubara Bolain (Try Again)</button>
+                        <button class="btn-secondary btn-sm" id="btn-silence-skip">⏭️ Pass Question</button>
+                    </div>
+                </div>
+
                 <div class="recording-area" id="recording-area">
                     <div class="mic-prompt" id="mic-prompt">
                         <button class="mic-button" id="btn-record" title="Start Recording">
                             <span class="mic-icon">🎤</span>
                         </button>
                         <p class="recording-hint">Tap the microphone and answer the question</p>
+                        <div class="quick-pass-link-row">
+                            <button class="btn-link-skip" id="btn-quick-skip">Don't know this answer? <span>Pass Question ⏭️</span></button>
+                        </div>
                     </div>
 
                     <div class="recording-active" id="recording-active" hidden>
@@ -475,12 +535,15 @@
                             <span class="live-pace-indicator" id="live-pace-indicator">🟢 Steady Pace</span>
                         </div>
                         <canvas id="waveform-canvas" width="500" height="80"></canvas>
-                        <button class="btn-stop" id="btn-stop">⬛ Stop & Submit Answer</button>
+                        <div class="recording-controls-row">
+                            <button class="btn-stop" id="btn-stop">⬛ Stop & Submit Answer</button>
+                            <button class="btn-skip-during-rec" id="btn-skip-during-rec">⏭️ Pass Question</button>
+                        </div>
                     </div>
 
                     <div class="processing" id="processing" hidden>
                         <div class="spinner"></div>
-                        <p>AI is analyzing your answer...</p>
+                        <p id="processing-status-text">AI is transcribing & analyzing your speech...</p>
                     </div>
                 </div>
 
@@ -551,6 +614,25 @@
                     </div>
                     <p id="sidebar-progress">0 / 10 answered</p>
                 </div>
+                <div class="sidebar-card webcam-card" id="webcam-card">
+                    <div class="webcam-header-row">
+                        <h4>📹 Mock Video Feed</h4>
+                        <button class="btn-cam-toggle" id="btn-cam-toggle">Turn ON</button>
+                    </div>
+                    <div class="webcam-container" id="webcam-container">
+                        <video id="webcam-video" autoplay playsinline muted hidden></video>
+                        <div class="webcam-placeholder" id="webcam-placeholder">
+                            <span class="cam-icon">📷</span>
+                            <span class="cam-label">Camera is OFF</span>
+                            <small>Practice with simulated video</small>
+                        </div>
+                        <div class="webcam-overlay" id="webcam-overlay" hidden>
+                            <div class="face-target-box"></div>
+                            <span class="live-tag">🟢 LIVE CAM</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="sidebar-card" id="sidebar-skills">
                     <h4>🔧 Top Skills</h4>
                     <div id="sidebar-skills-list"></div>
@@ -638,6 +720,9 @@
             </div>
         </section>
     </div>
+
+    <!-- Confetti Celebration Canvas -->
+    <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
     <script src="/static/js/app.js"></script>
 </body>

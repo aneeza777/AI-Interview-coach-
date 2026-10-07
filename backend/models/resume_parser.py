@@ -22,37 +22,117 @@ except OSError:
 
 
 # ──────────────────────────────────────────────
-# Common skill keywords for matching
+# Universal Multi-Industry Skills & Keywords (100% Domain-Agnostic)
 # ──────────────────────────────────────────────
-TECH_SKILLS_KEYWORDS = [
+UNIVERSAL_SKILLS_KEYWORDS = [
+    # ── 1. Technology, Software, AI & Data ──
     "python", "java", "javascript", "typescript", "c++", "c#", "golang", "rust",
     "react", "angular", "vue", "next.js", "node.js", "express", "django", "flask",
     "fastapi", "spring boot", "html", "css", "sass", "tailwind", "bootstrap",
     "sql", "mysql", "postgresql", "mongodb", "redis", "firebase", "supabase",
-    "aws", "azure", "gcp", "docker", "kubernetes", "terraform", "ci/cd",
+    "aws", "azure", "gcp", "alibaba cloud", "docker", "kubernetes", "terraform", "ci/cd",
     "git", "github", "gitlab", "jenkins", "linux", "bash", "powershell",
     "machine learning", "deep learning", "nlp", "computer vision", "tensorflow",
     "pytorch", "scikit-learn", "pandas", "numpy", "matplotlib", "jupyter",
     "rest api", "graphql", "microservices", "agile", "scrum", "jira",
-    "figma", "photoshop", "illustrator", "ui/ux", "wireframing",
-    "data analysis", "data science", "power bi", "tableau", "excel",
-    "communication", "leadership", "teamwork", "problem solving",
-    "project management", "critical thinking", "time management",
-    "html5", "css3", "es6", "oop", "design patterns", "testing",
-    "unit testing", "jest", "mocha", "selenium", "cypress",
     "blockchain", "solidity", "web3", "ethereum",
     "android", "ios", "flutter", "react native", "kotlin", "swift",
     "devops", "monitoring", "logging", "grafana", "prometheus",
-    "oauth", "jwt", "authentication", "authorization", "security",
-    "webpack", "vite", "babel", "eslint", "prettier",
+    "cybersecurity", "penetration testing", "network security", "cryptography",
+    
+    # ── 2. Healthcare, Medicine & Pharmaceuticals ──
+    "clinical practice", "patient care", "diagnostics", "surgery", "pharmacology",
+    "pathology", "emergency medicine", "nursing", "pediatrics", "cardiology",
+    "oncology", "radiology", "internal medicine", "public health", "clinical research",
+    "medical records", "ehr", "emr", "hipaa", "infection control", "phlebotomy",
+    "vital signs", "triage", "medical ethics", "pharmacotherapy", "biostatistics",
+    "patient assessment", "healthcare management", "telemedicine", "medical billing",
+    
+    # ── 3. Finance, Banking, Accounting & Audit ──
+    "financial modeling", "financial analysis", "accounting", "auditing", "taxation",
+    "gaap", "ifrs", "budgeting", "forecasting", "quickbooks", "sap", "tally",
+    "portfolio management", "risk management", "credit analysis", "corporate finance",
+    "investment banking", "equity research", "valuation", "internal audit",
+    "balance sheet", "cash flow management", "p&l management", "mergers and acquisitions",
+    "capital markets", "wealth management", "financial reporting", "cost accounting",
+    
+    # ── 4. Engineering (Mechanical, Civil, Electrical, Industrial) ──
+    "autocad", "solidworks", "matlab", "thermodynamics", "fluid mechanics",
+    "structural analysis", "finite element analysis", "fea", "circuit design",
+    "pcb design", "plc programming", "scada", "hvac", "power systems",
+    "construction management", "site supervision", "surveying", "geotechnical engineering",
+    "lean manufacturing", "six sigma", "quality assurance", "quality control", "iso 9001",
+    "cad/cam", "embedded systems", "robotics", "instrumentation", "safety engineering",
+    
+    # ── 5. Marketing, Advertising, PR & Content ──
+    "digital marketing", "seo", "sem", "search engine optimization", "content strategy",
+    "content marketing", "copywriting", "social media marketing", "brand management",
+    "google analytics", "google ads", "meta ads", "email marketing", "market research",
+    "public relations", "influencer marketing", "growth hacking", "lead generation",
+    "crm", "hubspot", "mailchimp", "conversion rate optimization", "cro", "creative direction",
+    
+    # ── 6. Sales, Business Development & Commercial ──
+    "b2b sales", "b2c sales", "account management", "business development",
+    "sales strategy", "client relations", "cold calling", "sales prospecting",
+    "contract negotiation", "pipeline management", "salesforce", "customer retention",
+    "consultative selling", "relationship building", "revenue growth", "deal closing",
+    
+    # ── 7. Human Resources (HR) & Talent Acquisition ──
+    "talent acquisition", "recruiting", "human resources", "hr management",
+    "employee relations", "onboarding", "performance management", "labor law",
+    "compensation and benefits", "hris", "workday", "bamboohr", "talent management",
+    "succession planning", "conflict resolution", "employee engagement", "organizational culture",
+    
+    # ── 8. Legal, Compliance & Governance ──
+    "legal research", "contract drafting", "contract negotiation", "litigation",
+    "corporate law", "regulatory compliance", "intellectual property", "due diligence",
+    "arbitration", "dispute resolution", "corporate governance", "commercial law",
+    "legal writing", "case management", "risk mitigation",
+    
+    # ── 9. Design, Creative Arts & Architecture ──
+    "graphic design", "ui/ux", "ui design", "ux design", "figma", "adobe xd",
+    "photoshop", "illustrator", "indesign", "after effects", "premiere pro",
+    "wireframing", "prototyping", "user research", "3d modeling", "blender",
+    "typography", "video editing", "animation", "motion graphics", "architectural design",
+    
+    # ── 10. Education, Teaching & Academia ──
+    "curriculum development", "instructional design", "classroom management",
+    "lesson planning", "pedagogy", "student assessment", "e-learning", "mentorship",
+    "academic research", "educational leadership", "learning management system", "canvas", "moodle",
+    
+    # ── 11. Supply Chain, Logistics & Operations ──
+    "supply chain management", "logistics", "procurement", "inventory management",
+    "vendor management", "operations management", "warehouse management", "freight forwarding",
+    "distribution", "fleet management", "demand planning", "erp systems", "import export",
+    
+    # ── 12. Universal Soft Skills & Professional Attributes ──
+    "communication", "leadership", "teamwork", "problem solving",
+    "project management", "critical thinking", "time management", "decision making",
+    "adaptability", "negotiation", "emotional intelligence", "public speaking",
+    "presentation skills", "customer service", "stakeholder management"
 ]
 
 EDUCATION_KEYWORDS = [
-    "bachelor", "master", "phd", "diploma", "certificate", "degree",
+    # Universal Degrees across all disciplines
+    "bachelor", "master", "phd", "doctorate", "diploma", "certificate", "degree",
     "university", "college", "institute", "school", "academy",
-    "bs", "ms", "mba", "btech", "mtech", "bca", "mca", "bba",
+    # Tech & Science
+    "bs", "ms", "bsc", "msc", "btech", "mtech", "bca", "mca",
     "computer science", "software engineering", "information technology",
-    "data science", "artificial intelligence", "electrical engineering",
+    "data science", "artificial intelligence", "biotechnology",
+    # Business, Commerce & Finance
+    "bba", "mba", "b.com", "m.com", "finance", "accounting", "economics",
+    "chartered accountant", "ca", "acca", "cfa", "cma", "banking",
+    # Medical, Nursing & Pharmacy
+    "mbbs", "bds", "pharmd", "pharmacy", "medicine", "nursing", "bscn", "surgery",
+    "health sciences", "physiotherapy", "dpt", "veterinary",
+    # Engineering
+    "electrical engineering", "mechanical engineering", "civil engineering",
+    "chemical engineering", "aerospace engineering", "industrial engineering", "be",
+    # Law & Humanities
+    "llb", "llm", "law", "arts", "ba", "ma", "psychology", "education",
+    "journalism", "mass communication", "international relations", "english literature",
+    "architecture", "b.arch", "m.arch", "fine arts", "graphic design",
 ]
 
 EXPERIENCE_INDICATORS = [
@@ -107,15 +187,84 @@ def extract_text_from_pdf(pdf_path: str) -> str:
 
 
 # ──────────────────────────────────────────────
-# Skill extraction
+# 100% Dynamic Multi-Domain Skill Extraction (AI + NLP)
 # ──────────────────────────────────────────────
-def extract_skills(text: str) -> List[str]:
-    """Extract technical/soft skills by keyword matching."""
-    text_lower = text.lower()
-    found_skills = []
+def _extract_skills_from_section(text: str) -> List[str]:
+    """Dynamically parse skills from any resume's dedicated Skills / Competencies section."""
+    lines = text.split("\n")
+    in_skills_section = False
+    section_skills = []
 
-    for skill in TECH_SKILLS_KEYWORDS:
-        # Use word boundary matching for short skills
+    skill_headers = [
+        "skills", "technical skills", "core competencies", "key skills",
+        "areas of expertise", "professional skills", "specializations",
+        "tools & technologies", "competencies", "key proficiencies",
+        "clinical skills", "technical proficiencies", "tools", "expertise"
+    ]
+    stop_headers = [
+        "experience", "work experience", "employment", "professional experience",
+        "education", "academic background", "projects", "certifications",
+        "publications", "awards", "languages", "references", "summary",
+        "profile", "about me", "interests", "hobbies"
+    ]
+
+    for line in lines:
+        line_clean = line.strip()
+        if not line_clean:
+            continue
+        line_lower = line_clean.lower().rstrip(":")
+
+        # Check if line is a skills header
+        if any(line_lower == h or line_lower.startswith(h + ":") or line_lower == h.upper() for h in skill_headers):
+            in_skills_section = True
+            # Check if header line itself has inline skills, e.g. "Skills: Python, SQL"
+            if ":" in line_clean:
+                remainder = line_clean.split(":", 1)[1].strip()
+                if remainder:
+                    for item in re.split(r'[,;•|\/]+', remainder):
+                        cleaned_item = item.strip().strip("-•* ")
+                        if 2 <= len(cleaned_item) <= 40 and not cleaned_item.lower().startswith(("http", "www")):
+                            section_skills.append(cleaned_item.title())
+            continue
+
+        # Check if line entered a different section
+        if in_skills_section:
+            if any(line_lower == h or line_lower.startswith(h + ":") or line_lower == h.upper() for h in stop_headers):
+                in_skills_section = False
+                break
+
+            # Parse skills line (comma, bullet, pipe, or newline delimited)
+            # Remove leading bullet symbols
+            cleaned_line = re.sub(r'^[•\-\*\d\.\)\s]+', '', line_clean).strip()
+            # If line has category prefix like "Programming: Java, C++" or "Clinical: Triage, EHR"
+            if ":" in cleaned_line and len(cleaned_line.split(":", 1)[0].split()) <= 3:
+                cleaned_line = cleaned_line.split(":", 1)[1].strip()
+
+            items = re.split(r'[,;•|\/\t]+', cleaned_line)
+            for item in items:
+                skill_cand = item.strip().strip("-•* ")
+                # Validation: 2-35 chars, doesn't look like full sentence or contact info
+                if 2 <= len(skill_cand) <= 35 and not any(ch in skill_cand for ch in ['@', 'www.', 'http', 'phone:']):
+                    if len(skill_cand.split()) <= 4:
+                        section_skills.append(skill_cand.title())
+
+    return section_skills
+
+
+def extract_skills(text: str) -> List[str]:
+    """
+    Extract technical, domain, and soft skills across ANY industry
+    using dynamic section parsing + universal multi-domain dictionary + spaCy NLP.
+    """
+    found_skills = []
+    text_lower = text.lower()
+
+    # 1. First, extract directly from any candidate Skills/Competencies section
+    section_skills = _extract_skills_from_section(text)
+    found_skills.extend(section_skills)
+
+    # 2. Match against universal multi-industry vocabulary
+    for skill in UNIVERSAL_SKILLS_KEYWORDS:
         if len(skill) <= 4:
             pattern = r'\b' + re.escape(skill) + r'\b'
             if re.search(pattern, text_lower):
@@ -124,7 +273,18 @@ def extract_skills(text: str) -> List[str]:
             if skill in text_lower:
                 found_skills.append(skill.title())
 
-    return list(dict.fromkeys(found_skills))  # deduplicate, preserve order
+    # 3. Use spaCy NER and noun-chunks for domain-specific terminology discovery
+    if nlp and len(found_skills) < 15:
+        doc = nlp(text[:4000])
+        for chunk in doc.noun_chunks:
+            chunk_text = chunk.text.strip().lower()
+            # Keep clean 2-3 word technical/professional phrases
+            if 4 <= len(chunk_text) <= 30 and len(chunk_text.split()) in [1, 2, 3]:
+                if any(w in UNIVERSAL_SKILLS_KEYWORDS for w in chunk_text.split()):
+                    found_skills.append(chunk.text.strip().title())
+
+    # Deduplicate while preserving order
+    return list(dict.fromkeys(found_skills))
 
 
 # ──────────────────────────────────────────────
@@ -218,13 +378,30 @@ def _looks_like_company(name: str) -> bool:
 def extract_education(text: str) -> List[str]:
     """Extract education-related lines from resume, strictly rejecting contact numbers and emails."""
     education_lines = []
+    section_lines = []
     lines = text.split("\n")
+
+    edu_headers = ("education", "academic background", "qualifications", "academics",
+                   "academic qualifications", "educational background", "education & training")
+    stop_headers = ("experience", "work experience", "employment", "professional experience",
+                    "skills", "key skills", "core competencies", "projects", "certifications",
+                    "publications", "awards", "languages", "references", "summary", "profile",
+                    "interests", "hobbies", "achievements")
+    in_edu = False
 
     for line in lines:
         line_stripped = line.strip()
         if not line_stripped:
             continue
         line_lower = line_stripped.lower()
+        header_key = line_lower.rstrip(":").strip()
+
+        # Track Education section boundaries
+        if header_key in edu_headers:
+            in_edu = True
+            continue
+        if in_edu and (header_key in stop_headers or any(header_key.startswith(h + ":") for h in stop_headers)):
+            in_edu = False
 
         # Reject pure contact lines
         if any(c in line_lower for c in ['@', 'email', 'cell:', 'phone:', 'tel:', 'contact:', 'github.com', 'linkedin.com']):
@@ -234,14 +411,27 @@ def extract_education(text: str) -> List[str]:
             line_stripped = re.sub(r'\+?\d[\d\s\-\.\(\)]{7,}\d', '', line_stripped).strip()
             line_lower = line_stripped.lower()
 
-        if any(kw in line_lower for kw in EDUCATION_KEYWORDS):
-            # Clean any leftover phone numbers or extra symbols
-            cleaned = re.sub(r'\+?\d[\d\s\-\.\(\)]{7,}\d', '', line_stripped).strip()
-            cleaned = re.sub(r'^[•\-\*\d\.\)\s]+', '', cleaned).strip()
-            if len(cleaned) > 3:
-                education_lines.append(cleaned)
+        # Clean any leftover phone numbers or extra symbols
+        cleaned = re.sub(r'\+?\d[\d\s\-\.\(\)]{7,}\d', '', line_stripped).strip()
+        cleaned = re.sub(r'^[•\-\*\d\.\)\s]+', '', cleaned).strip()
+        if len(cleaned) <= 3:
+            continue
 
-    return education_lines[:5]
+        if in_edu:
+            section_lines.append(cleaned)
+            continue
+
+        # Fallback keyword scan (whole-word only, short lines only to avoid experience bullets)
+        if len(cleaned.split()) > 14:
+            continue
+        if any(re.search(rf"(?<![a-z]){re.escape(kw)}(?![a-z])", line_lower) for kw in EDUCATION_KEYWORDS) \
+                or re.search(r"\b(b|m)\.?\s?(sc|ed|com|a|s|e|phil|arch)\b\.?", line_lower) \
+                or re.search(r"\bll\.?\s?[bm]\b", line_lower):
+            if ":" in cleaned and cleaned.split(":", 1)[0].strip().lower() in ("skills", "key skills", "core competencies"):
+                continue
+            education_lines.append(cleaned)
+
+    return (section_lines or education_lines)[:5]
 
 
 # ──────────────────────────────────────────────
@@ -415,6 +605,71 @@ def extract_name(text: str) -> Optional[str]:
 
 
 # ──────────────────────────────────────────────
+# Automatic target-role / field inference (any industry)
+# ──────────────────────────────────────────────
+# Generic role nouns used only to spot a CV headline like "Civil Engineer" or
+# "Registered Nurse" near the top of the document.
+_ROLE_NOUNS = (
+    "engineer", "developer", "doctor", "physician", "surgeon", "nurse", "pharmacist",
+    "dentist", "accountant", "auditor", "analyst", "banker", "consultant", "manager",
+    "teacher", "lecturer", "professor", "lawyer", "advocate", "attorney", "designer",
+    "architect", "scientist", "officer", "executive", "specialist", "technician",
+    "therapist", "marketer", "recruiter", "administrator", "coordinator", "director",
+    "researcher", "writer", "editor", "assistant", "associate", "intern", "trainer",
+)
+
+# Domain evidence vocab (scored by frequency across the whole CV).
+_DOMAIN_EVIDENCE = {
+    "Healthcare Professional": ["patient", "clinical", "hospital", "mbbs", "nursing", "diagnosis", "medical", "ward", "pharmacy", "surgery", "triage", "ehr"],
+    "Finance & Accounting Professional": ["financial", "accounting", "audit", "ifrs", "gaap", "tax", "ledger", "reconciliation", "acca", "budget", "banking", "invoice"],
+    "Civil Engineer": ["civil", "structural", "autocad", "construction", "site", "concrete", "surveying", "boq", "etabs"],
+    "Mechanical Engineer": ["mechanical", "solidworks", "thermodynamics", "hvac", "manufacturing", "cad", "fea", "machining"],
+    "Electrical Engineer": ["electrical", "circuit", "plc", "power systems", "scada", "voltage", "electronics", "wiring"],
+    "Marketing Professional": ["marketing", "seo", "campaign", "brand", "social media", "content", "advertising", "google ads"],
+    "Sales Professional": ["sales", "revenue", "quota", "client acquisition", "crm", "pipeline", "lead generation"],
+    "HR Professional": ["recruitment", "human resources", "payroll", "onboarding", "talent", "employee relations"],
+    "Legal Professional": ["legal", "litigation", "contract", "court", "llb", "compliance", "drafting", "counsel"],
+    "Teacher / Educator": ["teaching", "students", "curriculum", "lesson", "classroom", "pedagogy", "lecturer"],
+    "Supply Chain Professional": ["supply chain", "logistics", "procurement", "inventory", "warehouse", "vendor"],
+    "Graphic Designer": ["photoshop", "illustrator", "figma", "branding", "typography", "graphic"],
+    "Software Developer": ["python", "javascript", "react", "api", "git", "database", "backend", "frontend", "software"],
+    "Data Scientist": ["machine learning", "data analysis", "pandas", "tensorflow", "statistics", "model"],
+}
+
+
+def infer_target_role(text: str) -> str:
+    """
+    Infer the candidate's field / target role directly from their CV.
+    1) Look for a short headline near the top (e.g. "Registered Nurse", "Civil Engineer").
+    2) Otherwise, score every domain by keyword frequency across the full text.
+    Returns a human-readable role label; "General Professional" if nothing is found.
+    """
+    if not text:
+        return "General Professional"
+
+    # 1. Headline detection in the first few lines
+    for line in [l.strip() for l in text.split("\n")[:8] if l.strip()]:
+        low = line.lower()
+        if any(ch in low for ch in ["@", "http", "www", "+92", "phone", "cell"]):
+            continue
+        words = re.findall(r"[a-zA-Z&/]+", line)
+        if 1 <= len(words) <= 6 and any(re.search(rf"\b{n}s?\b", low) for n in _ROLE_NOUNS):
+            # Strip separators like "|" and keep the role chunk that holds the noun
+            for chunk in re.split(r"[|•,–\-]", line):
+                c = chunk.strip()
+                if c and any(re.search(rf"\b{n}s?\b", c.lower()) for n in _ROLE_NOUNS):
+                    return c.title()[:60]
+
+    # 2. Frequency-based domain scoring
+    low_text = text.lower()
+    scores = {}
+    for role, vocab in _DOMAIN_EVIDENCE.items():
+        scores[role] = sum(len(re.findall(rf"\b{re.escape(v)}\b", low_text)) for v in vocab)
+    best_role, best_score = max(scores.items(), key=lambda kv: kv[1])
+    return best_role if best_score >= 3 else "General Professional"
+
+
+# ──────────────────────────────────────────────
 # Main parser function
 # ──────────────────────────────────────────────
 def parse_resume(pdf_path: str) -> Dict:
@@ -428,17 +683,43 @@ def parse_resume(pdf_path: str) -> Dict:
             "skills": List[str],
             "experience": Dict,
             "education": List[str],
+            "inferred_role": str,
         }
     """
     raw_text = extract_text_from_pdf(pdf_path)
+    return parse_resume_text(raw_text)
+
+
+def parse_resume_text(raw_text: str) -> Dict:
+    """Parse already-extracted resume text (any field / industry)."""
+    skills = extract_skills(raw_text)
+    experience = extract_experience(raw_text)
+    education = extract_education(raw_text)
+
+    # Remove spaCy ORG false positives (skills, degrees, role titles mistaken for companies)
+    skill_set = {s.lower() for s in skills}
+    edu_blob = " ".join(education).lower()
+    clean_companies = []
+    for c in experience.get("companies", []):
+        cl = c.lower().strip()
+        if "\n" in c or len(cl) <= 3:
+            continue
+        parts = [p.strip() for p in cl.split(",") if p.strip()]
+        if cl in skill_set or any(p in skill_set for p in parts) or (len(cl) <= 6 and cl in edu_blob):
+            continue
+        if any(re.search(rf"\b{n}s?\b", cl) for n in _ROLE_NOUNS):
+            continue
+        clean_companies.append(c)
+    experience["companies"] = clean_companies
 
     return {
         "name": extract_name(raw_text),
         "raw_text": raw_text,
-        "skills": extract_skills(raw_text),
-        "experience": extract_experience(raw_text),
-        "education": extract_education(raw_text),
+        "skills": skills,
+        "experience": experience,
+        "education": education,
         "projects": extract_projects(raw_text),
+        "inferred_role": infer_target_role(raw_text),
     }
 
 

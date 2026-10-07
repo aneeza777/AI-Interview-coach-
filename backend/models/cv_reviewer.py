@@ -503,9 +503,17 @@ def match_job_description(resume_text: str, jd_text: str, resume_skills: List[st
     jd_skills_set = set(s.lower() for s in extract_skills(jd_text))
 
     if not jd_skills_set:
-        words = re.findall(r'\b[a-zA-Z]{3,15}\b', jd_text.lower())
-        tech_vocab = {"python", "javascript", "react", "node", "sql", "docker", "aws", "git", "api", "rest", "html", "css", "django", "fastapi", "java", "c++", "pytorch", "flutter"}
-        jd_skills_set = set(w for w in words if w in tech_vocab)
+        words = re.findall(r'\b[a-zA-Z]{3,20}\b', jd_text.lower())
+        stopwords = {
+            "and", "the", "for", "with", "that", "this", "from", "have", "will", "your",
+            "our", "you", "are", "about", "what", "which", "when", "where", "role", "team",
+            "work", "ability", "skills", "experience", "years", "candidate", "responsibilities",
+            "requirements", "qualification", "must", "plus", "preferred", "strong", "good",
+            "excellent", "looking", "join", "apply", "company", "opportunity", "position"
+        }
+        from collections import Counter
+        word_counts = Counter(w for w in words if w not in stopwords and len(w) >= 3)
+        jd_skills_set = set(w for w, _ in word_counts.most_common(12))
 
     matched = sorted(list(r_skills_set.intersection(jd_skills_set)))
     missing = sorted(list(jd_skills_set - r_skills_set))
@@ -519,13 +527,13 @@ def match_job_description(resume_text: str, jd_text: str, resume_skills: List[st
     recs = []
     if missing:
         missing_preview = ", ".join(missing[:4]).title()
-        recs.append(f"The job description highlights {missing_preview}. Emphasize related coursework or projects in these areas.")
+        recs.append(f"The job description emphasizes {missing_preview}. Highlight related training, certifications, or projects in these areas.")
     if match_score >= 80:
-        recs.append("Strong technical alignment! Focus your interview answers on quantifiable impact and system design.")
+        recs.append("Strong domain alignment! Focus your interview answers on quantifiable achievements and leadership impact.")
     elif match_score >= 50:
-        recs.append("Moderate alignment. Review missing core competencies and prepare to explain how quickly you learn new tools.")
+        recs.append("Moderate alignment. Review missing core competencies and prepare to explain your rapid adaptability.")
     else:
-        recs.append("Low direct skill overlap. Emphasize your fundamental problem-solving skills and related foundational concepts.")
+        recs.append("Foundational skill overlap. Emphasize your versatile problem-solving skills and domain fundamentals.")
 
     return {
         "match_score": max(20, min(100, match_score)),

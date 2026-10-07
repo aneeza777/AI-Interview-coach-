@@ -171,7 +171,7 @@ async def list_resumes(
             "id": r.id,
             "filename": r.filename,
             "job_title": r.job_title,
-            "target_role": r.job_title or "Software Engineer",
+            "target_role": r.job_title or "General Professional",
             "created_at": r.created_at.isoformat() if r.created_at else None,
             "score": (r.cv_review.get("score") if (r.cv_review and isinstance(r.cv_review, dict)) else 75),
             "cv_score": (r.cv_review.get("score") if (r.cv_review and isinstance(r.cv_review, dict)) else 75),
@@ -206,6 +206,10 @@ async def upload_resume(
     try:
         parsed = parse_resume(str(file_path))
         cv_review = review_cv(str(file_path))
+
+        # No role given? Let the CV decide its own field (domain-agnostic inference)
+        if not job_title or not job_title.strip() or job_title.strip().lower() == "general professional":
+            job_title = parsed.get("inferred_role") or "General Professional"
 
         db_resume = Resume(
             user_id=user.id,
@@ -247,8 +251,8 @@ async def get_cv_review(
     review_data = dict(resume.cv_review) if (resume.cv_review and isinstance(resume.cv_review, dict)) else {}
     review_data["id"] = resume.id
     review_data["filename"] = resume.filename
-    review_data["target_role"] = resume.job_title or "Software Engineer"
-    review_data["job_title"] = resume.job_title or "Software Engineer"
+    review_data["target_role"] = resume.job_title or "General Professional"
+    review_data["job_title"] = resume.job_title or "General Professional"
     review_data["parsed_data"] = resume.parsed_data or {}
     return review_data
 
@@ -322,6 +326,20 @@ async def create_interview(
 
     resume_data = resume.parsed_data if (resume and resume.parsed_data) else {"name": user.full_name, "skills": [], "experience_years": 2}
     resume_id_val = resume.id if resume else None
+
+    # Domain-agnostic role resolution: blank/generic role -> use the CV's own field
+    requested_role = (data.job_title or "").strip()
+    if not requested_role or requested_role.lower() == "general professional":
+        cv_role = None
+        if resume:
+            cv_role = resume.job_title or (resume.parsed_data or {}).get("inferred_role")
+            if (not cv_role or cv_role.lower() == "general professional") and resume.parsed_data:
+                try:
+                    from models.resume_parser import infer_target_role
+                    cv_role = infer_target_role(resume.parsed_data.get("raw_text", ""))
+                except Exception:
+                    pass
+        data.job_title = cv_role or "General Professional"
 
     target_count = data.question_count if (data.question_count and data.question_count in [3, 5, 10, 15]) else 5
 
@@ -492,7 +510,10 @@ async def submit_answer(
 
     try:
         if audio_path and audio_path.exists():
-            clean_vocab_prompt = "Technical software engineering mock interview answer covering skills, projects, and architecture."
+            # Domain-agnostic vocab hint built from the interview's own job title + question
+            role_hint = getattr(interview, "job_title", None) or "professional"
+            q_hint = (question.get("question") or "")[:150]
+            clean_vocab_prompt = f"Mock interview answer for a {role_hint} role. Question: {q_hint}"
             transcription = transcribe_audio(str(audio_path), language="en", prompt=clean_vocab_prompt)
             if not transcription.get("text") and answer_text:
                 transcription["text"] = answer_text
@@ -863,10 +884,10 @@ from typing import List, Optional
 class ATSOptimizeRequest(BaseModel):
     resume_id: Optional[int] = None
     job_description: str
-    target_role: Optional[str] = "Software Engineer"
+    target_role: Optional[str] = "General Professional"
 
 class SalaryNegotiateRequest(BaseModel):
-    job_title: str = "Software Engineer"
+    job_title: str = "General Professional"
     experience_years: Optional[int] = 2
     initial_offer: Optional[float] = 95000.0
     target_offer: Optional[float] = 120000.0
@@ -905,52 +926,25 @@ async def ats_optimizer_endpoint(
 
     jd_lower = req.job_description.lower()
     
-    # Comprehensive lexicon of 150+ tech skills across Mobile, Web, Cloud, AI, Backend
-    comprehensive_skills = [
-        # Mobile & Flutter
-        "flutter", "dart", "android", "ios", "swift", "kotlin", "react native", "provider", "bloc",
-        "riverpod", "mobx", "redux", "state management", "mobile app development", "google play",
-        "app store", "cross-platform", "sqlite", "firebase", "mobile development", "fastlane",
-        
-        # Web & Frontend
-        "react", "react.js", "next.js", "vue", "vue.js", "angular", "javascript", "typescript",
-        "html", "html5", "css", "css3", "tailwind", "tailwind css", "bootstrap", "sass", "webpack",
-        "vite", "zustand", "graphql", "rest api", "responsive design", "ui/ux",
-        
-        # Backend & Databases
-        "python", "fastapi", "django", "flask", "node.js", "express", "nest.js", "java", "spring boot",
-        "c#", ".net", "golang", "go", "rust", "php", "laravel", "c++", "c", "ruby", "rails",
-        "postgresql", "mysql", "mongodb", "redis", "elasticsearch", "sql", "nosql", "orm", "sqlalchemy",
-        "prisma", "kafka", "rabbitmq", "celery", "grpc", "microservices", "websockets",
-        
-        # Cloud & DevOps
-        "docker", "kubernetes", "aws", "alibaba cloud", "gcp", "azure", "terraform", "ansible",
-        "ci/cd", "git", "github", "gitlab", "github actions", "jenkins", "linux", "nginx", "helm",
-        "prometheus", "grafana", "serverless", "cloud architecture",
-        
-        # AI & Data
-        "machine learning", "deep learning", "pytorch", "tensorflow", "nlp", "llm", "rag",
-        "langchain", "openai", "pandas", "numpy", "scikit-learn", "computer vision", "opencv",
-        "data science", "data analysis", "etl", "spark",
-        
-        # Practices
-        "system design", "clean architecture", "mvvm", "mvc", "oop", "design patterns", "unit testing",
-        "tdd", "agile", "scrum", "debugging", "performance optimization", "version control"
-    ]
+    # 1. Extract domain skills from JD using universal multi-domain extractor
+    from models.resume_parser import extract_skills as extract_universal_skills
+    jd_skills = [s.lower() for s in extract_universal_skills(req.job_description)]
     
-    # Extract matching skills from JD
-    jd_skills = []
-    for skill in comprehensive_skills:
-        # Match whole words or phrases
-        pattern = r'\b' + re.escape(skill) + r'\b'
-        if re.search(pattern, jd_lower):
-            jd_skills.append(skill)
-    
-    if not jd_skills:
-        # Fallback extract words from JD
-        words = re.findall(r'\b[a-zA-Z]{3,15}\b', jd_lower)
-        stopwords = {"and", "the", "for", "with", "experience", "skills", "requirements", "years", "must", "have", "ability", "strong", "work", "team", "role", "full", "life", "cycle"}
-        jd_skills = [w for w in set(words) if w not in stopwords][:8]
+    # 2. NLP fallback for specialized domain terms
+    if len(jd_skills) < 4:
+        words = re.findall(r'\b[a-zA-Z]{3,20}\b', jd_lower)
+        stopwords = {
+            "and", "the", "for", "with", "that", "this", "from", "have", "will", "your",
+            "our", "you", "are", "about", "what", "which", "when", "where", "role", "team",
+            "work", "ability", "skills", "experience", "years", "candidate", "responsibilities",
+            "requirements", "qualification", "must", "plus", "preferred", "strong", "good",
+            "excellent", "looking", "join", "apply", "company", "opportunity", "position"
+        }
+        from collections import Counter
+        word_counts = Counter(w for w in words if w not in stopwords and len(w) >= 3)
+        for w, _ in word_counts.most_common(10):
+            if w not in jd_skills:
+                jd_skills.append(w)
 
     # Deduplicate while preserving order
     seen = set()
@@ -964,7 +958,6 @@ async def ats_optimizer_endpoint(
     missing = []
 
     for s in unique_jd_skills:
-        # Check if skill is in parsed resume_skills or resume raw_text
         is_matched = (
             any(s == rs or s in rs or rs in s for rs in resume_skills) or
             bool(re.search(r'\b' + re.escape(s) + r'\b', resume_text))
@@ -979,43 +972,107 @@ async def ats_optimizer_endpoint(
     else:
         match_pct = round((len(matched) / max(1, len(unique_jd_skills))) * 100, 1)
 
-    # Generate Tailored STAR Bullet Points tailored to the target role
-    role = req.target_role or "Software Engineer"
+    # Generate Tailored STAR Bullet Points adapted to the candidate's exact domain
+    role = req.target_role or "Professional"
     role_lower = role.lower()
     
-    top_m = [s.title() for s in matched[:3]] or ["Modern Frameworks", "Git", "REST APIs"]
-    top_miss = [s.title() for s in missing[:2]] or ["Cloud Architecture", "Automated CI/CD"]
+    top_m = [s.title() for s in matched[:3]] or ["Core Methodologies", "Quality Assurance", "Project Delivery"]
+    top_miss = [s.title() for s in missing[:2]] or ["Advanced Industry Best Practices", "Compliance Standards"]
     
     m_str = ", ".join(top_m)
-    miss_str = top_miss[0] if top_miss else "Cloud CI/CD"
+    miss_str = top_miss[0] if top_miss else "Compliance Standards"
 
-    if "flutter" in role_lower or "mobile" in role_lower or "dart" in role_lower or "android" in role_lower or "ios" in role_lower:
+    # Multi-Domain STAR bullet templates
+    if any(k in role_lower for k in ["medical", "doctor", "physician", "nurse", "nursing", "pharmacy", "pharmacist", "clinical", "hospital", "healthcare"]):
+        suggested_bullets = [
+            f"Administered evidence-based clinical care and diagnostics utilizing {m_str}, maintaining a 99.4% patient satisfaction rating across high-acuity caseloads.",
+            f"Streamlined triage workflows and EHR clinical documentation, reducing patient turnaround time by 30% while adhering strictly to HIPAA and patient safety standards.",
+            f"Collaborated with multidisciplinary healthcare teams to implement quality improvement initiatives, achieving zero protocol discrepancies in target units.",
+            f"Spearheaded adoption of {miss_str} clinical guidelines, enhancing patient recovery outcomes and diagnostic precision by 25%."
+        ]
+    elif any(k in role_lower for k in ["finance", "financial", "accountant", "accounting", "auditor", "audit", "banker", "tax", "cfa", "acca"]):
+        suggested_bullets = [
+            f"Architected comprehensive financial models, sensitivity analyses, and forecasting projections using {m_str}, supporting $15M+ in strategic capital allocations.",
+            f"Streamlined monthly close and GAAP/IFRS reporting processes, reducing reporting cycle duration by 4 days with zero audit discrepancies.",
+            f"Conducted rigorous variance analyses and operational cost audits, identifying $450K+ in annual overhead savings.",
+            f"Integrated {miss_str} controls and compliance frameworks to mitigate financial risk and enhance cash flow visibility."
+        ]
+    elif any(k in role_lower for k in ["mechanical", "civil", "electrical", "structural", "cad", "autocad", "solidworks", "construction"]):
+        suggested_bullets = [
+            f"Designed and validated critical engineering components using {m_str}, ensuring 100% adherence to ISO quality standards and structural safety tolerances.",
+            f"Conducted advanced simulation, stress analysis, and prototype testing, reducing fabrication rework costs by 32%.",
+            f"Supervised cross-functional project execution and contractor deliverables, completing capital projects on-time and under budget.",
+            f"Integrated {miss_str} protocols to enhance operational efficiency and minimize machinery downtime by 40%."
+        ]
+    elif any(k in role_lower for k in ["marketing", "seo", "sem", "content", "brand", "social media", "growth", "copywriter"]):
+        suggested_bullets = [
+            f"Engineered omnichannel digital growth campaigns utilizing {m_str}, driving a 65% increase in qualified inbound leads and improving conversion rates by 28%.",
+            f"Executed data-driven content marketing and SEO optimization strategies, generating 250,000+ organic impressions and slashing CAC by 35%.",
+            f"Managed advertising campaigns across target channels, maintaining an average ROAS of 4.2x.",
+            f"Spearheaded integration of {miss_str} workflows and automated lead nurturing sequences, expanding customer lifetime value."
+        ]
+    elif any(k in role_lower for k in ["sales", "business development", "account executive", "commercial", "revenue"]):
+        suggested_bullets = [
+            f"Generated $1.8M in net new revenue utilizing {m_str}, consistently surpassing annual quota targets by an average of 135%.",
+            f"Spearheaded consultative enterprise sales cycles from outbound discovery to contract closing, maintaining a 42% deal win rate.",
+            f"Built long-term executive stakeholder partnerships, boosting client account retention to 96%.",
+            f"Adopted {miss_str} prospecting methodologies, expanding high-intent pipeline volume by 50%."
+        ]
+    elif any(k in role_lower for k in ["hr", "human resources", "recruiter", "talent acquisition", "people"]):
+        suggested_bullets = [
+            f"Led end-to-end talent acquisition and employer branding strategies using {m_str}, reducing average time-to-hire by 18 days while improving offer acceptance to 92%.",
+            f"Designed employee engagement and performance management frameworks, reducing annual departmental turnover by 26%.",
+            f"Administered HR compliance audits and standardized onboarding programs across 300+ full-time personnel.",
+            f"Implemented {miss_str} initiatives to drive high-impact leadership development and organizational retention."
+        ]
+    elif any(k in role_lower for k in ["lawyer", "attorney", "legal", "compliance", "counsel"]):
+        suggested_bullets = [
+            f"Drafted and negotiated high-value commercial agreements utilizing {m_str}, mitigating legal exposure and protecting organizational interests.",
+            f"Conducted rigorous regulatory compliance audits across shifting statutory standards, achieving 100% audit pass rates.",
+            f"Advised executive leadership on corporate governance, dispute resolution, and risk management strategies.",
+            f"Integrated {miss_str} guidelines into operational agreements, resolving complex contractual ambiguities."
+        ]
+    elif any(k in role_lower for k in ["teacher", "professor", "educator", "instructor", "academic", "curriculum"]):
+        suggested_bullets = [
+            f"Designed and delivered innovative, learner-centered curriculum utilizing {m_str}, resulting in a 24% improvement in standardized competency benchmarks.",
+            f"Facilitated experiential learning, student mentorship, and differentiated instruction for diverse cohorts.",
+            f"Authored academic course materials and led departmental quality reviews with 100% compliance.",
+            f"Integrated {miss_str} tools to foster active participation, engagement, and critical analytical reasoning."
+        ]
+    elif any(k in role_lower for k in ["flutter", "mobile", "dart", "android", "ios"]):
         suggested_bullets = [
             f"Engineered and deployed scalable mobile applications using Flutter and Dart, maintaining 99.8% crash-free sessions across Android (Google Play) & iOS (App Store).",
             f"Implemented clean state management architecture using {m_str}, optimizing UI rebuild lifecycle and reducing memory overhead by 35%.",
             f"Integrated secure RESTful APIs, offline SQLite caching, and asynchronous background services to ensure seamless user experience on low-connectivity networks.",
             f"Spearheaded adoption of {miss_str} and automated mobile build pipelines, reducing release deployment time by 40%."
         ]
-    elif "ai" in role_lower or "data" in role_lower or "machine learning" in role_lower or "nlp" in role_lower:
+    elif any(k in role_lower for k in ["ai", "machine learning", "data scientist", "nlp", "deep learning"]):
         suggested_bullets = [
             f"Architected and fine-tuned domain-specific AI models and RAG pipelines using {m_str}, improving retrieval accuracy by 42% and reducing inference latency.",
             f"Designed and deployed low-latency prediction microservices with FastAPI and Docker on Cloud infrastructure, serving over 50,000+ daily user requests.",
             f"Automated data preprocessing pipelines and feature engineering workflows with Pandas and PyTorch, accelerating model training velocity by 30%.",
             f"Integrated {miss_str} monitoring and automated model evaluation benchmarks, maintaining 99.9% uptime in production environments."
         ]
-    elif "cloud" in role_lower or "devops" in role_lower:
+    elif any(k in role_lower for k in ["cloud", "devops", "sre", "infrastructure"]):
         suggested_bullets = [
             f"Architected multi-region cloud infrastructure using {m_str}, achieving 99.99% high availability and automated failover capabilities.",
-            f"Built automated CI/CD deployment pipelines with Docker and Kubernetes, reducing software release cycles from weeks to under 15 minutes.",
+            f"Built automated CI/CD deployment pipelines with Docker and Kubernetes, reducing release cycles from weeks to under 15 minutes.",
             f"Optimized cloud computing costs by 28% through dynamic auto-scaling policies, containerized workloads, and serverless architectures.",
             f"Integrated {miss_str} monitoring, alerting, and centralized log aggregation with Prometheus and Grafana for rapid incident resolution."
         ]
-    else:
+    elif any(k in role_lower for k in ["developer", "software", "engineer", "web", "frontend", "backend", "full stack"]):
         suggested_bullets = [
             f"Architected and shipped scalable software services using {m_str}, improving system throughput by 38% and reducing API response latency.",
             f"Spearheaded end-to-end integration of {miss_str} workflows, automating testing suites and achieving 99.9% production uptime.",
             f"Refactored legacy codebases to adopt modular clean architecture and unit tests, reducing bug reports by 45% and boosting team velocity.",
             f"Collaborated with cross-functional teams to deliver high-priority features for {role}, directly impacting over 25,000+ monthly active users."
+        ]
+    else:
+        suggested_bullets = [
+            f"Spearheaded high-impact strategic initiatives leveraging {m_str}, delivering a 35% measurable increase in operational efficiency and performance benchmarks.",
+            f"Managed complex deliverables from inception to completion for {role}, collaborating with cross-functional teams to consistently exceed milestone targets.",
+            f"Established standardized best practices and quality control frameworks, reducing turnaround time by 30%.",
+            f"Integrated {miss_str} standards and continuous improvement methodologies to drive sustainable organizational excellence."
         ]
 
     return {
@@ -1025,10 +1082,10 @@ async def ats_optimizer_endpoint(
         "total_jd_keywords": len(unique_jd_skills),
         "suggested_bullets": suggested_bullets,
         "ats_tips": [
-            f"Ensure top matched keywords ({', '.join(top_m)}) appear in your summary and experience sections.",
-            f"Add {miss_str} to your skills list or mention relevant project exposure to boost ATS keyword ranking.",
-            "Start every resume bullet with a strong action verb (Architected, Engineered, Spearheaded, Optimized).",
-            "Quantify your accomplishments with concrete metrics (e.g. latency reduced by 35%, 50k+ active users)."
+            f"Ensure top matched keywords ({', '.join(top_m)}) appear prominently in your summary and experience sections.",
+            f"Add {miss_str} to your core competencies or mention relevant project exposure to boost ATS keyword ranking.",
+            "Start every resume bullet with a strong action verb (Spearheaded, Directed, Engineered, Administered, Optimized).",
+            "Quantify your accomplishments with concrete metrics (e.g. 35% efficiency boost, 99.4% satisfaction, budget saved)."
         ]
     }
 
@@ -1138,47 +1195,281 @@ async def elevator_pitch_endpoint(
 
 @app.get("/api/tools/question-bank")
 async def question_bank_endpoint(
-    job_title: str = "Full Stack AI Developer",
+    job_title: str = "General Professional",
     user: Optional[User] = Depends(get_current_user),
 ):
     """Generate categorized technical & behavioral flashcards for target role."""
-    questions = [
-        {
-            "category": "System Architecture",
-            "difficulty": "Hard",
-            "question": f"How do you design a high-throughput, low-latency API architecture for a {job_title} application?",
-            "key_concepts": ["Load Balancing", "Redis Caching", "Database Indexing", "Asynchronous Workers", "Connection Pooling"],
-            "model_answer": "I decouple request handling using asynchronous worker queues (Celery/RabbitMQ), implement multi-tier caching with Redis, utilize connection pooling for PostgreSQL, and apply database indexing on frequent query keys with horizontal scaling behind Nginx/ALB."
-        },
-        {
-            "category": "Frontend & Performance",
-            "difficulty": "Medium",
-            "question": "Explain how you optimize frontend bundle size, rendering performance, and Core Web Vitals.",
-            "key_concepts": ["Code Splitting", "Tree Shaking", "Lazy Loading", "Memoization", "Asset Compression"],
-            "model_answer": "I implement dynamic imports with route-based code splitting, optimize images using modern WebP formats, eliminate unused dependencies via tree shaking, and prevent unnecessary re-renders using useMemo/useCallback."
-        },
-        {
-            "category": "Security & Auth",
-            "difficulty": "Medium",
-            "question": "How do you protect modern web applications against OWASP Top 10 vulnerabilities like XSS, CSRF, and SQL Injection?",
-            "key_concepts": ["JWT / HttpOnly Cookies", "Parameterized Queries (ORMs)", "Content Security Policy (CSP)", "CORS"],
-            "model_answer": "I store authentication tokens in Secure HttpOnly SameSite cookies to mitigate XSS theft, use ORM parameterized queries to eliminate SQL injection, configure strict CSP headers, and implement rate limiting on sensitive auth endpoints."
-        },
-        {
-            "category": "Behavioral & Leadership",
-            "difficulty": "Medium",
-            "question": "Tell me about a time you disagreed with a technical architecture decision made by a senior peer or manager.",
-            "key_concepts": ["STAR Method", "Objective Benchmarks", "Constructive Dialogue", "Commitment to Team Alignment"],
-            "model_answer": "In a previous project, there was a proposal to use a complex distributed microservices architecture for an MVP. I prepared a benchmark comparison highlighting operational overhead vs a modular monolith. We discussed it collaboratively and agreed on a modular monolith that saved 4 weeks of launch time."
-        },
-        {
-            "category": "Data & State Management",
-            "difficulty": "Hard",
-            "question": "How do you ensure data consistency and transactional integrity across distributed services?",
-            "key_concepts": ["Saga Pattern", "Event Sourcing", "Idempotency Keys", "Two-Phase Commit", "Dead Letter Queues"],
-            "model_answer": "I leverage the Saga pattern with compensating transactions, issue idempotency keys on write requests to prevent duplicate charging/creation, and use transactional outbox tables with message brokers like Kafka/RabbitMQ."
-        }
-    ]
+    """Generate categorized professional & behavioral flashcards dynamically for ANY target role."""
+    title_lower = job_title.lower()
+
+    if any(k in title_lower for k in ["medical", "doctor", "physician", "nurse", "nursing", "pharmacy", "clinical", "hospital"]):
+        questions = [
+            {
+                "category": "Clinical Diagnostics & Triage",
+                "difficulty": "Hard",
+                "question": f"How do you approach urgent differential diagnosis and clinical triage under emergency conditions as a {job_title}?",
+                "key_concepts": ["Primary Assessment (ABCDE)", "Diagnostic Algorithms", "Vital Signs Monitoring", "Evidence-Based Protocols"],
+                "model_answer": "I immediately conduct systematic primary triage assessing airway, breathing, and circulation, order targeted diagnostic panels, review clinical history, and stabilize the patient following established acute clinical guidelines."
+            },
+            {
+                "category": "Patient Safety & HIPAA",
+                "difficulty": "Medium",
+                "question": "How do you ensure strict medication safety, infection control, and patient privacy compliance?",
+                "key_concepts": ["Five Rights of Medication", "Infection Prevention Protocols", "HIPAA/EHR Security", "Sterile Field Maintenance"],
+                "model_answer": "I verify the five rights of medication administration, adhere to strict aseptic and hand hygiene techniques, and ensure patient health records are secured with encrypted, authenticated EHR access."
+            },
+            {
+                "category": "Interdisciplinary Collaboration",
+                "difficulty": "Medium",
+                "question": "Describe how you coordinate patient care plans with multidisciplinary medical teams and specialists.",
+                "key_concepts": ["SBAR Communication", "Care Coordination", "Multidisciplinary Rounds", "Clear Documentation"],
+                "model_answer": "I utilize the SBAR (Situation, Background, Assessment, Recommendation) framework during patient handoffs, lead multidisciplinary rounds with attending consultants, and maintain meticulous clinical notes."
+            },
+            {
+                "category": "Behavioral & Empathy",
+                "difficulty": "Medium",
+                "question": "How do you handle delivering difficult diagnoses or communicating with distressed patient families?",
+                "key_concepts": ["SPIKES Protocol", "Compassionate Listening", "Non-Verbal Empathy", "Support Resources"],
+                "model_answer": "I follow the SPIKES protocol for delivering difficult news: setting up a private space, assessing family perception, sharing information clearly with compassionate empathy, and outlining an actionable supportive care plan."
+            },
+            {
+                "category": "Quality Improvement",
+                "difficulty": "Hard",
+                "question": "Tell me about a clinical audit or quality improvement protocol you contributed to.",
+                "key_concepts": ["Clinical Audit", "Morbidity & Mortality Reviews", "Root Cause Analysis", "Patient Outcomes Tracking"],
+                "model_answer": "In our clinical unit, I participated in a root-cause analysis that standardized central line insertion checklists, reducing catheter-related bloodstream infections to zero over a 12-month period."
+            }
+        ]
+    elif any(k in title_lower for k in ["finance", "financial", "accountant", "accounting", "auditor", "audit", "banker", "tax"]):
+        questions = [
+            {
+                "category": "Financial Modeling & Valuation",
+                "difficulty": "Hard",
+                "question": f"Walk me through how you build a three-statement financial model and perform DCF valuation for a {job_title} project.",
+                "key_concepts": ["Income Statement / Balance Sheet / Cash Flow Linkage", "WACC Calculation", "Unlevered Free Cash Flow", "Sensitivity Tables"],
+                "model_answer": "I link net income to the cash flow statement, model working capital and depreciation schedules to balance the balance sheet, calculate unlevered free cash flows, and discount them using WACC with multi-scenario sensitivity tables."
+            },
+            {
+                "category": "GAAP/IFRS Compliance & Reporting",
+                "difficulty": "Medium",
+                "question": "How do you ensure strict adherence to GAAP/IFRS standards during month-end and annual reporting?",
+                "key_concepts": ["Revenue Recognition (ASC 606 / IFRS 15)", "Lease Accounting (IFRS 16)", "Internal Controls", "Variance Analysis"],
+                "model_answer": "I implement robust balance sheet reconciliation procedures, enforce ASC 606 revenue recognition criteria, document accruals meticulously, and conduct rigorous budget-to-actual variance audits."
+            },
+            {
+                "category": "Risk Management & Internal Controls",
+                "difficulty": "Hard",
+                "question": "What internal controls and audit testing procedures do you execute to detect fraudulent reporting or operational risks?",
+                "key_concepts": ["SOX 404 Compliance", "Segregation of Duties", "Audit Sampling", "Risk Assessment Matrix"],
+                "model_answer": "I maintain strict segregation of duties between authorization and payment execution, perform random dual-signature invoice sampling, and map financial processes against a comprehensive risk control matrix."
+            },
+            {
+                "category": "Working Capital & Cash Management",
+                "difficulty": "Medium",
+                "question": "How do you optimize working capital cycles, DSO, and cash flow liquidity in uncertain market conditions?",
+                "key_concepts": ["Days Sales Outstanding (DSO)", "Cash Conversion Cycle", "Aging Receivables", "Liquidity Ratios"],
+                "model_answer": "I monitor weekly aging reports, negotiate dynamic early-payment supplier discounts, optimize inventory turnover, and establish revolving credit lines to preserve healthy quick and current ratios."
+            },
+            {
+                "category": "Executive Strategy & Leadership",
+                "difficulty": "Medium",
+                "question": "How do you translate complex financial variances into clear strategic insights for executive stakeholders?",
+                "key_concepts": ["Executive Dashboards", "EBITDA Bridges", "Scenario Forecasting", "Actionable Recommendations"],
+                "model_answer": "I create concise EBITDA bridge summaries, eliminate technical accounting jargon, and provide C-suite leaders with scenario forecasts outlining clear revenue and cost-containment recommendations."
+            }
+        ]
+    elif any(k in title_lower for k in ["mechanical", "civil", "electrical", "structural", "cad", "solidworks", "construction"]):
+        questions = [
+            {
+                "category": "Engineering Design & Simulation",
+                "difficulty": "Hard",
+                "question": f"Walk me through your engineering design workflow from concept modeling to stress simulation as a {job_title}.",
+                "key_concepts": ["CAD 3D Modeling", "Finite Element Analysis (FEA)", "Safety Factors", "Material Selection"],
+                "model_answer": "I develop parametric 3D CAD assemblies, define boundary conditions and mechanical loads for FEA simulation, verify von Mises stresses against yield strengths, and ensure adequate safety factors."
+            },
+            {
+                "category": "Codes, Standards & Safety",
+                "difficulty": "Medium",
+                "question": "How do you ensure full compliance with international engineering codes (ISO, ASME, ASTM, IEEE, ACI)?",
+                "key_concepts": ["Design Codes & Standards", "Safety Audits", "Tolerancing (GD&T)", "Failure Mode Effects Analysis (FMEA)"],
+                "model_answer": "I cross-reference design criteria against applicable industry codes, apply GD&T to manufacturing drawings, and run Design FMEA sessions to identify and mitigate critical failure modes before fabrication."
+            },
+            {
+                "category": "Project Execution & Quality Control",
+                "difficulty": "Medium",
+                "question": "Describe how you manage on-site contractor execution, inspections, and quality assurance.",
+                "key_concepts": ["Quality Control (QC/QA)", "Non-Conformance Reporting (NCR)", "Timeline Tracking", "Contractor Coordination"],
+                "model_answer": "I conduct milestone inspections, verify material test certificates against specifications, issue NCRs for non-compliant work, and maintain tight project schedule tracking."
+            },
+            {
+                "category": "Root Cause & Failure Analysis",
+                "difficulty": "Hard",
+                "question": "Tell me about a component or system failure you investigated and how you resolved the root cause.",
+                "key_concepts": ["Root Cause Analysis (Fishbone/5 Whys)", "Metallurgical/Electrical Testing", "Preventive Action", "Redesign Iteration"],
+                "model_answer": "I investigated premature bearing fatigue by conducting vibration analysis and 5-Whys root-cause inquiry, tracing the issue to lubrication contamination, and redesigned the sealing assembly to eliminate the fault."
+            },
+            {
+                "category": "Cost & Sustainability Optimization",
+                "difficulty": "Medium",
+                "question": "How do you balance manufacturing costs, thermal/energy efficiency, and environmental sustainability?",
+                "key_concepts": ["Design for Manufacturing (DFM)", "Life Cycle Assessment", "Energy Efficiency", "Material Minimization"],
+                "model_answer": "I employ DFM principles to reduce tooling complexity, evaluate recycled alloy alternatives, and optimize structural geometry to reduce weight and raw material consumption by 22%."
+            }
+        ]
+    elif any(k in title_lower for k in ["marketing", "seo", "sem", "content", "brand", "growth"]):
+        questions = [
+            {
+                "category": "Growth Strategy & Funnel Optimization",
+                "difficulty": "Hard",
+                "question": f"How do you design an omnichannel acquisition strategy and optimize conversion funnels as a {job_title}?",
+                "key_concepts": ["Full-Funnel Attribution", "CAC & LTV Modeling", "Conversion Rate Optimization (CRO)", "A/B Testing"],
+                "model_answer": "I map the end-to-end buyer journey from awareness to retention, allocate budget across paid, organic, and email channels based on marginal ROAS, and run weekly multivariable CRO tests on key landing pages."
+            },
+            {
+                "category": "Search & Content Strategy",
+                "difficulty": "Medium",
+                "question": "What is your approach to technical SEO, search intent mapping, and high-impact content marketing?",
+                "key_concepts": ["Keyword Clustering", "Search Intent Analysis", "Core Web Vitals", "Topic Authority Clusters"],
+                "model_answer": "I analyze search volume and user intent to build topic clusters, optimize technical site architecture for crawl efficiency, and produce comprehensive pillar guides that rank top-3 for high-intent queries."
+            },
+            {
+                "category": "Analytics & Campaign Attribution",
+                "difficulty": "Medium",
+                "question": "How do you evaluate multi-touch attribution, GA4 metrics, and return on ad spend (ROAS)?",
+                "key_concepts": ["Multi-Touch Attribution", "GA4 Event Tracking", "ROAS & Cost-Per-Acquisition", "Cohort Retention"],
+                "model_answer": "I set up custom GA4 server-side event tracking, analyze data-driven attribution models to understand customer touchpoints, and monitor cohort retention to ensure ad spend drives profitable lifetime value."
+            },
+            {
+                "category": "Brand Positioning & Creative Messaging",
+                "difficulty": "Medium",
+                "question": "How do you develop compelling brand messaging that cuts through crowded, competitive markets?",
+                "key_concepts": ["Unique Value Proposition (UVP)", "Competitor Gap Analysis", "Customer Interview Insights", "Emotional Hooks"],
+                "model_answer": "I conduct customer interviews to uncover core pain points, map competitor messaging gaps, and test targeted hooks that articulate a clear, differentiated UVP focused on measurable customer outcomes."
+            },
+            {
+                "category": "Retention & Lifecycle Marketing",
+                "difficulty": "Hard",
+                "question": "What strategies do you use for email segmentation, automated lifecycle drips, and customer churn reduction?",
+                "key_concepts": ["Behavioral Segmentation", "Automated Drip Sequences", "RFM Analysis", "Win-Back Campaigns"],
+                "model_answer": "I segment customers using RFM (Recency, Frequency, Monetary) scores, deploy automated onboarding and re-engagement drips triggered by in-product behaviors, and reduce churn by 18%."
+            }
+        ]
+    elif any(k in title_lower for k in ["sales", "business development", "account executive"]):
+        questions = [
+            {
+                "category": "Enterprise Prospecting & Discovery",
+                "difficulty": "Medium",
+                "question": f"How do you execute strategic enterprise discovery and multi-threaded outbound prospecting as a {job_title}?",
+                "key_concepts": ["MEDDPICC Framework", "Pain Point Uncovering", "Economic Buyer Mapping", "Multi-Threading"],
+                "model_answer": "I use the MEDDPICC framework to identify economic buyers and decision criteria, map multiple champions across the organization, and ask consultative discovery questions focused on urgent business impact."
+            },
+            {
+                "category": "Objection Handling & Value Selling",
+                "difficulty": "Hard",
+                "question": "How do you navigate steep pricing objections and budget freezes while protecting deal margins?",
+                "key_concepts": ["ROI Quantification", "Cost of Inaction", "Value Defense", "Strategic Trade-Offs"],
+                "model_answer": "I pivot the conversation from price to ROI and the costly impact of inaction. If concessions are required, I trade non-price items such as multi-year commitments or upfront payment terms."
+            },
+            {
+                "category": "Pipeline & Deal Closing",
+                "difficulty": "Hard",
+                "question": "Walk me through how you construct Mutual Action Plans (MAP) to close enterprise deals on schedule.",
+                "key_concepts": ["Mutual Action Plan", "Procurement & Legal Navigation", "Compelling Events", "Closing Cadence"],
+                "model_answer": "I co-create a Mutual Action Plan with the champion linking their internal deadline to key milestones: legal review, security audits, and executive sign-off to ensure predictable quarterly closing."
+            },
+            {
+                "category": "Account Management & Expansion",
+                "difficulty": "Medium",
+                "question": "What is your approach to post-sale handoff, customer success alignment, and driving net revenue retention (NRR)?",
+                "key_concepts": ["Executive Business Reviews (EBR)", "Cross-Sell/Upsell", "Account Health Scoring", "Advocacy"],
+                "model_answer": "I conduct structured handoffs with customer success, schedule quarterly executive reviews to celebrate realized ROI, and identify natural department expansion opportunities."
+            },
+            {
+                "category": "Resilience & Quota Consistency",
+                "difficulty": "Medium",
+                "question": "How do you maintain high activity levels and psychological resilience through prolonged sales slumps?",
+                "key_concepts": ["Activity Metrics (KPIs)", "Sales Mindset", "Pipeline Hygiene", "Continuous Coaching"],
+                "model_answer": "I control my inputs by maintaining rigorous outbound calling and prospecting KPIs, audit my pipeline hygiene to eliminate stalled deals, and analyze call recordings to sharpen my pitch."
+            }
+        ]
+    elif any(k in title_lower for k in ["hr", "human resources", "recruiter", "talent acquisition"]):
+        questions = [
+            {
+                "category": "Talent Sourcing & Strategy",
+                "difficulty": "Medium",
+                "question": f"How do you build diverse, high-caliber talent pipelines in tight candidate markets as an {job_title}?",
+                "key_concepts": ["Boolean Sourcing", "Employer Branding", "Candidate Experience", "Talent Market Intelligence"],
+                "model_answer": "I leverage advanced Boolean sourcing and talent mapping, craft personalized outreach highlighting our mission, and maintain transparent, rapid interview loops that deliver a 94% candidate satisfaction score."
+            },
+            {
+                "category": "Employee Relations & Grievances",
+                "difficulty": "Hard",
+                "question": "How do you investigate sensitive workplace harassment or conflict allegations while ensuring fairness and compliance?",
+                "key_concepts": ["Impartial Investigation", "Documentation & Confidentiality", "Labor Law Compliance", "Conflict Mediation"],
+                "model_answer": "I initiate immediate confidential interviews with all parties, document factual evidence objectively, consult legal counsel to ensure labor law compliance, and implement fair corrective action."
+            },
+            {
+                "category": "Performance Management & Culture",
+                "difficulty": "Medium",
+                "question": "What is your philosophy on designing performance management and continuous feedback frameworks?",
+                "key_concepts": ["OKRs / KPIs", "Continuous Feedback Cycles", "Performance Improvement Plans (PIP)", "Merit-Based Rewards"],
+                "model_answer": "I replace rigid annual reviews with quarterly OKR check-ins and monthly 1-on-1 coaching, ensuring high performers are recognized while underperforming staff receive clear PIP milestones."
+            },
+            {
+                "category": "Retention & People Analytics",
+                "difficulty": "Medium",
+                "question": "How do you utilize people analytics, pulse surveys, and exit interview data to reduce organizational turnover?",
+                "key_concepts": ["Attrition Analytics", "eNPS Pulse Surveys", "Compensation Benchmarking", "Stay Interviews"],
+                "model_answer": "I analyze exit survey trends and eNPS scores to identify high-risk departments, benchmark market compensation, and conduct proactive stay interviews with key talent."
+            },
+            {
+                "category": "Organizational Leadership",
+                "difficulty": "Hard",
+                "question": "How do you guide leadership through complex structural reorganizations or change management initiatives?",
+                "key_concepts": ["Change Management (Kotter Model)", "Transparent Communication", "Role Alignment", "Morale Preservation"],
+                "model_answer": "I partner with executive leadership to outline clear restructuring goals, communicate openly with staff to eliminate rumors, and support managers with talking points to preserve team morale."
+            }
+        ]
+    else:
+        # Universal Dynamic Flashcards (Adapts dynamically to ANY specific role)
+        questions = [
+            {
+                "category": "Core Methodologies & Standards",
+                "difficulty": "Hard",
+                "question": f"What established methodologies, professional frameworks, and quality standards guide your execution as a {job_title}?",
+                "key_concepts": ["Industry Best Practices", "Quality Benchmarks", "Standard Operating Procedures", "Continuous Improvement"],
+                "model_answer": f"In my work as a {job_title}, I establish rigorous standard operating procedures, adhere to industry-recognized compliance standards, and continuously benchmark performance against leading metrics."
+            },
+            {
+                "category": "Complex Project Leadership",
+                "difficulty": "Hard",
+                "question": f"Walk me through a high-stakes, challenging deliverable you led from inception to completion in your role as a {job_title}.",
+                "key_concepts": ["Scope & Milestone Planning", "Risk Mitigation", "Resource Optimization", "Measurable Outcomes"],
+                "model_answer": f"I managed an end-to-end initiative by defining clear milestones, preemptively mitigating operational risks, coordinating cross-functional dependencies, and delivering a 35% improvement in key outcomes."
+            },
+            {
+                "category": "Problem Solving & Crisis Management",
+                "difficulty": "Medium",
+                "question": "Describe a situation where unexpected roadblocks or shifting constraints threatened your deliverables. How did you adapt?",
+                "key_concepts": ["Agile Adaptation", "Root Cause Analysis", "Stakeholder Communication", "Resource Reallocation"],
+                "model_answer": "I conducted immediate root cause analysis, realigned priorities with leadership, reallocated resources to critical path tasks, and successfully delivered within target timelines."
+            },
+            {
+                "category": "Stakeholder Collaboration",
+                "difficulty": "Medium",
+                "question": "How do you build consensus and maintain productive relationships with challenging peers or senior stakeholders?",
+                "key_concepts": ["Active Listening", "Objective Data Alignment", "Constructive Dialogue", "Shared Goals"],
+                "model_answer": "I focus on shared organizational objectives, present objective data rather than subjective opinions, actively listen to differing viewpoints, and establish mutually beneficial alignment."
+            },
+            {
+                "category": "Innovation & Future Vision",
+                "difficulty": "Medium",
+                "question": f"How do you stay abreast of emerging innovations, technological disruptions, and future trends relevant to a {job_title}?",
+                "key_concepts": ["Continuous Professional Development", "Industry Conferences & Research", "Technology Adoption", "Thought Leadership"],
+                "model_answer": f"I actively read leading journals, participate in professional industry associations, attend masterclasses, and pilot innovative methodologies to maintain a cutting-edge standard in my field."
+            }
+        ]
+
     return {"job_title": job_title, "questions": questions}
 
 

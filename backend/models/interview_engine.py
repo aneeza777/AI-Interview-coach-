@@ -115,107 +115,220 @@ CLOSING_QUESTIONS = [
     },
 ]
 
-# Job-specific question templates
+# Universal Job-specific question templates across all industries
 JOB_QUESTION_TEMPLATES = {
+    # ── 1. Technology & Software Engineering ──
     "software engineer": [
-        "How do you ensure the code you write is clean, maintainable, and testable?",
-        "Walk me through how you'd approach debugging a production issue under tight time constraints.",
+        "How do you ensure the code you write is clean, maintainable, and thoroughly tested?",
+        "Walk me through how you'd approach debugging a critical production issue under tight time constraints.",
         "What's your experience with code reviews, and how do you give constructive feedback to peers?",
-        "How do you balance writing perfect, architecturally sound code with meeting strict product deadlines?",
-        "Describe a situation where you had to refactor a legacy codebase. What strategy did you follow?",
+        "How do you balance writing architecturally sound code with meeting strict product deadlines?",
+        "Describe a situation where you had to refactor a complex codebase. What strategy did you follow?",
         "How do you manage technical debt when developing features rapidly?",
     ],
     "web developer": [
         "What modern frontend frameworks and backend technologies are you most comfortable working with?",
-        "How do you ensure your web applications are cross-browser compatible and responsive on mobile devices?",
+        "How do you ensure your web applications are cross-browser compatible and responsive on all devices?",
         "Explain how you optimize website load speed, assets, and API requests for smooth user experience.",
         "How do you handle client-side form validation, error states, and security vulnerabilities like XSS or CSRF?",
-        "Walk me through the lifecycle of an HTTP request from the browser address bar to the database and back.",
-        "Tell me about a web application you built from scratch. What challenges did you encounter?",
+        "Walk me through the lifecycle of an HTTP request from browser entry to database response.",
     ],
     "frontend developer": [
         "How do you make sure your web applications are accessible (WCAG) and responsive across all viewports?",
         "Tell me about a time you had to profile and optimize frontend rendering performance.",
         "How do you manage state in complex frontend applications (e.g., Redux, Context, Zustand)?",
-        "What's your approach to component-driven design, modular CSS, and reusable UI libraries?",
-        "How do you handle asynchronous data fetching, loading skeletons, and optimistic UI updates?",
-        "Explain the difference between Server-Side Rendering (SSR), Client-Side Rendering (CSR), and Static Site Generation.",
+        "What's your approach to component-driven design, modular styling, and reusable UI design systems?",
     ],
     "backend developer": [
         "How do you design RESTful or GraphQL APIs that are scalable, versioned, and easy to maintain?",
-        "Explain your approach to relational vs non-relational database design, indexing, and query optimization.",
+        "Explain your approach to database schema design, indexing strategies, and query optimization.",
         "How do you handle authentication, role-based authorization, and token management in distributed backend systems?",
-        "What caching strategies (e.g., Redis, Memcached) do you use to mitigate heavy traffic loads on databases?",
-        "Describe a time you diagnosed and resolved a high-latency database bottleneck or deadlock in production.",
-        "How do you structure microservices communication, message queues (RabbitMQ/Kafka), and error retries?",
-    ],
-    "full stack developer": [
-        "How do you decide which business logic belongs on the client-side vs the server-side?",
-        "Describe a full-stack project you built end-to-end from database schema design to responsive UI.",
-        "How do you ensure data integrity and type safety between your frontend client and backend APIs?",
-        "What is your continuous deployment (CI/CD) workflow and how do you manage environment configurations?",
-        "How do you handle WebSocket or real-time event streaming in a full-stack architecture?",
+        "What caching strategies (e.g., Redis) and message queues do you use to mitigate heavy traffic loads?",
     ],
     "data scientist": [
         "How do you validate that your machine learning model will generalize well on unseen test data?",
         "Explain your methodology for handling messy, skewed, or incomplete real-world datasets.",
-        "How do you communicate complex technical and mathematical findings to non-technical business stakeholders?",
-        "Tell me about a project where your exploratory data analysis directly led to a high-impact business decision.",
+        "How do you communicate complex statistical findings and data insights to non-technical business stakeholders?",
         "What metrics (Precision, Recall, ROC-AUC, F1) do you prioritize when evaluating imbalanced classification problems?",
-    ],
-    "machine learning engineer": [
-        "How do you take an ML model from Jupyter notebook experimentation into a scalable production API?",
-        "What model deployment, containerization, and low-latency inference challenges have you solved?",
-        "How do you monitor model performance over time to detect data drift and concept drift in production?",
-        "Explain your experience with advanced feature engineering, embeddings, and vector similarity search.",
-        "How do you choose between fine-tuning a pre-trained Transformer model vs utilizing prompt engineering with RAG?",
     ],
     "mobile developer": [
         "How do you handle state management, memory leaks, and activity lifecycles in mobile applications?",
         "What is your architectural approach to building mobile apps that work seamlessly offline with local sync?",
-        "How do you optimize mobile UI rendering, frame rates (60/120 fps), and battery consumption on diverse devices?",
-        "Tell me about a challenging native integration or platform-specific mobile problem you solved.",
-    ],
-    "flutter developer": [
-        "How do you manage complex application state in Flutter (e.g., Bloc, Riverpod, Provider)?",
-        "What is your experience with platform channels and integrating native Android (Kotlin) / iOS (Swift) code?",
-        "How do you handle responsive layouts and adaptive UI widgets across phones, tablets, and web?",
-        "Tell me about a Flutter app you published and how you organized its clean layered architecture.",
+        "How do you optimize mobile UI rendering, frame rates, and battery consumption on diverse devices?",
     ],
     "devops engineer": [
-        "Describe your ideal automated CI/CD pipeline from git push to zero-downtime production deployment.",
+        "Describe your automated CI/CD pipeline from code commit to zero-downtime production deployment.",
         "How do you approach Infrastructure as Code (IaC) using tools like Terraform, Ansible, or CloudFormation?",
-        "What centralized logging, distributed tracing, and real-time alerting tools (e.g. Prometheus, Grafana) have you configured?",
-        "How do you enforce security guardrails, secrets management, and container vulnerability scanning in cloud deployments?",
+        "What centralized logging, distributed tracing, and real-time alerting systems have you configured?",
     ],
     "ui/ux designer": [
-        "Walk me through your end-to-end design process from user research, wireframing, to high-fidelity prototypes in Figma.",
+        "Walk me through your end-to-end design process from user research, wireframing, to high-fidelity prototypes.",
         "How do you conduct usability testing and incorporate feedback into iterative design sprints?",
-        "Tell me about a time you had to defend a user-centric design decision against engineering or business constraints.",
-        "How do you balance aesthetic visual appeal with strict accessibility standards (contrast, typography, screen readers)?",
+        "Tell me about a time you had to defend a user-centric design decision against business constraints.",
     ],
+
+    # ── 2. Healthcare, Medicine & Pharmaceuticals ──
+    "healthcare": [
+        "How do you ensure patient safety and clinical quality when managing high-acuity or emergency situations?",
+        "Describe your approach to comprehensive diagnostic assessment and evidence-based treatment planning.",
+        "How do you handle difficult conversations with patients and families regarding care plans or adverse outcomes?",
+        "What protocols do you follow for medication administration, infection control, and accurate EHR documentation?",
+        "Tell me about a time you collaborated with an interdisciplinary healthcare team to optimize patient outcomes.",
+    ],
+
+    # ── 3. Finance, Banking, Accounting & Audit ──
+    "finance": [
+        "Walk me through your methodology for financial modeling, valuation, and sensitivity analysis.",
+        "How do you ensure strict compliance with GAAP/IFRS standards, tax laws, and regulatory reporting requirements?",
+        "Describe a time you detected a critical discrepancy or financial risk during an audit or forecasting cycle.",
+        "How do you communicate complex financial metrics, variances, and P&L statements to executive leadership?",
+        "What strategies do you use for working capital optimization, cash flow management, and cost containment?",
+    ],
+
+    # ── 4. Engineering (Mechanical, Civil, Electrical, Industrial) ──
+    "mechanical engineer": [
+        "Walk me through your engineering design process from initial CAD modeling to physical prototyping and testing.",
+        "How do you conduct Finite Element Analysis (FEA) and stress testing to ensure component structural integrity?",
+        "Describe a situation where a design failed quality control or manufacturing tolerances and how you redesigned it.",
+        "How do you apply Lean Manufacturing and Six Sigma principles to streamline production and eliminate bottlenecks?",
+    ],
+    "civil engineer": [
+        "How do you approach structural analysis, load calculations, and building code compliance on major projects?",
+        "Describe your process for managing on-site contractors, safety protocols, and construction timelines.",
+        "Tell me about a geotechnical, environmental, or zoning constraint you encountered on a job site and how you resolved it.",
+        "How do you coordinate architectural blueprints, structural drawings, and MEP requirements using AutoCAD/BIM?",
+    ],
+    "electrical engineer": [
+        "How do you design, simulate, and debug complex circuit schematics and PCB layouts?",
+        "What is your approach to power distribution, signal integrity, and electromagnetic interference (EMI) mitigation?",
+        "Describe your experience with embedded microcontrollers, firmware testing, or industrial PLC automation.",
+        "Walk me through a safety-critical electrical testing procedure you managed and the standards you applied.",
+    ],
+
+    # ── 5. Marketing, Advertising, PR & Content ──
+    "marketing": [
+        "How do you develop an end-to-end digital marketing strategy across SEO, paid channels, and content marketing?",
+        "What key performance indicators (CAC, ROAS, LTV, conversion rate) do you prioritize when analyzing campaign ROI?",
+        "Describe a successful campaign you planned and executed that significantly boosted brand awareness or revenue growth.",
+        "How do you conduct customer persona research and A/B test messaging to optimize conversion funnels?",
+    ],
+
+    # ── 6. Sales & Business Development ──
+    "sales": [
+        "Walk me through your end-to-end sales cycle from prospecting high-value leads to contract closing.",
+        "How do you handle tough price objections and negotiate terms while protecting company profitability?",
+        "Describe a challenging enterprise client negotiation where you successfully built long-term trust.",
+        "What pipeline management and CRM strategies do you use to consistently exceed sales targets?",
+    ],
+
+    # ── 7. Human Resources (HR) & Talent Acquisition ──
+    "human resources": [
+        "How do you source, evaluate, and attract top-tier talent in highly competitive employment markets?",
+        "Describe a time you navigated a complex employee relations dispute or workplace grievance with empathy and fairness.",
+        "How do you design performance management systems that align employee growth with company goals?",
+        "What strategies do you use to foster workplace retention, engagement, and a high-performance organizational culture?",
+    ],
+
+    # ── 8. Legal, Law & Compliance ──
+    "legal": [
+        "How do you approach drafting and negotiating high-value commercial contracts to minimize corporate liability?",
+        "Describe your process for conducting thorough legal due diligence during corporate transactions or audits.",
+        "Tell me about a complex regulatory compliance challenge you solved under shifting statutory guidelines.",
+        "How do you translate complex legal precedents and statutory risks into clear, actionable advice for business leaders?",
+    ],
+
+    # ── 9. Education, Teaching & Academia ──
+    "education": [
+        "How do you differentiate instruction to engage learners with diverse backgrounds, styles, and skill levels?",
+        "Describe your philosophy on classroom management, learner assessment, and fostering critical thinking.",
+        "Tell me about a curriculum or lesson plan you designed that produced measurable gains in student performance.",
+        "How do you leverage modern educational technology and feedback loops to continuously enhance learning outcomes?",
+    ],
+
+    # ── 10. Supply Chain, Logistics & Operations ──
+    "supply chain": [
+        "How do you manage supplier relationships, lead times, and global supply chain disruptions?",
+        "What inventory management and demand forecasting models do you use to prevent stockouts while minimizing holding costs?",
+        "Describe a time you negotiated vendor contracts that delivered significant cost savings without sacrificing quality.",
+        "How do you optimize warehouse throughput, logistics routes, and distribution network efficiency?",
+    ],
+
+    # ── 11. Graphic Design & Creative Arts ──
+    "graphic designer": [
+        "Walk me through your creative process from initial brief and moodboards to final multi-platform production assets.",
+        "How do you balance brand consistency with fresh, innovative visual storytelling across digital and print media?",
+        "Tell me about a time a client or stakeholder rejected your creative concept and how you iterated to a winning solution.",
+        "How do you optimize visual hierarchy, typography, and color theory for maximum audience engagement?",
+    ],
+
+    # ── 12. Project & Product Management ──
+    "project manager": [
+        "How do you prioritize competing stakeholder demands and product roadmap features when resources are limited?",
+        "Describe a project where unexpected scope creep threatened the launch deadline. How did you realign the team?",
+        "What agile metrics and workflow rituals do you rely on to maintain high velocity and clear team accountability?",
+        "How do you measure project success and conduct post-launch retrospectives to continuously improve execution?",
+    ],
+
+    # ── 13. Universal Domain-Agnostic Fallback (Applies to ANY Profession) ──
     "default": [
-        "What excites you most about this role and how does it fit into your long-term career goals?",
-        "How does your previous technical and academic experience prepare you to succeed here?",
-        "What do you consider your strongest professional quality, and what area are you actively working to improve?",
-        "How do you approach receiving constructive criticism or code review feedback from team members?",
-        "Describe a time you had to quickly learn a new technology or framework to complete a high-priority deliverable.",
+        "What core methodologies, industry standards, and best practices do you rely on most in your field?",
+        "Walk me through a complex, high-stakes project or case you managed from inception to successful completion.",
+        "How do you handle unforeseen roadblocks, tight deadlines, or shifting requirements in your work?",
+        "What metrics or objective standards do you use to evaluate the quality and tangible impact of your work?",
+        "How do you stay abreast of emerging research, regulatory changes, and advanced techniques in your industry?",
     ],
 }
 
 
 # ──────────────────────────────────────────────
-# Helpers
+# Multi-Domain Job Title Matcher
 # ──────────────────────────────────────────────
 def _match_job_title(job_title: str) -> str:
-    """Match user job title to our templates."""
+    """Intelligently match user job title to domain categories across all industries."""
     title_lower = job_title.lower()
-    for key in JOB_QUESTION_TEMPLATES:
-        if key == "default":
-            continue
-        keywords = key.replace("/", " ").split()
-        if any(kw in title_lower for kw in keywords):
-            return key
+
+    # Domain keyword associations
+    domain_mappings = [
+        # Healthcare & Medicine
+        (["doctor", "physician", "surgeon", "nurse", "nursing", "medical", "pharmacist", "pharmacy", "dentist", "clinical", "hospital", "healthcare", "therapist"], "healthcare"),
+        # Finance, Banking & Accounting
+        (["finance", "financial", "accountant", "accounting", "auditor", "audit", "banker", "banking", "tax", "actuary", "cfa", "acca", "ca", "treasury"], "finance"),
+        # Civil Engineering & Architecture
+        (["civil", "structural", "construction", "site engineer", "surveyor", "architect", "architecture"], "civil engineer"),
+        # Mechanical Engineering
+        (["mechanical", "automotive", "hvac", "cad designer", "aerospace", "manufacturing engineer", "thermal"], "mechanical engineer"),
+        # Electrical Engineering
+        (["electrical", "electronics", "circuit", "power engineer", "telecom", "hardware engineer"], "electrical engineer"),
+        # Marketing & Brand
+        (["marketing", "seo", "sem", "social media", "content", "copywriter", "brand", "growth", "advertising", "pr"], "marketing"),
+        # Sales & Business Dev
+        (["sales", "business development", "account executive", "client relationship", "commercial", "tele-sales"], "sales"),
+        # Human Resources
+        (["hr", "human resources", "recruiter", "recruitment", "talent acquisition", "people operations"], "human resources"),
+        # Legal & Compliance
+        (["lawyer", "attorney", "legal", "compliance", "counsel", "paralegal", "advocate", "regulatory"], "legal"),
+        # Education & Teaching
+        (["teacher", "professor", "lecturer", "educator", "instructor", "academic", "principal", "curriculum"], "education"),
+        # Supply Chain & Logistics
+        (["supply chain", "logistics", "procurement", "inventory", "warehouse", "operations", "import", "export"], "supply chain"),
+        # Graphic Design & Creative
+        (["graphic", "designer", "illustrator", "animator", "video editor", "creative", "artist"], "graphic designer"),
+        # Project & Product Management
+        (["project manager", "product manager", "scrum master", "agile coach", "program manager"], "project manager"),
+        # Tech & Data
+        (["frontend", "front-end", "react", "vue", "angular"], "frontend developer"),
+        (["backend", "back-end", "api", "database", "node", "django"], "backend developer"),
+        (["data scientist", "data analyst", "bi analyst", "analytics"], "data scientist"),
+        (["mobile", "android", "ios", "flutter", "react native"], "mobile developer"),
+        (["devops", "cloud", "sre", "infrastructure", "system admin"], "devops engineer"),
+        (["ui", "ux", "ui/ux", "product designer"], "ui/ux designer"),
+        (["web developer", "full stack", "software engineer", "developer", "programmer", "coder"], "software engineer"),
+    ]
+
+    for keywords, category in domain_mappings:
+        if any(re.search(rf"(?<![a-z]){re.escape(kw)}(?![a-z])", title_lower) for kw in keywords):
+            return category
+
     return "default"
 
 
@@ -240,8 +353,8 @@ def _generate_cv_questions(resume_data: Dict, job_title: str, mode: str = "direc
     if total_years > 0:
         exp_options = [
             f"I see you have {total_years}+ years of experience in the field. Could you walk me through your career progression and key milestones so far?",
-            f"With around {total_years} years of professional background, what has been the most technically challenging problem you had to solve?",
-            f"Reflecting on your {total_years}+ years in tech, how has your engineering approach and problem-solving mindset evolved over time?",
+            f"With around {total_years} years of professional background, what has been the most challenging problem or case you had to solve in your work?",
+            f"Reflecting on your {total_years}+ years of professional background, how has your strategic approach and problem-solving methodology evolved over time?",
         ]
         questions.append({
             "question": random.choice(exp_options),
@@ -251,9 +364,9 @@ def _generate_cv_questions(resume_data: Dict, job_title: str, mode: str = "direc
         })
     else:
         fresh_options = [
-            "Could you tell me about your academic journey and any hands-on internship or coursework projects you've worked on?",
-            "As an emerging technologist, what practical software engineering projects have you built that best demonstrate your technical passion?",
-            "How do you approach learning complex programming frameworks independently outside of standard coursework?",
+            "Could you tell me about your academic journey and any hands-on internship, research, or coursework initiatives you've completed?",
+            "As an emerging professional, what practical projects or case studies have you executed that best demonstrate your core capabilities?",
+            "How do you approach mastering complex new methodologies, tools, or industry standards independently?",
         ]
         questions.append({
             "question": random.choice(fresh_options),
@@ -265,8 +378,8 @@ def _generate_cv_questions(resume_data: Dict, job_title: str, mode: str = "direc
     if company:
         comp_options = [
             f"Tell me more about your responsibilities during your time at {company}. What were your primary contributions and achievements?",
-            f"What was the most impactful feature or project you delivered while working at {company}?",
-            f"How did you collaborate with cross-functional team members and senior engineers during your tenure at {company}?",
+            f"What was the most impactful initiative or project you delivered while working at {company}?",
+            f"How did you collaborate with multidisciplinary team members and leadership during your tenure at {company}?",
         ]
         questions.append({
             "question": random.choice(comp_options),
@@ -279,20 +392,20 @@ def _generate_cv_questions(resume_data: Dict, job_title: str, mode: str = "direc
     if projects:
         best_project = projects[0][:50]
         proj_options = [
-            f"I noticed your project '{best_project}'. Can you describe the system architecture, your individual role, and the main technical challenge you solved?",
-            f"Regarding your project '{best_project}', what key design trade-offs did you make during implementation?",
-            f"If you were to scale '{best_project}' to 100,000 active users, what architectural changes or caching layers would you introduce?",
+            f"I noticed your project or initiative '{best_project}'. Can you describe your individual role, methodology, and the main challenge you solved?",
+            f"Regarding your project '{best_project}', what key strategic trade-offs or design decisions did you make during execution?",
+            f"If you were to expand '{best_project}' to a larger scale, what key optimizations or enhancements would you introduce?",
         ]
         questions.append({
             "question": random.choice(proj_options),
             "type": "projects",
-            "expected_keywords": ["project", "architecture", "build", "develop", "result", "challenge", "solution", "impact"],
+            "expected_keywords": ["project", "methodology", "build", "deliver", "result", "challenge", "solution", "impact"],
             "difficulty": "hard" if mode == "direct" else "medium",
             "target_project": best_project,
         })
     elif resume_data.get("raw_text", "").lower().count("project") > 0:
         questions.append({
-            "question": "Can you describe a technical project from your resume that you are particularly proud of, including the challenges you overcame?",
+            "question": "Can you describe a key project or case study from your resume that you are particularly proud of, including the challenges you overcame?",
             "type": "projects",
             "expected_keywords": ["project", "proud", "build", "develop", "result", "learn", "challenge", "impact"],
             "difficulty": "medium",
@@ -302,8 +415,8 @@ def _generate_cv_questions(resume_data: Dict, job_title: str, mode: str = "direc
     education = resume_data.get("education", [])
     if education:
         edu_options = [
-            "How has your academic background and coursework prepared you for the technical demands of this role?",
-            "What was the most rewarding technical or software project you completed during your degree studies?",
+            "How has your academic background, degree, and training prepared you for the professional demands of this role?",
+            "What was the most rewarding project, research, or coursework you completed during your academic education?",
         ]
         questions.append({
             "question": random.choice(edu_options),
@@ -312,22 +425,22 @@ def _generate_cv_questions(resume_data: Dict, job_title: str, mode: str = "direc
             "difficulty": "easy",
         })
 
-    # 4. Skill-based questions
+    # 4. Skill-based questions (Universal across all fields)
     skills = resume_data.get("skills", [])
     if skills:
         shuffled_skills = list(skills)
         random.shuffle(shuffled_skills)
         for skill in shuffled_skills[:3]:
             paraphrases = [
-                f"Could you walk me through how you've used {skill} in a real-world project, and what challenges you solved with it?",
-                f"How would you rate your hands-on proficiency in {skill}, and what architecture patterns have you applied using it?",
-                f"What is a memorable feature or bug fix where {skill} played a crucial role in your implementation?",
-                f"How do you handle error handling, performance optimization, and testing when building with {skill}?",
+                f"Could you walk me through how you've applied your expertise in {skill} in a real-world scenario, and what results you achieved with it?",
+                f"How would you rate your hands-on proficiency in {skill}, and what best practices or standards do you follow when utilizing it?",
+                f"Can you share a memorable challenge or case where your mastery of {skill} played a crucial role in achieving success?",
+                f"How do you ensure quality, compliance, and optimal outcomes when working with {skill}?",
             ]
             questions.append({
                 "question": random.choice(paraphrases),
                 "type": "technical",
-                "expected_keywords": [skill.lower(), "project", "experience", "use", "build", "develop", "implement"],
+                "expected_keywords": [skill.lower(), "project", "experience", "use", "apply", "result", "implement"],
                 "difficulty": "medium",
                 "target_skill": skill,
             })
@@ -644,10 +757,10 @@ def _sanitize_name(name: Optional[str]) -> str:
 
 
 def _sanitize_education(education_val: Optional[str]) -> str:
-    """Sanitize education string, stripping phone numbers, URLs, and noisy status text."""
+    """Sanitize education string (any discipline), stripping phone numbers, URLs, and noisy status text."""
     if not education_val or not isinstance(education_val, str):
-        return "Computer Science"
-    
+        return "my field of study"
+
     clean = education_val.strip()
     # Remove phone numbers, cell numbers, emails
     clean = re.sub(r'(?:cell|phone|tel|contact|mobile)\s*:\s*[\+\d\s\-\.\(\)]+', '', clean, flags=re.IGNORECASE)
@@ -656,30 +769,16 @@ def _sanitize_education(education_val: Optional[str]) -> str:
     # Remove trailing status like (final result awaited) with hands-
     clean = re.sub(r'\(.*?\)', '', clean)
     clean = re.sub(r'with\s+hands.*$', '', clean, flags=re.IGNORECASE)
-    clean = re.sub(r'\s+', ' ', clean).strip()
+    # Remove year ranges / CGPA noise
+    clean = re.sub(r'\b(19|20)\d{2}\b\s*[-–]?\s*((19|20)\d{2}|present)?', '', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'(cgpa|gpa)\s*[:\-]?\s*[\d\.\/]+', '', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\s+', ' ', clean).strip(" ,|-–")
 
-    # If common degrees appear, format cleanly
-    clean_lower = clean.lower()
-    if "computer science" in clean_lower:
-        if "bs" in clean_lower or "bachelor" in clean_lower:
-            return "BS Computer Science"
-        return "Computer Science"
-    elif "software engineering" in clean_lower:
-        if "bs" in clean_lower or "bachelor" in clean_lower:
-            return "BS Software Engineering"
-        return "Software Engineering"
-    elif "information technology" in clean_lower or "bsit" in clean_lower:
-        return "Information Technology"
-    elif "data science" in clean_lower:
-        return "Data Science"
-    elif "artificial intelligence" in clean_lower or "ai" in clean_lower.split():
-        return "Artificial Intelligence"
-
-    # If it's too short or contains no letters, fallback
+    # If it's too short or contains no letters, fallback (domain-neutral)
     if len(clean) < 3 or not any(c.isalpha() for c in clean):
-        return "Computer Science"
+        return "my field of study"
 
-    return clean[:40]
+    return clean[:60]
 
 
 def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> str:
@@ -687,17 +786,22 @@ def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> 
     Generate a sample / model answer for a given interview question.
     Uses resume data and STAR methodology (Situation, Task, Action, Result)
     to provide high quality, contextual, and realistic responses.
+
+    100% domain-agnostic: wording is driven by the candidate's own CV data
+    (skills, education, companies, projects) and the target job title, so it
+    works for doctors, accountants, engineers, marketers, teachers, lawyers,
+    developers, etc. without any field-specific hardcoding.
     """
     q_type = question.get("type", "general")
     q_text = question.get("question", "").lower()
     name = _sanitize_name(resume_data.get("name"))
     skills = resume_data.get("skills", [])
-    top_skills = ", ".join(skills[:3]) if skills else "modern software engineering practices and tools"
-    primary_skill = question.get("target_skill") or (skills[0] if skills else "technical problem solving")
-    
+    top_skills = ", ".join(skills[:3]) if skills else f"the core competencies required of a {job_title}"
+    primary_skill = question.get("target_skill") or (skills[0] if skills else f"core {job_title} responsibilities")
+
     education_list = resume_data.get("education", [])
     education = _sanitize_education(education_list[0] if education_list else None)
-    
+
     experience = resume_data.get("experience", {})
     total_years = experience.get("total_years", 0) or 0
     company = _pick_valid_company(experience.get("companies", []))
@@ -711,124 +815,120 @@ def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> 
             return (
                 f"Hello, my name is {name}. I hold a background in {education} and bring {total_years}+ years "
                 f"of professional experience in the field, {exp_phrase}specializing in {top_skills}. "
-                f"Throughout my career, I have focused on engineering scalable, high-performance systems and "
-                f"collaborating across teams to deliver user-centric products. I am excited about this {job_title} "
-                f"position because it directly aligns with my technical background and allows me to contribute to impactful initiatives."
+                f"Throughout my career, I have focused on delivering high-quality, measurable outcomes and "
+                f"collaborating closely with colleagues and stakeholders. I am excited about this {job_title} "
+                f"position because it directly aligns with my expertise and allows me to contribute to impactful work."
             )
-        else:
-            return (
-                f"Hello, my name is {name}. I graduated with a degree in {education}, where I built a strong "
-                f"foundation in software engineering principles and computer science fundamentals. "
-                f"Through intensive academic and hands-on projects, I have developed solid proficiency in {top_skills}. "
-                f"I am eager to begin my career as a {job_title}, applying my problem-solving skills, curiosity, "
-                f"and passion for clean code to make a positive impact on your team."
-            )
+        return (
+            f"Hello, my name is {name}. I completed my studies in {education}, where I built a strong "
+            f"foundation in the core principles of my discipline. "
+            f"Through academic work, practical training, and hands-on assignments, I have developed solid proficiency in {top_skills}. "
+            f"I am eager to begin my career as a {job_title}, applying my problem-solving ability, curiosity, "
+            f"and commitment to quality to make a positive impact on your team."
+        )
 
     # 2. Experience-based (STAR method)
     if q_type == "experience":
         if company and total_years > 0:
             return (
                 f"During my time at {company} (as part of my {total_years}+ years of experience), "
-                f"I worked on core technical deliverables. [Situation & Task] Our team was tasked with building and "
-                f"scaling reliable software components under fast-paced release cycles. [Action] I utilized {top_skills} "
-                f"to design clean modular architectures, implement automated tests, and collaborate closely in daily agile sprints. "
-                f"[Result] As a result, we enhanced overall system throughput, minimized post-release defects, and consistently "
-                f"delivered major milestones on schedule."
+                f"I was responsible for key deliverables in my role. [Situation & Task] Our team needed to achieve demanding "
+                f"targets under tight timelines and limited resources. [Action] I applied {top_skills} "
+                f"to plan the work systematically, set clear priorities, and coordinate closely with my colleagues and stakeholders. "
+                f"[Result] As a result, we improved overall quality and efficiency, reduced errors, and consistently "
+                f"met our major milestones on schedule."
             )
         elif total_years > 0:
             return (
-                f"Over my {total_years}+ years of industry experience, I have developed and maintained several production-grade applications. "
-                f"[Situation & Task] In a recent role, our primary challenge was optimizing delivery workflows and implementing key business features. "
-                f"[Action] I applied {top_skills} to develop scalable modules, streamline API communication, and maintain strict code quality standards. "
-                f"[Result] This approach led to smoother deployments, reduced latency, and positive feedback from stakeholders."
+                f"Over my {total_years}+ years of professional experience, I have handled a wide range of responsibilities. "
+                f"[Situation & Task] In a recent role, our primary challenge was improving the way our team delivered results. "
+                f"[Action] I applied {top_skills} to streamline processes, communicate clearly with stakeholders, and maintain high quality standards. "
+                f"[Result] This approach led to smoother operations, measurable improvements, and positive feedback from management."
             )
-        else:
-            return (
-                f"During my academic journey in {education}, I engaged in multiple comprehensive coursework and capstone projects. "
-                f"[Situation & Task] Our objective was to architect and deliver real-world software solutions from scratch. "
-                f"[Action] I took charge of the technical design using {top_skills}, establishing coding conventions, git workflows, and unit testing. "
-                f"[Result] We successfully presented fully working prototypes on time, earning top academic evaluations and providing me with "
-                f"practical, hands-on development experience."
-            )
+        return (
+            f"During my studies in {education}, I engaged in comprehensive coursework, practical training, and a capstone assignment. "
+            f"[Situation & Task] Our objective was to solve a real-world problem relevant to our field from start to finish. "
+            f"[Action] I took ownership of planning and execution using {top_skills}, organizing tasks, and keeping the team aligned. "
+            f"[Result] We delivered our work on time, earned strong evaluations, and I gained valuable practical experience."
+        )
 
     # 3. Project-based (STAR method)
     if q_type == "projects":
-        proj_name = f"'{target_proj}'" if target_proj else "a full-stack application"
+        proj_name = f"'{target_proj}'" if target_proj else "a key initiative I worked on"
         return (
-            f"In my project {proj_name}, [Situation & Task] the goal was to build an efficient, user-friendly solution addressing a practical need. "
-            f"[Action] I took ownership of the technical implementation using {top_skills}, structuring the database and backend logic, "
-            f"integrating RESTful interfaces, and optimizing performance bottlenecks through systematic debugging. "
-            f"[Result] The project successfully achieved high responsiveness and reliability, demonstrating my ability to manage the complete "
-            f"software lifecycle from concept to deployment."
+            f"In {proj_name}, [Situation & Task] the goal was to deliver a practical, high-quality outcome addressing a real need. "
+            f"[Action] I took ownership of the core execution using {top_skills}, breaking the work into clear phases, "
+            f"coordinating with the people involved, and resolving obstacles through systematic analysis. "
+            f"[Result] The initiative achieved its objectives reliably, demonstrating my ability to manage work "
+            f"end-to-end from planning to successful completion."
         )
 
-    # 4. Technical / Skill-based
+    # 4. Skill-based (domain-neutral)
     if q_type == "technical":
         return (
-            f"I have extensive hands-on experience utilizing {primary_skill} in real-world scenarios. "
-            f"[Situation & Task] When implementing complex features, choosing the appropriate design patterns in {primary_skill} is essential for maintainability and performance. "
-            f"[Action] I focus on writing modular, self-documenting code, enforcing type safety and automated testing, and following ecosystem best practices. "
-            f"[Result] This disciplined approach ensures that components built with {primary_skill} remain robust, easily testable, and straightforward for the team to scale."
+            f"I have extensive hands-on experience applying {primary_skill} in real-world situations. "
+            f"[Situation & Task] When handling complex responsibilities, applying {primary_skill} correctly is essential for quality and accuracy. "
+            f"[Action] I follow established best practices and professional standards, double-check critical steps, and document my work clearly. "
+            f"[Result] This disciplined approach ensures my work with {primary_skill} is reliable, compliant, and easy for others to build upon."
         )
 
     # 5. Behavioral (STAR method tailored to theme)
     if q_type == "behavioral":
         if any(w in q_text for w in ["conflict", "disagree", "teammate", "difficult"]):
             return (
-                "[Situation] In a previous project, a teammate and I had differing opinions on technical architecture choices for a critical feature. "
-                "[Task] Our objective was to reach a decision quickly without compromising product quality or team dynamics. "
-                "[Action] I scheduled a dedicated discussion where we mapped both approaches against key metrics—scalability, delivery timeline, and maintenance cost. "
-                "[Result] We synthesized the best aspects of both approaches into a unified plan, which delivered the feature on time and strengthened our collaboration."
+                "[Situation] In a previous role, a colleague and I had differing opinions on how to approach an important task. "
+                "[Task] Our objective was to reach a decision quickly without compromising quality or team relationships. "
+                "[Action] I arranged a focused discussion where we compared both approaches against key criteria—impact, timeline, and cost. "
+                "[Result] We combined the best aspects of both ideas into a unified plan, which delivered results on time and strengthened our collaboration."
             )
         elif any(w in q_text for w in ["mistake", "fail", "error", "wrong"]):
             return (
-                "[Situation] Early in a major release, an edge-case validation bug reached the staging environment due to a missing boundary test. "
-                "[Task] I took direct accountability for fixing the defect and ensuring it could not happen again. "
-                "[Action] I promptly patched the validation logic, wrote exhaustive regression tests covering the edge cases, and updated our CI test suite. "
-                "[Result] The patch passed validation seamlessly, and the improved automated test suite prevented similar edge-case regressions in subsequent sprints."
+                "[Situation] Early in an important assignment, an oversight on my part caused an error that was caught during review. "
+                "[Task] I took direct accountability for correcting it and making sure it would not happen again. "
+                "[Action] I promptly fixed the issue, informed the relevant people transparently, and introduced a simple checklist to verify that step every time. "
+                "[Result] The correction was completed quickly, and the new checklist prevented similar errors going forward."
             )
-        else:  # Deadline, pressure, challenge, or general behavioral
-            return (
-                "[Situation] During a critical release cycle, unexpected requirement changes compressed our delivery timeline significantly. "
-                "[Task] I needed to ensure all essential functionalities were completed without sacrificing test coverage or code reliability. "
-                "[Action] I prioritized the core deliverables, broke complex tasks into bite-sized milestones, and maintained transparent daily communication with the team. "
-                "[Result] We delivered the release on schedule with zero high-severity production defects, proving the effectiveness of structured prioritization and clear communication."
-            )
+        return (
+            "[Situation] During a critical period, unexpected changes significantly compressed our deadline. "
+            "[Task] I needed to ensure all essential work was completed without sacrificing quality. "
+            "[Action] I prioritized the most important deliverables, broke them into manageable milestones, and kept everyone updated daily. "
+            "[Result] We delivered on schedule with no major issues, proving the value of structured prioritization and clear communication."
+        )
 
     # 6. Education
     if q_type == "education":
         return (
-            f"My education in {education} gave me a comprehensive grounding in data structures, algorithms, and system design. "
-            f"Beyond theory, I actively applied these principles through practical assignments using {top_skills}. "
-            f"This academic foundation equipped me with the analytical mindset and problem-solving discipline required to succeed in a {job_title} role."
+            f"My education in {education} gave me a comprehensive grounding in the core theory and principles of my field. "
+            f"Beyond theory, I actively applied this knowledge through practical work involving {top_skills}. "
+            f"This foundation equipped me with the analytical mindset and discipline required to succeed in a {job_title} role."
         )
 
     # 7. Job-specific
     if q_type == "job_specific":
         return (
-            f"As a {job_title}, my core focus is on engineering clean, scalable, and maintainable solutions that directly support user needs. "
-            f"When approaching a new problem, I start by clarifying requirements and edge cases, then design a modular architecture leveraging {top_skills}. "
-            f"Throughout development, I emphasize automated testing, continuous integration, and clear documentation to ensure long-term stability."
+            f"As a {job_title}, my core focus is on delivering accurate, high-quality results that meet the needs of the people I serve. "
+            f"When approaching a new challenge, I start by clarifying the requirements and risks, then plan a structured approach leveraging {top_skills}. "
+            f"Throughout the work, I emphasize quality checks, clear documentation, and open communication to ensure consistent, reliable outcomes."
         )
 
     # 8. Follow-up
     if q_type == "follow_up":
         return (
-            f"To elaborate on that: when working with {primary_skill}, I pay close attention to architectural separation, exception handling, and performance trade-offs. "
-            f"In practice, this means writing clean unit and integration tests, monitoring runtime metrics, and iterating based on real user feedback."
+            f"To elaborate on that: when working with {primary_skill}, I pay close attention to accuracy, risk management, and trade-offs. "
+            f"In practice, this means verifying my work carefully, tracking outcomes, and continuously improving based on feedback."
         )
 
     # 9. Closing
     if q_type == "closing":
         return (
-            f"Thank you very much for this opportunity. I would love to learn more about the team's upcoming engineering priorities, "
-            f"the tech stack roadmap, and what key milestones success would look like for a {job_title} in the first 90 days."
+            f"Thank you very much for this opportunity. I would love to learn more about the team's upcoming priorities, "
+            f"the biggest challenges you are facing, and what success would look like for a {job_title} in the first 90 days."
         )
 
     # Fallback
     return (
         f"For this question, I would structure my answer using the STAR method: outlining the Situation and Task, "
-        f"explaining how I applied {top_skills} during the Action phase, and highlighting the measurable business Result."
+        f"explaining how I applied {top_skills} during the Action phase, and highlighting the measurable Result."
     )
 
 

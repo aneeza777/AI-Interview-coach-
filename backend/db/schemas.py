@@ -68,7 +68,7 @@ class CVReviewResponse(BaseModel):
 # ──────────────────────────────────────────────
 class InterviewCreate(BaseModel):
     resume_id: Optional[int] = None
-    job_title: str
+    job_title: Optional[str] = ""  # blank -> inferred from the candidate's CV
     mode: str = "practice"  # 'practice', 'direct', or 'mock'
     difficulty: Optional[str] = "mid"  # 'junior', 'mid', 'senior'
     language: Optional[str] = "en"  # 'en' or 'ur'

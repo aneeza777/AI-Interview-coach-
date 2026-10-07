@@ -296,7 +296,7 @@ async function uploadAndAnalyzeCV() {
   try {
     const formData = new FormData();
     formData.append('resume', state.selectedCVFile);
-    formData.append('job_title', document.getElementById('cv-job-title').value.trim() || 'Full Stack AI Developer');
+    formData.append('job_title', document.getElementById('cv-job-title').value.trim() || 'General Professional');
 
     const res = await fetch(`${API_BASE}/resumes/upload`, {
       method: 'POST',
@@ -426,7 +426,7 @@ function renderResumesList(resumes) {
       </div>
       <div class="item-actions">
         <button class="btn btn-sm btn-outline" onclick="viewParsedResume(${r.id})">Review</button>
-        <button class="btn btn-sm btn-primary" onclick="launchInterviewWithResume(${r.id}, '${(r.target_role || r.job_title || 'Software Engineer').replace(/'/g, "\'")}')">Practice</button>
+        <button class="btn btn-sm btn-primary" onclick="launchInterviewWithResume(${r.id}, '${(r.target_role || r.job_title || 'General Professional').replace(/'/g, "\'")}')">Practice</button>
         <button class="btn btn-sm btn-outline-danger" onclick="deleteResume(${r.id})" title="Delete Resume">🗑️ Delete</button>
       </div>
     </div>
@@ -465,11 +465,11 @@ function populateSetupResumeDropdown(resumes) {
 function renderCVReviewScreen(resumeData, jdMatchData = null) {
   const parsed = resumeData.parsed_data || {};
   document.getElementById('cv-candidate-name').textContent = parsed.name || state.user?.full_name || 'Candidate';
-  document.getElementById('cv-target-role').textContent = resumeData.target_role || resumeData.job_title || 'Software Engineer';
+  document.getElementById('cv-target-role').textContent = resumeData.target_role || resumeData.job_title || 'General Professional';
   document.getElementById('cv-overall-score').textContent = resumeData.score !== undefined ? resumeData.score : (resumeData.cv_score || 78);
   document.getElementById('cv-grade-badge').textContent = `Grade: ${resumeData.grade || 'B+'}`;
   document.getElementById('cv-exp-years').textContent = `${parsed.experience_years || 2}+ Years`;
-  document.getElementById('cv-education').textContent = (Array.isArray(parsed.education) ? parsed.education.join(', ') : parsed.education) || 'B.S. in Computer Science';
+  document.getElementById('cv-education').textContent = (Array.isArray(parsed.education) ? parsed.education.join(', ') : parsed.education) || 'Not detected';
 
   const wordCountElem = document.getElementById('cv-word-count');
   if (wordCountElem) {
@@ -638,7 +638,7 @@ function setSetupMode(mode) {
 }
 
 async function startInterviewSession() {
-  const jobTitle = document.getElementById('setup-job-title').value.trim() || 'Full Stack AI Developer';
+  const jobTitle = document.getElementById('setup-job-title').value.trim() || 'General Professional';
   const resumeId = document.getElementById('setup-resume-select').value || null;
   const questionCount = parseInt(document.getElementById('setup-question-count').value, 10) || 5;
   const difficulty = document.getElementById('setup-difficulty').value || 'Mid-Level';
@@ -1055,7 +1055,7 @@ async function viewInterviewReport(interviewId) {
 }
 
 function renderReportScreen(report) {
-  document.getElementById('report-job-title').textContent = report.job_title || 'Full Stack AI Developer';
+  document.getElementById('report-job-title').textContent = report.job_title || 'General Professional';
   document.getElementById('report-date').textContent = new Date(report.created_at || Date.now()).toLocaleDateString();
 
   const score = report.overall_score || 82.5;
@@ -1120,7 +1120,7 @@ function handleATSResumeChange() {
 
 async function runATSScanner() {
   const resumeId = document.getElementById('ats-resume-select').value || null;
-  const targetRole = document.getElementById('ats-job-title').value.trim() || 'Software Engineer';
+  const targetRole = document.getElementById('ats-job-title').value.trim() || 'General Professional';
   const jdText = document.getElementById('ats-jd-input').value.trim();
 
   if (!jdText) {
@@ -1181,7 +1181,7 @@ async function runATSScanner() {
    TOOL 2: SALARY NEGOTIATION COACH
    ═════════════════════════════════════════════════════════════════════════════ */
 async function runSalaryNegotiator() {
-  const jobTitle = document.getElementById('salary-job-title').value.trim() || 'Software Engineer';
+  const jobTitle = document.getElementById('salary-job-title').value.trim() || 'General Professional';
   const initialOffer = parseFloat(document.getElementById('salary-initial-offer').value) || 95000;
   const targetOffer = parseFloat(document.getElementById('salary-target-offer').value) || 120000;
   const strategy = document.getElementById('salary-strategy').value;
@@ -1289,22 +1289,30 @@ function copyPolishedPitch() {
    TOOL 4: QUESTION BANK & FLASHCARDS
    ═════════════════════════════════════════════════════════════════════════════ */
 async function loadQuestionBank() {
-  const role = document.getElementById('qbank-role-select')?.value || 'Full Stack AI Developer';
+  const role = document.getElementById('qbank-role-select')?.value.trim() || 'General Professional';
   try {
     const data = await fetchAPI(`/tools/question-bank?job_title=${encodeURIComponent(role)}`);
     state.questionBankData = data.questions || [];
+    renderQuestionBankCategoryPills(state.questionBankData);
     renderQuestionBankCards(state.questionBankData);
   } catch (err) {
     showToast(err.message, 'error');
   }
 }
 
+function renderQuestionBankCategoryPills(questions) {
+  const row = document.getElementById('qbank-category-filters');
+  if (!row) return;
+  const categories = [...new Set((questions || []).map(q => q.category).filter(Boolean))];
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  row.innerHTML = `<button class="cat-pill active" data-cat="All" onclick="filterQuestionBank('All')">All Topics</button>` +
+    categories.map((c, i) => `<button class="cat-pill" data-cat="${esc(c)}" onclick="filterQuestionBank(state.qbankCategories[${i}])">${esc(c)}</button>`).join('');
+  state.qbankCategories = categories;
+}
+
 function filterQuestionBank(category) {
-  document.querySelectorAll('.cat-pill').forEach(p => {
-    p.classList.remove('active');
-    if (p.textContent.includes(category) || (category === 'All' && p.textContent.includes('All'))) {
-      p.classList.add('active');
-    }
+  document.querySelectorAll('#qbank-category-filters .cat-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.cat === category);
   });
 
   if (category === 'All') {

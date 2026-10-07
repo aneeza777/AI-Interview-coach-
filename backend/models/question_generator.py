@@ -133,57 +133,58 @@ BEHAVIORAL_QUESTIONS = [
     },
 ]
 
-# Technical question templates (filled dynamically based on skills)
+# Technical / Domain question templates (filled dynamically based on skills)
 TECHNICAL_TEMPLATES = [
     {
-        "template": "Explain your experience with {skill}. What projects have you built using it?",
-        "expected_keywords_fn": lambda skill: [skill.lower(), "project", "built", "developed", "experience", "used", "application"],
+        "template": "Explain your hands-on experience with {skill}. What initiatives, cases, or projects have you executed using it?",
+        "expected_keywords_fn": lambda skill: [skill.lower(), "project", "initiative", "developed", "experience", "used", "applied"],
         "difficulty": "medium",
     },
     {
-        "template": "What are the key concepts of {skill} that every developer should know?",
-        "expected_keywords_fn": lambda skill: [skill.lower(), "concept", "fundamental", "important", "understand", "principle", "core"],
+        "template": "What are the core concepts and best practices of {skill} that every professional in your field should master?",
+        "expected_keywords_fn": lambda skill: [skill.lower(), "concept", "fundamental", "practice", "standard", "principle", "core"],
         "difficulty": "medium",
     },
     {
-        "template": "How would you explain {skill} to someone with no technical background?",
-        "expected_keywords_fn": lambda skill: [skill.lower(), "simple", "explain", "tool", "use", "help", "build", "create"],
+        "template": "How would you explain the strategic value of {skill} to a non-technical or cross-functional stakeholder?",
+        "expected_keywords_fn": lambda skill: [skill.lower(), "explain", "value", "benefit", "impact", "application"],
         "difficulty": "easy",
     },
     {
-        "template": "What challenges have you faced while working with {skill} and how did you overcome them?",
-        "expected_keywords_fn": lambda skill: [skill.lower(), "challenge", "problem", "solution", "debug", "fix", "learn", "approach"],
+        "template": "What challenges have you faced while working with {skill} and how did you resolve them?",
+        "expected_keywords_fn": lambda skill: [skill.lower(), "challenge", "problem", "solution", "resolve", "overcome", "learn"],
         "difficulty": "hard",
     },
     {
-        "template": "Compare {skill} with its alternatives. When would you choose {skill} over other options?",
-        "expected_keywords_fn": lambda skill: [skill.lower(), "compare", "alternative", "choose", "better", "advantage", "use case", "scenario"],
+        "template": "Compare {skill} with standard alternatives in your domain. When is {skill} the optimal choice?",
+        "expected_keywords_fn": lambda skill: [skill.lower(), "compare", "alternative", "choose", "advantage", "trade-off", "scenario"],
         "difficulty": "hard",
     },
 ]
 
-# Job-title-specific question banks
+# Universal multi-domain question banks
 JOB_SPECIFIC_QUESTIONS = {
+    # ── 1. Technology ──
     "software engineer": [
         {
-            "question": "Describe your approach to writing clean, maintainable code.",
+            "question": "Describe your approach to writing clean, maintainable, and testable code.",
             "expected_keywords": ["clean", "readable", "maintainable", "comment", "naming", "structure", "test", "refactor"],
             "difficulty": "medium",
         },
         {
-            "question": "How do you approach debugging a complex issue in production?",
+            "question": "How do you approach debugging a complex issue under high pressure in production?",
             "expected_keywords": ["debug", "log", "monitor", "reproduce", "fix", "test", "deploy", "root cause"],
             "difficulty": "hard",
         },
         {
-            "question": "Explain the software development lifecycle (SDLC) and your preferred methodology.",
+            "question": "Explain the software development lifecycle (SDLC) and your preferred agile methodology.",
             "expected_keywords": ["agile", "scrum", "waterfall", "sprint", "planning", "testing", "deployment", "requirement"],
             "difficulty": "medium",
         },
     ],
     "data scientist": [
         {
-            "question": "How do you handle missing or corrupted data in a dataset?",
+            "question": "How do you handle missing or corrupted data in a real-world dataset?",
             "expected_keywords": ["missing", "impute", "drop", "clean", "outlier", "mean", "median", "analysis"],
             "difficulty": "medium",
         },
@@ -193,7 +194,7 @@ JOB_SPECIFIC_QUESTIONS = {
             "difficulty": "easy",
         },
         {
-            "question": "How do you evaluate if a machine learning model is performing well?",
+            "question": "How do you evaluate if a machine learning model generalizes well to unseen data?",
             "expected_keywords": ["accuracy", "precision", "recall", "f1", "cross-validation", "overfit", "metric", "test"],
             "difficulty": "medium",
         },
@@ -205,14 +206,9 @@ JOB_SPECIFIC_QUESTIONS = {
             "difficulty": "medium",
         },
         {
-            "question": "How do you ensure a website is responsive and works on all devices?",
+            "question": "How do you ensure a web application is responsive and accessible on all devices?",
             "expected_keywords": ["responsive", "media query", "flexbox", "grid", "mobile", "breakpoint", "test", "design"],
             "difficulty": "easy",
-        },
-        {
-            "question": "What is REST API and how do you design one?",
-            "expected_keywords": ["rest", "api", "endpoint", "http", "get", "post", "json", "status", "route"],
-            "difficulty": "medium",
         },
     ],
     "frontend developer": [
@@ -222,62 +218,211 @@ JOB_SPECIFIC_QUESTIONS = {
             "difficulty": "hard",
         },
         {
-            "question": "What performance optimization techniques do you use in frontend development?",
+            "question": "What performance optimization techniques do you use in frontend rendering?",
             "expected_keywords": ["lazy", "cache", "bundle", "minify", "image", "load", "render", "optimize"],
             "difficulty": "medium",
         },
     ],
     "backend developer": [
         {
-            "question": "How do you design a scalable backend architecture?",
+            "question": "How do you design a scalable backend architecture with clean APIs?",
             "expected_keywords": ["scalable", "microservice", "database", "cache", "load balancer", "api", "server", "queue"],
             "difficulty": "hard",
         },
         {
-            "question": "Explain database normalization and when you might denormalize.",
+            "question": "Explain database indexing, normalization, and when you might denormalize.",
             "expected_keywords": ["normalization", "denormalize", "table", "relation", "performance", "redundancy", "query", "join"],
             "difficulty": "medium",
         },
     ],
     "devops engineer": [
         {
-            "question": "Describe your CI/CD pipeline setup and best practices.",
-            "expected_keywords": ["ci", "cd", "pipeline", "deploy", "build", "test", "automate", "jenkins", "github"],
+            "question": "Describe your CI/CD pipeline setup, infrastructure automation, and monitoring best practices.",
+            "expected_keywords": ["ci", "cd", "pipeline", "deploy", "build", "test", "automate", "jenkins", "docker"],
             "difficulty": "medium",
         },
     ],
     "mobile developer": [
         {
-            "question": "How do you handle app state and navigation in a mobile application?",
-            "expected_keywords": ["state", "navigation", "screen", "route", "stack", "tab", "data", "persist"],
+            "question": "How do you handle app state, memory leaks, and offline caching in a mobile application?",
+            "expected_keywords": ["state", "navigation", "screen", "route", "memory", "cache", "sqlite", "persist"],
             "difficulty": "medium",
         },
     ],
     "ui/ux designer": [
         {
-            "question": "Walk me through your design process from research to final delivery.",
+            "question": "Walk me through your design process from user research to interactive Figma prototypes.",
             "expected_keywords": ["research", "wireframe", "prototype", "user", "test", "iterate", "feedback", "design"],
             "difficulty": "medium",
         },
     ],
+
+    # ── 2. Healthcare & Medicine ──
+    "healthcare": [
+        {
+            "question": "How do you approach clinical triage, differential diagnosis, and patient stabilization under acute emergency conditions?",
+            "expected_keywords": ["triage", "assessment", "diagnosis", "vital signs", "protocol", "patient", "clinical"],
+            "difficulty": "hard",
+        },
+        {
+            "question": "What protocols do you enforce for infection control, sterile field maintenance, and medication administration safety?",
+            "expected_keywords": ["safety", "infection", "medication", "sterile", "hipaa", "ehr", "protocol", "prevention"],
+            "difficulty": "medium",
+        },
+        {
+            "question": "Describe a challenging situation where you communicated with distressed patient families or coordinated care across multidisciplinary teams.",
+            "expected_keywords": ["communication", "empathy", "family", "team", "care", "support", "interdisciplinary"],
+            "difficulty": "medium",
+        },
+    ],
+
+    # ── 3. Finance, Banking & Accounting ──
+    "finance": [
+        {
+            "question": "Walk me through your methodology for building three-statement financial models and DCF sensitivity analyses.",
+            "expected_keywords": ["model", "dcf", "cash flow", "balance sheet", "wacc", "valuation", "forecast", "assumptions"],
+            "difficulty": "hard",
+        },
+        {
+            "question": "How do you ensure strict compliance with GAAP/IFRS standards during month-end reconciliation and financial reporting?",
+            "expected_keywords": ["gaap", "ifrs", "compliance", "audit", "reconciliation", "reporting", "variance", "controls"],
+            "difficulty": "medium",
+        },
+        {
+            "question": "Describe an audit, risk assessment, or cost containment initiative where you identified significant operational discrepancies.",
+            "expected_keywords": ["audit", "risk", "discrepancy", "cost", "savings", "controls", "variance", "investigation"],
+            "difficulty": "hard",
+        },
+    ],
+
+    # ── 4. Engineering (Mechanical, Civil, Electrical) ──
+    "mechanical engineer": [
+        {
+            "question": "Walk me through your engineering design workflow from CAD 3D modeling to FEA stress analysis and prototyping.",
+            "expected_keywords": ["cad", "solidworks", "fea", "stress", "simulation", "prototype", "material", "tolerances"],
+            "difficulty": "hard",
+        },
+        {
+            "question": "How do you apply Lean Manufacturing, GD&T, and Six Sigma to reduce fabrication defects and streamline assembly?",
+            "expected_keywords": ["lean", "six sigma", "gd&t", "quality", "manufacturing", "tolerances", "defects"],
+            "difficulty": "medium",
+        },
+    ],
+    "civil engineer": [
+        {
+            "question": "How do you conduct structural load calculations, geotechnical assessments, and ensure compliance with building safety codes?",
+            "expected_keywords": ["structural", "load", "geotechnical", "codes", "safety", "concrete", "steel", "compliance"],
+            "difficulty": "hard",
+        },
+        {
+            "question": "Describe your process for managing on-site contractor deliverables, safety protocols, and construction timelines.",
+            "expected_keywords": ["site", "contractor", "safety", "timeline", "inspection", "quality", "coordination"],
+            "difficulty": "medium",
+        },
+    ],
+    "electrical engineer": [
+        {
+            "question": "How do you approach PCB schematic design, power distribution, signal integrity, and EMI shielding?",
+            "expected_keywords": ["pcb", "schematic", "circuit", "power", "signal", "emi", "testing", "components"],
+            "difficulty": "hard",
+        },
+    ],
+
+    # ── 5. Marketing, Content & SEO ──
+    "marketing": [
+        {
+            "question": "How do you develop an omnichannel customer acquisition strategy and optimize conversion funnels (CRO)?",
+            "expected_keywords": ["funnel", "conversion", "cro", "acquisition", "cac", "ltv", "a/b test", "campaign"],
+            "difficulty": "hard",
+        },
+        {
+            "question": "What is your approach to technical SEO, topic clustering, content marketing, and measuring campaign ROAS?",
+            "expected_keywords": ["seo", "content", "roas", "analytics", "keywords", "organic", "attribution", "traffic"],
+            "difficulty": "medium",
+        },
+    ],
+
+    # ── 6. Sales & Business Development ──
+    "sales": [
+        {
+            "question": "Walk me through your consultative sales process from enterprise prospecting to navigating complex procurement negotiations.",
+            "expected_keywords": ["prospecting", "discovery", "negotiation", "procurement", "closing", "value", "pipeline"],
+            "difficulty": "hard",
+        },
+        {
+            "question": "How do you handle steep pricing objections and maintain high closing rates in competitive markets?",
+            "expected_keywords": ["objections", "pricing", "roi", "value", "margin", "closing", "trade-off"],
+            "difficulty": "medium",
+        },
+    ],
+
+    # ── 7. Human Resources & Recruiting ──
+    "human resources": [
+        {
+            "question": "How do you build strategic talent acquisition pipelines and reduce time-to-hire while maintaining high candidate quality?",
+            "expected_keywords": ["talent", "sourcing", "recruiting", "pipeline", "time-to-hire", "quality", "interview"],
+            "difficulty": "medium",
+        },
+        {
+            "question": "Describe your approach to handling workplace conflict mediation, employee grievances, and labor law compliance.",
+            "expected_keywords": ["conflict", "mediation", "grievance", "compliance", "labor law", "fairness", "policy"],
+            "difficulty": "hard",
+        },
+    ],
+
+    # ── 8. Legal, Law & Compliance ──
+    "legal": [
+        {
+            "question": "How do you approach drafting and negotiating complex commercial contracts to minimize organizational risk and liability?",
+            "expected_keywords": ["contract", "drafting", "negotiation", "liability", "risk", "terms", "compliance"],
+            "difficulty": "hard",
+        },
+    ],
+
+    # ── 9. Education & Teaching ──
+    "education": [
+        {
+            "question": "How do you differentiate curriculum instruction to engage learners with diverse needs, abilities, and backgrounds?",
+            "expected_keywords": ["curriculum", "instruction", "differentiation", "learners", "assessment", "engagement"],
+            "difficulty": "medium",
+        },
+    ],
+
+    # ── 10. Supply Chain & Logistics ──
+    "supply chain": [
+        {
+            "question": "How do you manage supplier risk, demand forecasting, inventory holding costs, and global logistics disruptions?",
+            "expected_keywords": ["supplier", "forecasting", "inventory", "logistics", "lead time", "warehouse", "procurement"],
+            "difficulty": "hard",
+        },
+    ],
+
+    # ── 11. Project & Product Management ──
+    "project manager": [
+        {
+            "question": "How do you prioritize competing stakeholder demands, prevent scope creep, and ensure on-time milestone delivery?",
+            "expected_keywords": ["stakeholder", "scope", "milestones", "agile", "priority", "timeline", "risk"],
+            "difficulty": "hard",
+        },
+    ],
 }
 
-# Default technical questions when job title doesn't match any specific category
+# Universal Domain Questions when job title doesn't match a specific category
 DEFAULT_TECHNICAL_QUESTIONS = [
     {
-        "question": "What technical skills do you consider your strongest, and why?",
-        "expected_keywords": ["skill", "strong", "experience", "project", "proficient", "expert", "learn", "practice"],
-        "difficulty": "easy",
-    },
-    {
-        "question": "How do you stay updated with the latest trends in technology?",
-        "expected_keywords": ["learn", "course", "blog", "community", "conference", "read", "practice", "trend"],
-        "difficulty": "easy",
-    },
-    {
-        "question": "Describe a technical problem you solved recently. What was your approach?",
-        "expected_keywords": ["problem", "solution", "approach", "debug", "research", "implement", "test", "result"],
+        "question": "What established methodologies, professional frameworks, and quality standards guide your execution most, and why?",
+        "expected_keywords": ["methodology", "framework", "standard", "quality", "experience", "best practice", "impact"],
         "difficulty": "medium",
+    },
+    {
+        "question": "How do you stay updated with emerging innovations, research, and regulatory changes in your field?",
+        "expected_keywords": ["learn", "research", "industry", "trend", "conference", "continuous", "practice"],
+        "difficulty": "easy",
+    },
+    {
+        "question": "Describe a complex problem or high-stakes challenge you solved recently. What was your systematic approach?",
+        "expected_keywords": ["problem", "solution", "approach", "analysis", "execute", "result", "outcome"],
+        "difficulty": "hard",
     },
 ]
 
@@ -286,18 +431,30 @@ DEFAULT_TECHNICAL_QUESTIONS = [
 # Helper: match job title to category
 # ──────────────────────────────────────────────
 def _match_job_category(job_title: str) -> str:
-    """Match a job title to one of the predefined categories."""
+    """Match a job title to one of the multi-domain categories."""
     title_lower = job_title.lower()
 
     category_map = {
-        "software engineer": ["software engineer", "software developer", "sde", "swe"],
+        "healthcare": ["doctor", "physician", "surgeon", "nurse", "nursing", "medical", "pharmacist", "clinical", "hospital", "healthcare"],
+        "finance": ["finance", "financial", "accountant", "accounting", "auditor", "audit", "banker", "tax", "cfa", "acca", "ca"],
+        "mechanical engineer": ["mechanical", "automotive", "hvac", "cad designer", "aerospace"],
+        "civil engineer": ["civil", "structural", "construction", "site engineer", "surveyor", "architect"],
+        "electrical engineer": ["electrical", "electronics", "circuit", "power engineer", "telecom"],
+        "marketing": ["marketing", "seo", "sem", "content", "brand", "social media", "growth"],
+        "sales": ["sales", "business development", "account executive", "commercial"],
+        "human resources": ["hr", "human resources", "recruiter", "talent acquisition", "people"],
+        "legal": ["lawyer", "attorney", "legal", "compliance", "counsel"],
+        "education": ["teacher", "professor", "lecturer", "educator", "curriculum"],
+        "supply chain": ["supply chain", "logistics", "procurement", "inventory", "warehouse"],
+        "project manager": ["project manager", "product manager", "scrum master"],
+        "software engineer": ["software engineer", "software developer", "sde", "swe", "programmer", "coder"],
         "data scientist": ["data scientist", "data analyst", "ml engineer", "ai engineer", "machine learning"],
         "web developer": ["web developer", "full stack", "fullstack"],
         "frontend developer": ["frontend", "front-end", "ui developer"],
         "backend developer": ["backend", "back-end", "server"],
-        "devops engineer": ["devops", "dev ops", "cloud engineer", "site reliability", "sre"],
+        "devops engineer": ["devops", "cloud", "site reliability", "sre", "infrastructure"],
         "mobile developer": ["mobile developer", "android", "ios", "flutter", "react native"],
-        "ui/ux designer": ["ui/ux", "ux designer", "ui designer", "product designer"],
+        "ui/ux designer": ["ui/ux", "ux designer", "ui designer", "graphic", "designer"],
     }
 
     for category, keywords in category_map.items():

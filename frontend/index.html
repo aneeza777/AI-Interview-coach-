@@ -391,7 +391,7 @@
           <div class="cv-target-inputs-box">
             <div class="form-group">
               <label for="cv-job-title">Target Role / Specialization</label>
-              <input type="text" id="cv-job-title" placeholder="e.g. Full Stack AI Developer, Flutter Engineer" value="Full Stack AI Developer">
+              <input type="text" id="cv-job-title" placeholder="Any field: Doctor, Accountant, Civil Engineer, Teacher, Developer..." value="">
             </div>
 
             <div class="form-group">
@@ -554,7 +554,7 @@
           <div class="setup-form-grid">
             <div class="form-group">
               <label for="setup-job-title">Target Job Title</label>
-              <input type="text" id="setup-job-title" placeholder="e.g. Full Stack AI Developer" value="Full Stack AI Developer">
+              <input type="text" id="setup-job-title" placeholder="Any field: Nurse, Financial Analyst, Lawyer, Marketing Manager..." value="">
             </div>
 
             <div class="form-group">
@@ -837,7 +837,7 @@
 
           <div class="form-group">
             <label for="ats-job-title">Target Role</label>
-            <input type="text" id="ats-job-title" placeholder="e.g. Senior Cloud Architect" value="Full Stack AI Developer">
+            <input type="text" id="ats-job-title" placeholder="Any field: HR Manager, Pharmacist, Mechanical Engineer..." value="">
           </div>
 
           <div class="form-group">
@@ -913,7 +913,7 @@
 
           <div class="form-group">
             <label for="salary-job-title">Target Job Title</label>
-            <input type="text" id="salary-job-title" placeholder="e.g. Staff Software Engineer" value="Full Stack AI Developer">
+            <input type="text" id="salary-job-title" placeholder="Any field: Doctor, Banker, Civil Engineer, Teacher..." value="">
           </div>
 
           <div class="form-row-2">
@@ -938,7 +938,7 @@
 
           <div class="form-group">
             <label for="salary-user-pitch">Your Counter-Offer Pitch</label>
-            <textarea id="salary-user-pitch" rows="4" placeholder="e.g. Based on my experience scaling microservices and current market data, I was aiming for $120,000..."></textarea>
+            <textarea id="salary-user-pitch" rows="4" placeholder="e.g. Based on my experience and current market data for this role, I was aiming for..."></textarea>
           </div>
 
           <button class="btn btn-primary btn-block btn-glow" id="btn-run-salary" onclick="runSalaryNegotiator()">
@@ -1015,7 +1015,7 @@
 
           <div class="form-group">
             <label for="pitch-text-input">Your Elevator Pitch Script</label>
-            <textarea id="pitch-text-input" rows="6" placeholder="Hi, I'm a developer who specializes in building scalable AI systems. Over the past 3 years..."></textarea>
+            <textarea id="pitch-text-input" rows="6" placeholder="Hi, I'm a professional who specializes in... Over the past 3 years..."></textarea>
           </div>
 
           <button class="btn btn-primary btn-block btn-glow" id="btn-run-pitch" onclick="runPitchEvaluator()">
@@ -1068,30 +1068,46 @@
     <section id="screen-questions" class="app-screen">
       <div class="screen-top-bar">
         <button class="btn btn-ghost" onclick="navigateTo('dashboard')">➔ Back to Dashboard</button>
-        <div class="screen-title-badge">💡 Technical & Behavioral Question Bank</div>
+        <div class="screen-title-badge">💡 Role-Based & Behavioral Question Bank</div>
       </div>
 
       <div class="qbank-container">
         <!-- Controls & Filters -->
         <div class="qbank-controls-bar">
           <div class="filter-group">
-            <label>Select Target Role:</label>
-            <select id="qbank-role-select" onchange="loadQuestionBank()">
-              <option value="Full Stack AI Developer" selected>Full Stack AI Developer</option>
-              <option value="Cloud & DevOps Engineer">Cloud & DevOps Engineer</option>
-              <option value="Data Scientist / ML Engineer">Data Scientist / ML Engineer</option>
-              <option value="Backend Software Engineer">Backend Software Engineer</option>
-              <option value="Frontend Engineer">Frontend Engineer</option>
-            </select>
+            <label>Target Role (any field):</label>
+            <input type="text" id="qbank-role-select" list="qbank-role-suggestions"
+                   value="General Professional"
+                   placeholder="e.g. Doctor, Accountant, Civil Engineer, Teacher, Marketing Manager..."
+                   onchange="loadQuestionBank()" onkeydown="if(event.key==='Enter'){loadQuestionBank();}">
+            <datalist id="qbank-role-suggestions">
+              <option value="General Professional"></option>
+              <option value="Doctor / Clinical Specialist"></option>
+              <option value="Registered Nurse"></option>
+              <option value="Pharmacist"></option>
+              <option value="Financial Analyst"></option>
+              <option value="Chartered Accountant"></option>
+              <option value="Banker"></option>
+              <option value="Civil Engineer"></option>
+              <option value="Mechanical Engineer"></option>
+              <option value="Electrical Engineer"></option>
+              <option value="Digital Marketing Manager"></option>
+              <option value="Sales Executive"></option>
+              <option value="HR Manager"></option>
+              <option value="Lawyer / Legal Advisor"></option>
+              <option value="Teacher / Lecturer"></option>
+              <option value="Supply Chain Manager"></option>
+              <option value="Graphic Designer"></option>
+              <option value="Project Manager"></option>
+              <option value="Full Stack Developer"></option>
+              <option value="Data Scientist"></option>
+              <option value="Cloud & DevOps Engineer"></option>
+            </datalist>
           </div>
 
           <div class="category-pills-row" id="qbank-category-filters">
+            <!-- Category pills are generated dynamically from the AI-generated question set -->
             <button class="cat-pill active" onclick="filterQuestionBank('All')">All Topics</button>
-            <button class="cat-pill" onclick="filterQuestionBank('System Architecture')">System Architecture</button>
-            <button class="cat-pill" onclick="filterQuestionBank('Frontend & Performance')">Frontend & UI</button>
-            <button class="cat-pill" onclick="filterQuestionBank('Security & Auth')">Security & Auth</button>
-            <button class="cat-pill" onclick="filterQuestionBank('Behavioral & Leadership')">Behavioral (STAR)</button>
-            <button class="cat-pill" onclick="filterQuestionBank('Data & State Management')">Data & State</button>
           </div>
         </div>
 

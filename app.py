@@ -41,7 +41,7 @@ init_db()
 css_dir = FRONTEND_DIR / "css"
 js_dir = FRONTEND_DIR / "js"
 
-# Create Gradio Blocks embedding the full custom project frontend
+# Create Gradio Blocks embedding the full custom project frontend (Image 2 UI)
 with gr.Blocks(
     title="AI Interview Coach | Alibaba Cloud AI Hackathon 2026",
 ) as demo:
@@ -63,15 +63,15 @@ with gr.Blocks(
         background: #0b0f17;
       }
     </style>
-    <iframe id="app-frame" src="/app" allow="microphone; camera; display-capture; autoplay"></iframe>
+    <iframe id="app-frame" src="/web/index.html" allow="microphone; camera; display-capture; autoplay"></iframe>
     """)
 
 if __name__ == "__main__":
-    # Launch Gradio server in non-blocking mode first
+    # Launch Gradio server in non-blocking mode
     demo.queue().launch(prevent_thread_lock=True, show_error=True)
     
-    # Mount the custom frontend and all backend API routes onto the active Gradio server
-    demo.app.mount("/app", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend_app")
+    # Mount the custom frontend and static directories onto the active server
+    demo.app.mount("/web", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend_web")
     if css_dir.exists():
         demo.app.mount("/css", StaticFiles(directory=str(css_dir)), name="frontend_css")
     if js_dir.exists():

@@ -77,3 +77,4 @@ logs/
 checkpoints/
 .system_generated/
 scratch/
+training/data/*.json

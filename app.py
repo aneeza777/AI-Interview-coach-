@@ -31,19 +31,54 @@ _ROOT = Path(__file__).parent.resolve()
 sys.path.insert(0, str(_ROOT))
 sys.path.insert(0, str(_ROOT / "backend"))
 
-import uvicorn
 import gradio as gr
-from backend.main import app as fastapi_app
+from fastapi.staticfiles import StaticFiles
+from backend.main import app as fastapi_app, FRONTEND_DIR, init_db
 
-# Define a minimal demo for Gradio SDK runtime requirement
-with gr.Blocks(title="AI Interview Coach Engine") as demo:
-    gr.Markdown("# AI Interview Coach Engine")
+# Initialize database tables
+init_db()
 
-# Mount Gradio app under /gradio so that demo is bound for Hugging Face Spaces SDK,
-# while the root "/" and all static assets are served directly by fastapi_app!
-app = gr.mount_gradio_app(fastapi_app, demo, path="/gradio")
+css_dir = FRONTEND_DIR / "css"
+js_dir = FRONTEND_DIR / "js"
+
+# Create Gradio Blocks embedding the full custom project frontend
+with gr.Blocks(
+    title="AI Interview Coach | Alibaba Cloud AI Hackathon 2026",
+) as demo:
+    gr.HTML("""
+    <style>
+      body, html { margin: 0; padding: 0; overflow: hidden; height: 100%; width: 100%; background: #0b0f17; }
+      .gradio-container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; height: 100vh !important; width: 100vw !important; }
+      footer { display: none !important; }
+      #app-frame {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        border: none;
+        margin: 0;
+        padding: 0;
+        z-index: 9999999;
+        background: #0b0f17;
+      }
+    </style>
+    <iframe id="app-frame" src="/app" allow="microphone; camera; display-capture; autoplay"></iframe>
+    """)
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 7860))
-    print(f"Starting AI Interview Coach server on port {port}...")
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # Launch Gradio server in non-blocking mode first
+    demo.queue().launch(prevent_thread_lock=True, show_error=True)
+    
+    # Mount the custom frontend and all backend API routes onto the active Gradio server
+    demo.app.mount("/app", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend_app")
+    if css_dir.exists():
+        demo.app.mount("/css", StaticFiles(directory=str(css_dir)), name="frontend_css")
+    if js_dir.exists():
+        demo.app.mount("/js", StaticFiles(directory=str(js_dir)), name="frontend_js")
+    
+    # Attach all FastAPI backend endpoints (/api/auth, /api/interviews, /api/resumes, etc.)
+    demo.app.include_router(fastapi_app.router)
+    
+    # Keep the server running
+    demo.block_thread()

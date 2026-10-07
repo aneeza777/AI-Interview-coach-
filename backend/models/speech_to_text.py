@@ -21,15 +21,18 @@ from typing import Optional, Dict
 _whisper_model = None
 
 
-def get_whisper_model(model_size: str = "small") -> whisper.Whisper:
+def get_whisper_model(model_size: Optional[str] = None) -> whisper.Whisper:
     """
     Load Whisper model (cached after first load).
 
     Model sizes: tiny, base, small, medium, large
     - "small" gives much better accuracy for accented/mixed English
       (a bit slower than "base", but far fewer wrong/repeated words)
+    - Defaults to WHISPER_MODEL_SIZE env var or "small"
     """
     global _whisper_model
+    if not model_size:
+        model_size = os.getenv("WHISPER_MODEL_SIZE", "small")
     if _whisper_model is None:
         print(f"[Speech-to-Text] Loading Whisper model '{model_size}'...")
         _whisper_model = whisper.load_model(model_size)
@@ -156,7 +159,7 @@ def _sanitize_transcription(text: str) -> str:
 
 def transcribe_audio(
     audio_path: str,
-    model_size: str = "small",
+    model_size: Optional[str] = None,
     language: Optional[str] = "en",
     prompt: Optional[str] = None,
 ) -> Dict:

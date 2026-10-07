@@ -1,4 +1,4 @@
-﻿FROM python:3.11-slim
+FROM python:3.11-slim
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -28,14 +28,14 @@ COPY . .
 # Ensure storage directories exist with write permissions
 RUN mkdir -p uploads data && chmod -R 777 uploads data
 
-# Set environment variables for Hugging Face Spaces
+# Default environment variables
 ENV HOST=0.0.0.0
 ENV PORT=7860
-ENV WHISPER_MODEL_SIZE=small
+ENV WHISPER_MODEL_SIZE=tiny
 ENV PYTHONUNBUFFERED=1
 
-# Expose default HF Spaces port
+# Expose default port
 EXPOSE 7860
 
-# Start FastAPI server
-CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Start FastAPI server with dynamic PORT support
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-7860}"]

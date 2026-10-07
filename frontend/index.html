@@ -74,7 +74,7 @@
     <section id="screen-auth" class="app-screen active">
       <div class="auth-wrapper">
         <div class="auth-hero">
-          <div class="auth-badge">🚀 Alibaba Cloud AI Hackathon Pakistan 2026</div>
+          <div class="auth-badge">🏆 Alibaba Cloud AI Hackathon Pakistan 2026 • Islamabad Finalist (FAST NUCES)</div>
           <h1 class="auth-title">Next-Gen Voice AI <span class="gradient-text">Interview Coach</span></h1>
           <p class="auth-subtitle">
             Practice realistic AI mock interviews, get instant speech confidence metrics, tailor your resume for ATS, and master technical interview questions.
@@ -114,8 +114,19 @@
               <button type="submit" class="btn btn-primary btn-block btn-glow" id="btn-login-submit">
                 <span>Sign In to Dashboard</span> ➔
               </button>
-              <div class="auth-footer-note">
-                <span>Demo test account? Register any instant email to start!</span>
+              
+              <!-- 1-Click Judge & Demo Sign In -->
+              <div style="margin: 0.85rem 0 0.5rem 0; display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.75rem;">
+                <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.12);"></span>
+                <span>QUICK HACKATHON EVALUATION</span>
+                <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.12);"></span>
+              </div>
+              <button type="button" class="btn btn-outline btn-block" style="border-color: var(--accent-emerald); color: var(--accent-mint); font-weight: 600; padding: 0.65rem 1rem;" onclick="loginAsJudgeOrDemo()">
+                ⚡ 1-Click Judge & Demo Sign In
+              </button>
+
+              <div class="auth-footer-note" style="margin-top: 0.75rem;">
+                <span>Click above for instant demo access, or create an account with any email.</span>
               </div>
             </form>
 

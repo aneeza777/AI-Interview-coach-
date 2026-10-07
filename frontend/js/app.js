@@ -137,6 +137,38 @@ async function handleRegister(e) {
   }
 }
 
+async function loginAsJudgeOrDemo() {
+  const email = 'judge@hackathon.ai';
+  const password = 'Password123!';
+  showToast('Connecting as Hackathon Judge / Demo...');
+  try {
+    let res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    let data = await res.json();
+    if (!res.ok) {
+      // Auto-register if not yet created in the database
+      res = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ full_name: 'Hackathon Evaluator', email, password })
+      });
+      data = await res.json();
+    }
+    if (!res.ok) throw new Error(formatAPIError(data) || 'Sign in failed');
+    state.token = data.access_token;
+    localStorage.setItem('token', state.token);
+    state.user = data.user;
+    updateUserUI();
+    showToast('Welcome, Hackathon Evaluator!', 'success');
+    navigateTo('dashboard');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
 function logout() {
   state.token = null;
   state.user = null;

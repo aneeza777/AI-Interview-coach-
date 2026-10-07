@@ -25,8 +25,8 @@ const state = {
   questionBankData: []
 };
 
-// API Base URL
-const API_BASE = '/api';
+// API Base URL (configurable for cloud/Vercel deployment)
+const API_BASE = window.API_BASE || localStorage.getItem('api_base') || '/api';
 
 /* ═════════════════════════════════════════════════════════════════════════════
    INITIALIZATION & AUTHENTICATION
@@ -712,10 +712,20 @@ function renderCurrentQuestion() {
   document.getElementById('q-category-tag').textContent = (q.type || q.category || 'TECHNICAL').toUpperCase();
   document.getElementById('active-question-text').textContent = q.question;
 
-  // Reset transcript & answer inputs
+  // Reset audio & transcript & answer inputs
+  state.audioChunks = [];
+  state.isRecording = false;
   document.getElementById('transcript-content').textContent = '';
   document.getElementById('transcript-placeholder').classList.remove('hidden');
-  document.getElementById('manual-answer-input').value = '';
+
+  const manualInput = document.getElementById('manual-answer-input');
+  if (manualInput) {
+    manualInput.value = '';
+    manualInput.oninput = () => {
+      document.getElementById('btn-submit-answer').disabled = manualInput.value.trim().length === 0;
+    };
+  }
+
   document.getElementById('btn-submit-answer').disabled = true;
   document.getElementById('btn-re-record').disabled = true;
   document.getElementById('model-answer-text').textContent = 'Fetching model answer guidance...';
@@ -919,16 +929,24 @@ async function submitCurrentAnswer() {
     formData.append('question_number', qNum.toString());
     formData.append('question_index', state.currentQuestionIndex.toString());
 
-    const manualText = document.getElementById('manual-answer-input').value.trim();
-    const speechText = document.getElementById('transcript-content').textContent.trim();
+    const manualInput = document.getElementById('manual-answer-input');
+    const manualText = (manualInput ? manualInput.value : '').trim();
+    const transcriptEl = document.getElementById('transcript-content');
+    const speechText = (transcriptEl ? transcriptEl.textContent : '').trim();
     const answerText = manualText || speechText || 'I discussed my technical implementation and background.';
 
     formData.append('answer_text', answerText);
 
-    if (state.audioChunks.length > 0) {
+    // Only attach audio if the candidate spoke / recorded audio AND did not type the answer
+    if (!manualText && state.audioChunks && state.audioChunks.length > 0) {
       const audioBlob = new Blob(state.audioChunks, { type: 'audio/wav' });
-      formData.append('audio', audioBlob, 'answer.wav');
+      if (audioBlob.size > 200) {
+        formData.append('audio', audioBlob, 'answer.wav');
+      }
     }
+
+    // Clear recorded chunks after preparing payload
+    state.audioChunks = [];
 
     const res = await fetch(`${API_BASE}/interviews/${state.activeInterview.id}/answer`, {
       method: 'POST',
@@ -939,7 +957,10 @@ async function submitCurrentAnswer() {
     const data = await res.json();
     if (!res.ok) throw new Error(formatAPIError(data) || 'Evaluation failed');
 
-    const scoreVal = Math.round(data.content_score || data.combined_score || 80);
+    const scoreVal = Math.round(
+      data.combined_score !== undefined && data.combined_score !== null ? data.combined_score :
+      (data.content_score !== undefined && data.content_score !== null ? data.content_score : 0)
+    );
     showToast(`Answer recorded! Score: ${scoreVal}/100`, 'success');
     advanceToNextQuestion();
   } catch (err) {
@@ -1058,43 +1079,53 @@ function renderReportScreen(report) {
   document.getElementById('report-job-title').textContent = report.job_title || 'General Professional';
   document.getElementById('report-date').textContent = new Date(report.created_at || Date.now()).toLocaleDateString();
 
-  const score = report.overall_score || 82.5;
+  const score = (report.overall_score !== undefined && report.overall_score !== null) ? Math.round(report.overall_score) : 0;
   document.getElementById('report-overall-score').textContent = score;
-  document.getElementById('report-grade-pill').textContent = `Grade: ${report.grade || 'A'}`;
+  document.getElementById('report-grade-pill').textContent = `Grade: ${report.grade || (score === 0 ? 'N/A' : 'A')}`;
 
-  document.getElementById('bar-content-score').style.width = `${report.content_score || 80}%`;
-  document.getElementById('val-content-score').textContent = `${report.content_score || 80}/100`;
+  const contentScore = (report.content_score !== undefined && report.content_score !== null)
+    ? Math.round(report.content_score)
+    : ((report.content_average !== undefined && report.content_average !== null) ? Math.round(report.content_average) : 0);
+  document.getElementById('bar-content-score').style.width = `${Math.min(100, Math.max(0, contentScore))}%`;
+  document.getElementById('val-content-score').textContent = `${contentScore}/100`;
 
-  document.getElementById('bar-confidence-score').style.width = `${report.confidence_score || 85}%`;
-  document.getElementById('val-confidence-score').textContent = `${report.confidence_score || 85}/100`;
+  const confScore = (report.confidence_score !== undefined && report.confidence_score !== null)
+    ? Math.round(report.confidence_score)
+    : ((report.confidence_average !== undefined && report.confidence_average !== null) ? Math.round(report.confidence_average) : 0);
+  document.getElementById('bar-confidence-score').style.width = `${Math.min(100, Math.max(0, confScore))}%`;
+  document.getElementById('val-confidence-score').textContent = `${confScore}/100`;
 
-  document.getElementById('bar-pace-score').style.width = `${Math.min(100, (report.pace_wpm || 135) / 1.6)}%`;
-  document.getElementById('val-pace-score').textContent = `${report.pace_wpm || 135} WPM`;
+  const pace = (report.pace_wpm !== undefined && report.pace_wpm !== null) ? Math.round(report.pace_wpm) : 0;
+  document.getElementById('bar-pace-score').style.width = `${Math.min(100, Math.max(0, pace / 1.6))}%`;
+  document.getElementById('val-pace-score').textContent = `${pace} WPM`;
 
   const strList = document.getElementById('report-strengths-list');
-  const str = report.strengths || ['Good clarity and structured STAR answers', 'Technical vocabulary was well-applied'];
+  const str = report.strengths && report.strengths.length > 0 ? report.strengths : ['Completed interview session walkthrough.'];
   strList.innerHTML = str.map(s => `<li>${s}</li>`).join('');
 
   const impList = document.getElementById('report-improvements-list');
-  const imp = report.improvements || ['Maintain consistent speaking pace throughout complex answers', 'Provide more concrete metrics in behavioral responses'];
+  const imp = report.improvements && report.improvements.length > 0 ? report.improvements : (report.weaknesses || ['Continue practicing technical and behavioral responses.']);
   impList.innerHTML = imp.map(i => `<li>${i}</li>`).join('');
 
   const qBreakdown = document.getElementById('report-questions-breakdown');
   if (report.questions && report.questions.length > 0) {
-    qBreakdown.innerHTML = report.questions.map((q, idx) => `
+    qBreakdown.innerHTML = report.questions.map((q, idx) => {
+      const qScore = (q.score !== undefined && q.score !== null) ? Math.round(q.score) : 0;
+      return `
       <div class="q-review-item">
         <div class="q-review-header">
           <span>Q${idx + 1}: ${q.question}</span>
-          <span class="kw-pill">Score: ${q.score || 80}/100</span>
+          <span class="kw-pill" style="${qScore === 0 ? 'background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); color: #f87171;' : ''}">Score: ${qScore}/100</span>
         </div>
         <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem;">
-          <strong>Your Answer:</strong> ${q.user_answer || 'Covered key concepts.'}
+          <strong>Your Answer:</strong> ${q.user_answer || 'No answer provided'}
         </p>
         <p style="font-size: 0.85rem; color: var(--accent-mint);">
-          <strong>AI Feedback:</strong> ${q.feedback || 'Good coverage of core topics.'}
+          <strong>AI Feedback:</strong> ${q.feedback || 'Completed'}
         </p>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 }
 

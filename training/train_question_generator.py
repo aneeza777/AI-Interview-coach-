@@ -22,7 +22,12 @@ from transformers import (
     Seq2SeqTrainingArguments,
     Seq2SeqTrainer,
     DataCollatorForSeq2Seq,
-)
+try:
+    import peft.import_utils
+    peft.import_utils.is_torchao_available = lambda: False
+except Exception:
+    pass
+
 from peft import LoraConfig, get_peft_model, TaskType
 
 
@@ -88,18 +93,21 @@ def train():
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
     model = AutoModelForSeq2SeqLM.from_pretrained(BASE_MODEL)
 
-    # ── Apply LoRA (efficient fine-tuning) ──
-    print("Applying LoRA configuration...")
-    lora_config = LoraConfig(
-        task_type=TaskType.SEQ_2_SEQ_LM,
-        r=16,                          # LoRA rank
-        lora_alpha=32,                 # scaling factor
-        lora_dropout=0.1,
-        target_modules=["q", "v"],     # attention layers
-        bias="none",
-    )
-    model = get_peft_model(model, lora_config)
-    model.print_trainable_parameters()
+    # ── Apply LoRA (or fallback to direct fine-tuning) ──
+    try:
+        print("Applying LoRA configuration...")
+        lora_config = LoraConfig(
+            task_type=TaskType.SEQ_2_SEQ_LM,
+            r=16,                          # LoRA rank
+            lora_alpha=32,                 # scaling factor
+            lora_dropout=0.1,
+            target_modules=["q", "v"],     # attention layers
+            bias="none",
+        )
+        model = get_peft_model(model, lora_config)
+        model.print_trainable_parameters()
+    except Exception as e:
+        print(f"PEFT/LoRA skipped ({e}). Training FLAN-T5 directly...")
 
     # ── Prepare data ──
     raw_data = load_and_prepare_data()

@@ -328,57 +328,38 @@ MULTI_DOMAIN_KNOWLEDGE = [
 def prepare_question_generation_dataset():
     """Generates balanced resume-context -> interview-question pairs across 12 domains."""
     print("=" * 60)
-    print("  Preparing Question Generation Dataset (Multi-Domain Hybrid)")
+    print("  Preparing Question Generation Dataset (Real Kaggle + Open Source)")
     print("=" * 60)
 
-    samples = []
+    # Check for real Kaggle datasets in project root
+    base_dir = Path(__file__).resolve().parent.parent
+    mock_file = base_dir / "Mock_interview_questions.json"
+    hr_file = base_dir / "hr_interview_questions_dataset.json"
 
-    # Question template generators
-    generic_question_templates = [
-        "Could you walk me through your hands-on methodology for {topic}?",
-        "How do you ensure strict quality, safety, and compliance standards when managing {topic}?",
-        "Tell me about a challenging real-world project or case where you utilized {topic}.",
-        "What key performance metrics and indicators do you track when evaluating {topic}?",
-        "How do you handle unexpected setbacks, critical risks, or edge cases in {topic}?",
-        "Describe how you collaborate across multidisciplinary teams to execute {topic}.",
-    ]
+    if mock_file.exists() or hr_file.exists():
+        print("  Found real Kaggle dataset files! Using real Kaggle questions (Zero hardcoding)...")
+        from prepare_kaggle_datasets import qg_samples
+        samples = list(qg_samples)
+        print(f"  Loaded {len(samples)} real Kaggle question samples.")
+    else:
+        samples = []
 
-    for domain_info in MULTI_DOMAIN_KNOWLEDGE:
-        domain_name = domain_info["domain"]
-        roles = domain_info["roles"]
-        degrees = domain_info["degrees"]
-        bundles = domain_info["skill_bundles"]
-        qa_pairs = domain_info["qa_pairs"]
+    if not samples:
+        # Fallback to multi-domain knowledge only if no Kaggle datasets present
+        for domain_info in MULTI_DOMAIN_KNOWLEDGE:
+            domain_name = domain_info["domain"]
+            roles = domain_info["roles"]
+            qa_pairs = domain_info["qa_pairs"]
 
-        # 1. Core QA pairs
-        for qa in qa_pairs:
-            for role in roles:
-                context = f"Target Role: {role} | Domain: {domain_name} | Key Competency: {qa['topic']}"
-                samples.append({
-                    "context": context,
-                    "question": qa["question"],
-                    "category": domain_name,
-                    "source": "curated_domain"
-                })
-
-        # 2. Permutation augmentation
-        for _ in range(120):
-            role = random.choice(roles)
-            deg = random.choice(degrees)
-            bundle = random.choice(bundles)
-            years = random.randint(1, 10)
-            primary_skill = random.choice(bundle)
-            template = random.choice(generic_question_templates)
-
-            q_text = template.format(topic=primary_skill)
-            context = f"Candidate: {role} ({deg}) | Experience: {years}+ years | Core Skills: {', '.join(bundle)}"
-
-            samples.append({
-                "context": context,
-                "question": q_text,
-                "category": domain_name,
-                "source": "augmented_multidomain"
-            })
+            for qa in qa_pairs:
+                for role in roles:
+                    context = f"Target Role: {role} | Domain: {domain_name} | Key Competency: {qa['topic']}"
+                    samples.append({
+                        "context": context,
+                        "question": qa["question"],
+                        "category": domain_name,
+                        "source": "curated_domain"
+                    })
 
     # Optional: HuggingFace SQuAD or open datasets
     try:
@@ -412,18 +393,28 @@ def prepare_question_generation_dataset():
 # 2. Answer Evaluation Dataset (3,000+ Tri-Tier Scored Samples)
 # ──────────────────────────────────────────────
 def prepare_answer_evaluation_dataset():
-    """Generates Tri-Tier (Good/Medium/Poor) answer evaluations with realistic STAR scoring."""
+    """Generates Tri-Tier answer evaluations from real Kaggle datasets."""
     print("=" * 60)
-    print("  Preparing Answer Evaluation Dataset (Multi-Domain Hybrid)")
+    print("  Preparing Answer Evaluation Dataset (Real Kaggle Datasets)")
     print("=" * 60)
 
-    samples = []
+    base_dir = Path(__file__).resolve().parent.parent
+    mock_file = base_dir / "Mock_interview_questions.json"
+    hr_file = base_dir / "hr_interview_questions_dataset.json"
 
-    for domain_info in MULTI_DOMAIN_KNOWLEDGE:
-        domain_name = domain_info["domain"]
-        roles = domain_info["roles"]
-        bundles = domain_info["skill_bundles"]
-        qa_pairs = domain_info["qa_pairs"]
+    if mock_file.exists() or hr_file.exists():
+        print("  Found real Kaggle dataset files! Using real Kaggle answers (Zero hardcoding)...")
+        from prepare_kaggle_datasets import ae_samples
+        samples = list(ae_samples)
+        print(f"  Loaded {len(samples)} real Kaggle answer evaluation samples.")
+    else:
+        samples = []
+
+    if not samples:
+        for domain_info in MULTI_DOMAIN_KNOWLEDGE:
+            domain_name = domain_info["domain"]
+            roles = domain_info["roles"]
+            qa_pairs = domain_info["qa_pairs"]
 
         # 1. Curated QA pairs with all 3 tiers
         for qa in qa_pairs:

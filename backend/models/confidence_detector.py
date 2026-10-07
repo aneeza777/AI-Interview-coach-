@@ -47,18 +47,23 @@ def _load_confidence_net():
         class ConfidenceNet(nn.Module):
             def __init__(self, input_dim=5, hidden_dim=64, num_classes=3):
                 super().__init__()
-                self.network = nn.Sequential(
+                self.net = nn.Sequential(
                     nn.Linear(input_dim, hidden_dim), nn.ReLU(), nn.Dropout(0.2),
                     nn.Linear(hidden_dim, hidden_dim), nn.ReLU(), nn.Dropout(0.2),
                     nn.Linear(hidden_dim, 32), nn.ReLU(),
                     nn.Linear(32, num_classes),
                 )
             def forward(self, x):
-                return self.network(x)
+                return self.net(x)
 
         checkpoint = torch.load(str(model_file), map_location="cpu", weights_only=False)
+        state_dict = checkpoint["model_state_dict"]
+        # Normalize state dict keys (support both self.net and self.network)
+        if any(k.startswith("network.") for k in state_dict.keys()):
+            state_dict = {k.replace("network.", "net."): v for k, v in state_dict.items()}
+        
         _confidence_net = ConfidenceNet(input_dim=5)
-        _confidence_net.load_state_dict(checkpoint["model_state_dict"])
+        _confidence_net.load_state_dict(state_dict)
         _confidence_net.eval()
 
         with open(scaler_file, "r") as f:

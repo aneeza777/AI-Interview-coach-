@@ -5,39 +5,59 @@ tags:
 - feature-extraction
 - dense
 - generated_from_trainer
-- dataset_size:27
+- dataset_size:21250
 - loss:CosineSimilarityLoss
 base_model: sentence-transformers/all-MiniLM-L6-v2
 widget:
-- source_sentence: What is your experience with AWS? aws experience project build
-    advanced
+- source_sentence: How does this role fit into your career path? next step future
   sentences:
-  - I know machine learning a bit. I've used it sometimes.
-  - I know AWS a bit. I've used it sometimes.
-  - I know database design a bit. I've used it sometimes.
-- source_sentence: Explain your experience with Python. experience education skills
+  - I'm always eager to learn and embrace change as a way to improve. For example,
+    I once had to switch to a new tech stack and picked it up quickly. How do you
+    stay updated with industry trends?
+  - I'm always eager to learn and embrace change as a way to improve. For example,
+    I once had to switch to a new tech stack and picked it up quickly. Tell me about
+    a time you had to learn something completely new quickly.
+  - My long-term goal is to grow into a senior role where I can contribute more strategically
+    and mentor others. This role brings me closer to that. How does this role fit
+    into your career path?
+- source_sentence: How do you organize and prioritize your daily tasks? tool method
   sentences:
-  - Yeah, I've used Python. It's a programming language. I wrote some code with it.
-  - Um, I don't know, I just like computers I guess.
-  - It's like when computers learn stuff. I think it uses data or something.
-- source_sentence: Tell me about yourself. experience education skills passion career
+  - I follow a structured workflow and use tools like Jira/Trello/Notion to manage
+    my tasks efficiently. What tools or methods help you stay organized?
+  - I'm motivated by challenges and the opportunity to grow both personally and professionally.
+    What motivates you to come to work every day?
+  - I follow a structured workflow and use tools like Jira/Trello/Notion to manage
+    my tasks efficiently. How do you organize and prioritize your daily tasks?
+- source_sentence: Describe your ideal workday. tool method
   sentences:
-  - It's like when computers learn stuff. I think it uses data or something.
-  - Um, I don't know, I just like computers I guess.
-  - I know database design a bit. I've used it sometimes.
-- source_sentence: What is your experience with database design? docker experience
-    project
+  - My long-term goal is to grow into a senior role where I can contribute more strategically
+    and mentor others. This role brings me closer to that. Where do you see yourself
+    in 5 years?
+  - I'm always eager to learn and embrace change as a way to improve. For example,
+    I once had to switch to a new tech stack and picked it up quickly. Describe a
+    time you failed and what you learned from it.
+  - I follow a structured workflow and use tools like Jira/Trello/Notion to manage
+    my tasks efficiently. Describe your ideal workday.
+- source_sentence: Why do you want to work at our company? goal drive
   sentences:
-  - I know machine learning a bit. I've used it sometimes.
-  - I know agile methodology a bit. I've used it sometimes.
-  - I know Docker a bit. I've used it sometimes.
-- source_sentence: What is your experience with Docker? docker experience project
-    build advanced
+  - I'm motivated by challenges and the opportunity to grow both personally and professionally.
+    Why do you want to work at our company?
+  - My long-term goal is to grow into a senior role where I can contribute more strategically
+    and mentor others. This role brings me closer to that. What kind of growth opportunities
+    are you looking for?
+  - I believe communication and mutual respect are key to successful collaboration.
+    In one project, we achieved X because of great teamwork. How do you build trust
+    with new teammates?
+- source_sentence: Describe a project where teamwork was essential to success. collaboration
+    cooperate
   sentences:
-  - Uh, I can't really think of one right now. Maybe there was something but I don't
-    remember.
-  - Yeah, I've used Python. It's a programming language. I wrote some code with it.
-  - I know Docker a bit. I've used it sometimes.
+  - I'm motivated by challenges and the opportunity to grow both personally and professionally.
+    Why do you want to work at our company?
+  - I'm motivated by challenges and the opportunity to grow both personally and professionally.
+    How do you stay motivated during repetitive tasks?
+  - I believe communication and mutual respect are key to successful collaboration.
+    In one project, we achieved X because of great teamwork. Describe a project where
+    teamwork was essential to success.
 pipeline_tag: sentence-similarity
 library_name: sentence-transformers
 metrics:
@@ -54,16 +74,16 @@ model-index:
       type: interview-val
     metrics:
     - type: pearson_cosine
-      value: 0.6408957839130808
+      value: 0.6978723611969696
       name: Pearson Cosine
     - type: spearman_cosine
-      value: 0.8944271909999159
+      value: 0.5242777266097143
       name: Spearman Cosine
 ---
 
 # SentenceTransformer based on sentence-transformers/all-MiniLM-L6-v2
 
-This is a [sentence-transformers](https://www.SBERT.net) model finetuned from [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2). It maps inputs to a 384-dimensional dense vector space and can be used for semantic textual similarity, semantic search, paraphrase mining, classification, clustering, and more.
+This is a [sentence-transformers](https://www.SBERT.net) model finetuned from [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2). It maps sentences & paragraphs to a 384-dimensional dense vector space and can be used for semantic textual similarity, semantic search, paraphrase mining, classification, clustering, and more.
 
 ## Model Details
 
@@ -90,7 +110,7 @@ This is a [sentence-transformers](https://www.SBERT.net) model finetuned from [s
 SentenceTransformer(
   (0): Transformer({'transformer_task': 'feature-extraction', 'modality_config': {'text': {'method': 'forward', 'method_output_name': 'last_hidden_state'}}, 'module_output_name': 'token_embeddings', 'architecture': 'BertModel'})
   (1): Pooling({'embedding_dimension': 384, 'pooling_mode': 'mean', 'include_prompt': True})
-  (2): Normalize({'module_input_name': 'sentence_embedding', 'module_output_name': 'sentence_embedding'})
+  (2): Normalize({})
 )
 ```
 
@@ -111,9 +131,9 @@ from sentence_transformers import SentenceTransformer
 model = SentenceTransformer("sentence_transformers_model_id")
 # Run inference
 sentences = [
-    'What is your experience with Docker? docker experience project build advanced',
-    "I know Docker a bit. I've used it sometimes.",
-    "Yeah, I've used Python. It's a programming language. I wrote some code with it.",
+    'Describe a project where teamwork was essential to success. collaboration cooperate',
+    'I believe communication and mutual respect are key to successful collaboration. In one project, we achieved X because of great teamwork. Describe a project where teamwork was essential to success.',
+    "I'm motivated by challenges and the opportunity to grow both personally and professionally. Why do you want to work at our company?",
 ]
 embeddings = model.encode(sentences)
 print(embeddings.shape)
@@ -122,9 +142,9 @@ print(embeddings.shape)
 # Get the similarity scores for the embeddings
 similarities = model.similarity(embeddings, embeddings)
 print(similarities)
-# tensor([[1.0000, 0.5194, 0.0226],
-#         [0.5194, 1.0000, 0.3525],
-#         [0.0226, 0.3525, 1.0000]])
+# tensor([[1.0000, 0.9260, 0.7030],
+#         [0.9260, 1.0000, 0.7549],
+#         [0.7030, 0.7549, 1.0000]])
 ```
 <!--
 ### Direct Usage (Transformers)
@@ -161,8 +181,8 @@ You can finetune this model on your own dataset.
 
 | Metric              | Value      |
 |:--------------------|:-----------|
-| pearson_cosine      | 0.6409     |
-| **spearman_cosine** | **0.8944** |
+| pearson_cosine      | 0.6979     |
+| **spearman_cosine** | **0.5243** |
 
 <!--
 ## Bias, Risks and Limitations
@@ -182,20 +202,20 @@ You can finetune this model on your own dataset.
 
 #### Unnamed Dataset
 
-* Size: 27 training samples
+* Size: 21,250 training samples
 * Columns: <code>sentence_0</code>, <code>sentence_1</code>, and <code>label</code>
-* Approximate statistics based on the first 27 samples:
-  |          | sentence_0                                                                         | sentence_1                                                                         | label                                                           |
-  |:---------|:-----------------------------------------------------------------------------------|:-----------------------------------------------------------------------------------|:----------------------------------------------------------------|
-  | type     | string                                                                             | string                                                                             | float                                                           |
-  | modality | text                                                                               | text                                                                               |                                                                 |
-  | details  | <ul><li>min: 11 tokens</li><li>mean: 14.59 tokens</li><li>max: 20 tokens</li></ul> | <ul><li>min: 16 tokens</li><li>mean: 36.56 tokens</li><li>max: 95 tokens</li></ul> | <ul><li>min: 0.1</li><li>mean: 0.44</li><li>max: 0.98</li></ul> |
+* Approximate statistics based on the first 100 samples:
+  |          | sentence_0                                                                          | sentence_1                                                                          | label                                                           |
+  |:---------|:------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------|:----------------------------------------------------------------|
+  | type     | string                                                                              | string                                                                              | float                                                           |
+  | modality | text                                                                                | text                                                                                |                                                                 |
+  | details  | <ul><li>min: 10 tokens</li><li>mean: 23.68 tokens</li><li>max: 109 tokens</li></ul> | <ul><li>min: 25 tokens</li><li>mean: 73.41 tokens</li><li>max: 229 tokens</li></ul> | <ul><li>min: 0.9</li><li>mean: 0.92</li><li>max: 0.96</li></ul> |
 * Samples:
-  | sentence_0                                                                              | sentence_1                                                                                                                                                                                                                                                                                                                                                                                              | label                           |
-  |:----------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------|
-  | <code>Describe a challenging project. challenge problem solution result approach</code> | <code>Last year, I led the migration of our monolithic application to microservices. The biggest challenge was maintaining data consistency across services. I implemented an event-driven architecture using RabbitMQ, created a comprehensive testing strategy, and we migrated incrementally over 3 months. The result was a 60% improvement in deployment speed and much better scalability.</code> | <code>0.9800000000000001</code> |
-  | <code>What is machine learning? supervised unsupervised algorithm data train</code>     | <code>It's like when computers learn stuff. I think it uses data or something.</code>                                                                                                                                                                                                                                                                                                                   | <code>0.12</code>               |
-  | <code>What is your experience with AWS? aws experience project build advanced</code>    | <code>I have 2 years of experience with AWS. In my most recent project, I used AWS to build a scalable solution that handled thousands of users. I'm comfortable with both the fundamentals and advanced concepts like Lambda, auto-scaling, CloudFormation.</code>                                                                                                                                     | <code>0.8333892763875008</code> |
+  | sentence_0                                                                                                                                                                                                                                                                         | sentence_1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | label                           |
+  |:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------|
+  | <code>Tell me about a time you had to learn something completely new quickly. adjust learn</code>                                                                                                                                                                                  | <code>I'm always eager to learn and embrace change as a way to improve. For example, I once had to switch to a new tech stack and picked it up quickly. Tell me about a time you had to learn something completely new quickly.</code>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | <code>0.9400000000000001</code> |
+  | <code>How do you organize and prioritize your daily tasks? process daily routine</code>                                                                                                                                                                                            | <code>I follow a structured workflow and use tools like Jira/Trello/Notion to manage my tasks efficiently. How do you organize and prioritize your daily tasks?</code>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | <code>0.9400000000000001</code> |
+  | <code>What is the primary mechanism by which cloud computing services achieve scalability, and how do the trade-offs between auto-scaling, load balancing, and queuing mechanisms impact the overall system resilience and performance? computer science devops methodology</code> | <code>Cloud computing services achieve scalability primarily through the use of virtualization and automation. Virtualization allows for the creation of virtual resources, such as servers, storage, and networks, which can be easily scaled up or down as needed. Automation, on the other hand, enables the dynamic allocation of these virtual resources in response to changes in demand, allowing for efficient and flexible scaling.<br><br>Auto-scaling, load balancing, and queuing mechanisms are three key techniques used to manage and optimize the scaling of cloud-based systems. Each of these mechanisms has its own trade-offs in terms of system resilience and performance:<br><br>1. Auto-scaling: This mechanism automatically adjusts the number of active instances (e.g., virtual machines) based on the current workload. Auto-scaling can help improve system resilience by automatically adding capacity to handle spikes in demand, but it can also introduce additional complexity and overhead, as instances need</code> | <code>0.96</code>               |
 * Loss: [<code>CosineSimilarityLoss</code>](https://sbert.net/docs/package_reference/sentence_transformer/losses.html#cosinesimilarityloss) with these parameters:
   ```json
   {
@@ -208,7 +228,6 @@ You can finetune this model on your own dataset.
 #### Non-Default Hyperparameters
 
 - `per_device_train_batch_size`: 16
-- `num_train_epochs`: 10
 - `per_device_eval_batch_size`: 16
 - `multi_dataset_batch_sampler`: round_robin
 
@@ -216,7 +235,7 @@ You can finetune this model on your own dataset.
 <details><summary>Click to expand</summary>
 
 - `per_device_train_batch_size`: 16
-- `num_train_epochs`: 10
+- `num_train_epochs`: 3
 - `max_steps`: -1
 - `learning_rate`: 5e-05
 - `lr_scheduler_type`: linear
@@ -320,23 +339,31 @@ You can finetune this model on your own dataset.
 </details>
 
 ### Training Logs
-| Epoch | Step | interview-val_spearman_cosine |
-|:-----:|:----:|:-----------------------------:|
-| 0.5   | 1    | 0.8944                        |
+| Epoch  | Step | Training Loss | interview-val_spearman_cosine |
+|:------:|:----:|:-------------:|:-----------------------------:|
+| 0.1994 | 265  | -             | 0.1783                        |
+| 0.3762 | 500  | 0.0033        | -                             |
+| 0.3988 | 530  | -             | 0.4602                        |
+| 0.5982 | 795  | -             | 0.4907                        |
+| 0.7524 | 1000 | 0.0004        | -                             |
+| 0.7976 | 1060 | -             | 0.5043                        |
+| 0.9970 | 1325 | -             | 0.5031                        |
+| 1.0    | 1329 | -             | 0.5037                        |
+| 1.1287 | 1500 | 0.0004        | -                             |
+| 1.1964 | 1590 | -             | 0.5172                        |
+| 1.3958 | 1855 | -             | 0.5243                        |
 
 
 ### Training Time
-- **Training**: 1.8 seconds
-- **Evaluation**: 0.1 seconds
-- **Total**: 1.9 seconds
+- **Training**: 4.8 minutes
 
 ### Framework Versions
-- Python: 3.11.5
-- Sentence Transformers: 6.0.1
-- Transformers: 5.16.1
-- PyTorch: 2.13.0+cpu
-- Accelerate: 1.14.0
-- Datasets: 5.0.1
+- Python: 3.13.15
+- Sentence Transformers: 5.7.0
+- Transformers: 5.18.0
+- PyTorch: 2.11.0+cu130
+- Accelerate: 1.15.0
+- Datasets: 4.8.5
 - Tokenizers: 0.23.2
 
 ## Additional Resources

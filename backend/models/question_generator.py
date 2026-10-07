@@ -35,12 +35,15 @@ def _load_trained_model():
 
     try:
         from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-        from peft import PeftModel
-
         print("[Question Generator] Loading fine-tuned model...")
-        base_model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-small")
-        _qg_model = PeftModel.from_pretrained(base_model, str(_TRAINED_MODEL_PATH))
         _qg_tokenizer = AutoTokenizer.from_pretrained(str(_TRAINED_MODEL_PATH))
+        if (_TRAINED_MODEL_PATH / "adapter_config.json").exists():
+            from peft import PeftModel
+            base_model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-small")
+            _qg_model = PeftModel.from_pretrained(base_model, str(_TRAINED_MODEL_PATH))
+        else:
+            _qg_model = AutoModelForSeq2SeqLM.from_pretrained(str(_TRAINED_MODEL_PATH))
+
         _qg_model.eval()
         print("[Question Generator] Fine-tuned model loaded successfully.")
         return True

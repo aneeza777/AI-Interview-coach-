@@ -553,14 +553,14 @@
 
           <div class="setup-form-grid">
             <div class="form-group">
-              <label for="setup-job-title">Target Job Title</label>
-              <input type="text" id="setup-job-title" placeholder="Any field: Nurse, Financial Analyst, Lawyer, Marketing Manager..." value="">
+              <label for="setup-job-title">Target Job Title / Field <span style="color: var(--accent-rose); font-weight: 700;">* Required</span></label>
+              <input type="text" id="setup-job-title" placeholder="Required: e.g. Full Stack AI Developer, Teacher, Nurse, Marketing Manager..." required>
             </div>
 
             <div class="form-group">
-              <label for="setup-resume-select">Select Parsed Resume (Optional)</label>
+              <label for="setup-resume-select">Select Candidate Resume / CV <span style="color: var(--accent-mint); font-size: 0.8rem;">(Recommended)</span></label>
               <select id="setup-resume-select">
-                <option value="">-- No Resume (Generic Questions) --</option>
+                <option value="">-- Auto-Tailor from Uploaded CV --</option>
               </select>
             </div>
 

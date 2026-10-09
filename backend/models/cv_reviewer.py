@@ -27,8 +27,8 @@ SECTION_KEYWORDS = {
     "experience": ["experience", "work experience", "employment", "internship", "professional experience"],
     "education": ["education", "degree", "university", "college", "institute", "bachelor", "master"],
     "skills": ["skills", "technical skills", "competencies", "technologies"],
-    "projects": ["projects", "personal projects", "academic projects"],
-    "certifications": ["certifications", "certificates", "awards"],
+    "projects": ["projects", "personal projects", "academic projects", "course project", "semester project"],
+    "certifications": ["certification", "certifications", "certificate", "certificates", "achievement", "achievements", "awards", "award", "competitions", "competition", "licenses", "license", "accreditations", "courses"],
 }
 
 # Action verbs recruiters love

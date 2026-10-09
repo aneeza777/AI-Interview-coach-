@@ -149,9 +149,12 @@ async function handleRegister(e) {
 }
 
 async function loginAsJudgeOrDemo() {
+  const defaultName = (state.user && state.user.full_name && state.user.full_name !== 'Candidate' && state.user.full_name !== 'Hackathon Evaluator') ? state.user.full_name : 'Aneeza';
+  const candidateName = prompt('Please enter your Candidate Name for your interview scorecard & certificate:', defaultName) || defaultName;
+
   const email = 'judge@hackathon.ai';
   const password = 'Password123!';
-  showToast('Connecting as Hackathon Judge / Demo...');
+  showToast(`Setting up profile for ${candidateName}...`);
   try {
     let res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
@@ -164,24 +167,25 @@ async function loginAsJudgeOrDemo() {
       res = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ full_name: 'Hackathon Evaluator', email, password })
+        body: JSON.stringify({ full_name: candidateName, email, password })
       });
       data = await res.json();
     }
     if (!res.ok) throw new Error(formatAPIError(data) || 'Sign in failed');
     state.token = data.access_token;
     localStorage.setItem('token', state.token);
-    state.user = data.user;
+    state.user = data.user || { id: 1, full_name: candidateName, email };
+    state.user.full_name = candidateName;
     updateUserUI();
-    showToast('Welcome, Hackathon Evaluator!', 'success');
+    showToast(`Welcome, ${candidateName}!`, 'success');
     navigateTo('dashboard');
   } catch (err) {
     // Standalone / Vercel fallback
-    state.token = 'standalone-judge-token';
+    state.token = 'standalone-judge-token-' + Date.now();
     localStorage.setItem('token', state.token);
-    state.user = { id: 1, full_name: 'Hackathon Evaluator', email };
+    state.user = { id: 1, full_name: candidateName, email: 'candidate@ai.coach' };
     updateUserUI();
-    showToast('Welcome, Hackathon Evaluator! (Interactive Demo Mode)', 'success');
+    showToast(`Welcome, ${candidateName}!`, 'success');
     navigateTo('dashboard');
   }
 }
@@ -335,11 +339,37 @@ async function uploadAndAnalyzeCV() {
     formData.append('resume', state.selectedCVFile);
     formData.append('job_title', document.getElementById('cv-job-title').value.trim() || 'General Professional');
 
-    const res = await fetch(`${API_BASE}/resumes/upload`, {
+    let res = await fetch(`${API_BASE}/resumes/upload`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${state.token}` },
       body: formData
     });
+
+    if (res.status === 401) {
+      try {
+        const loginRes = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'demo@candidate.ai', password: 'DemoPassword123!' })
+        });
+        if (loginRes.ok) {
+          const loginData = await loginRes.json();
+          state.token = loginData.access_token;
+          localStorage.setItem('token', state.token);
+          state.user = loginData.user;
+          updateUserUI();
+
+          const retryFormData = new FormData();
+          retryFormData.append('resume', state.selectedCVFile);
+          retryFormData.append('job_title', document.getElementById('cv-job-title').value.trim() || 'General Professional');
+          res = await fetch(`${API_BASE}/resumes/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${state.token}` },
+            body: retryFormData
+          });
+        }
+      } catch (e) {}
+    }
 
     const data = await res.json();
     if (!res.ok) throw new Error(formatAPIError(data) || 'Upload failed');
@@ -363,57 +393,7 @@ async function uploadAndAnalyzeCV() {
     loadCVReviewScreen();
     document.getElementById('cv-audit-results')?.scrollIntoView({ behavior: 'smooth' });
   } catch (err) {
-    console.warn('Backend CV upload notice, using intelligent local resume review:', err);
-    const fname = state.selectedCVFile?.name || 'Uploaded_Resume.pdf';
-    const role = document.getElementById('cv-job-title')?.value.trim() || 'General Professional';
-    const fallbackData = {
-      id: Date.now(),
-      filename: fname,
-      job_title: role,
-      target_role: role,
-      score: 78,
-      grade: 'B+',
-      grade_label: 'Competent',
-      word_count: 420,
-      sections_found: {
-        contact: true,
-        summary: true,
-        experience: true,
-        education: true,
-        skills: true,
-        projects: true,
-        certifications: false
-      },
-      parsed_data: {
-        name: state.user?.full_name || 'Candidate',
-        experience_years: 3,
-        education: ['Bachelor of Science'],
-        skills: ['Communication', 'Project Management', 'Problem Solving', 'Strategic Planning']
-      },
-      issues: [
-        {
-          type: 'ATS',
-          severity: 'high',
-          message: 'Quantifiable metrics are missing in some job descriptions.',
-          suggestion: 'Add percentage increases, dollar amounts saved, or team sizes led to showcase measurable business impact.'
-        },
-        {
-          type: 'Formatting',
-          severity: 'medium',
-          message: 'Certifications section is absent or not recognized.',
-          suggestion: 'Consider adding a dedicated Certifications or Continuous Learning section.'
-        }
-      ],
-      strengths: [
-        'Clear chronological career progression',
-        'Strong foundational competencies identified',
-        'Concise bullet point structure'
-      ]
-    };
-    state.activeResumeId = fallbackData.id;
-    showToast('Resume analyzed successfully!', 'success');
-    renderCVReviewScreen(fallbackData);
-    document.getElementById('cv-audit-results')?.scrollIntoView({ behavior: 'smooth' });
+    showToast('CV Analysis error: ' + err.message, 'error');
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<span>⚡ Analyze Resume & Run Job Matcher</span>';
@@ -733,10 +713,33 @@ function setSetupMode(mode) {
 }
 
 async function startInterviewSession() {
-  const jobTitle = document.getElementById('setup-job-title').value.trim() || 'General Professional';
-  const resumeId = document.getElementById('setup-resume-select').value || null;
+  const jobTitleInput = document.getElementById('setup-job-title');
+  const jobTitle = (jobTitleInput ? jobTitleInput.value : '').trim();
+  const resumeSelect = document.getElementById('setup-resume-select');
+  const resumeId = resumeSelect ? resumeSelect.value : null;
   const questionCount = parseInt(document.getElementById('setup-question-count').value, 10) || 5;
   const difficulty = document.getElementById('setup-difficulty').value || 'Mid-Level';
+
+  // 1. Mandatory Target Field / Role validation
+  if (!jobTitle || jobTitle.length < 2) {
+    showToast('Target Job Title / Field is required! Please enter your job role (e.g. Full Stack AI Developer, Teacher, Nurse, Marketing).', 'warning');
+    if (jobTitleInput) {
+      jobTitleInput.focus();
+      jobTitleInput.style.borderColor = 'var(--accent-rose)';
+    }
+    return;
+  }
+  if (jobTitleInput) jobTitleInput.style.borderColor = '';
+
+  // 2. CV check & guidance
+  if (!resumeId && (!state.activeResumeId || state.activeResumeId === null)) {
+    const wantsUpload = confirm(`You have not linked a parsed CV yet for this interview.\n\nUploading your CV tailors the questions directly to your specific technical projects and past experience.\n\nClick 'OK' to upload your CV now in Resume Matcher, or 'Cancel' to proceed with general questions for ${jobTitle}.`);
+    if (wantsUpload) {
+      navigateTo('cv-review');
+      showToast('Please upload your CV here, then return to begin your customized interview.', 'info');
+      return;
+    }
+  }
 
   const btn = document.getElementById('btn-start-session');
   btn.disabled = true;
@@ -765,7 +768,7 @@ async function startInterviewSession() {
 
     const payload = {
       job_title: jobTitle,
-      resume_id: resumeId ? parseInt(resumeId, 10) : null,
+      resume_id: resumeId ? parseInt(resumeId, 10) : (state.activeResumeId || null),
       question_count: questionCount,
       difficulty: difficulty,
       mode: state.currentInterviewMode
@@ -1319,33 +1322,59 @@ async function submitCurrentAnswer() {
     showToast(`Answer recorded! Score: ${scoreVal}/100`, 'success');
     advanceToNextQuestion();
   } catch (err) {
-    // Standalone fallback: evaluate locally
+    // Calibrated standalone evaluation fallback
     if (state.activeInterview) {
       const manualInput = document.getElementById('manual-answer-input');
       const manualText = (manualInput ? manualInput.value : '').trim();
       const transcriptEl = document.getElementById('transcript-content');
       const speechText = (transcriptEl ? transcriptEl.textContent : '').trim();
-      const answerText = manualText || speechText || 'I explained my implementation and methodology.';
+      const answerText = manualText || speechText || '';
       const q = state.activeInterview.questions[state.currentQuestionIndex] || {};
-      const keywords = q.expected_keywords || ['experience', 'skills'];
+      const keywords = q.expected_keywords || ['experience', 'skills', 'tools'];
       const matched = keywords.filter(k => answerText.toLowerCase().includes(k.toLowerCase()));
-      const wordCount = answerText.split(/\s+/).length;
-      const contentScore = Math.min(95, Math.max(50, Math.round((matched.length / Math.max(1, keywords.length)) * 50 + Math.min(45, wordCount * 1.5))));
-      const confScore = manualText ? 80 : 85;
-      const combinedScore = Math.round(contentScore * 0.6 + confScore * 0.4);
+      const words = answerText.split(/\s+/).filter(Boolean);
+      const wordCount = words.length;
+
+      let contentScore = 0;
+      let confScore = 20;
+      let feedback = '';
+
+      if (wordCount < 4) {
+        // Very short answers like "hello", "Organisation", "yes", "no"
+        contentScore = Math.min(10, wordCount * 2);
+        confScore = 15;
+        feedback = `Answer is too brief (${wordCount} word${wordCount === 1 ? '' : 's'}) to demonstrate technical competence. In a real interview, provide a detailed, structured response (STAR method).`;
+      } else if (wordCount < 15) {
+        const kwRatio = matched.length / Math.max(1, keywords.length);
+        contentScore = Math.round(15 + kwRatio * 20);
+        confScore = 30;
+        feedback = `Answer is too brief (${wordCount} words) and lacks specific technical details or examples.`;
+      } else if (matched.length === 0) {
+        contentScore = Math.min(25, Math.round(wordCount * 0.6));
+        confScore = 35;
+        feedback = `Off-topic or missing expected technical concepts. Expected topics: ${keywords.slice(0, 4).join(', ')}.`;
+      } else {
+        const kwScore = (matched.length / Math.max(1, keywords.length)) * 50;
+        const depthScore = Math.min(40, wordCount * 0.6);
+        contentScore = Math.min(95, Math.round(kwScore + depthScore));
+        confScore = Math.min(90, Math.round(60 + matched.length * 10));
+        feedback = `Good coverage of key concepts (${matched.join(', ')}). Well-structured explanation.`;
+      }
+
+      const combinedScore = Math.round(contentScore * 0.7 + confScore * 0.3);
 
       if (!state.activeInterview.answers) state.activeInterview.answers = [];
       state.activeInterview.answers.push({
         question_number: state.currentQuestionIndex + 1,
         question: q.question || `Question ${state.currentQuestionIndex + 1}`,
-        transcription: answerText,
+        transcription: answerText || '[No audible response recorded]',
         content_score: contentScore,
         confidence_score: confScore,
         combined_score: combinedScore,
         score: combinedScore,
-        content_feedback: matched.length > 0 ? `Good coverage of core topics: ${matched.join(', ')}.` : 'Clear response with relevant domain context.',
-        user_answer: answerText,
-        feedback: 'Good structured response.'
+        content_feedback: feedback,
+        user_answer: answerText || '[No audible response recorded]',
+        feedback: feedback
       });
 
       showToast(`Answer recorded! Score: ${combinedScore}/100`, 'success');
@@ -2058,10 +2087,30 @@ async function fetchAPI(endpoint, options = {}) {
     headers['Content-Type'] = 'application/json';
   }
 
-  const res = await fetch(`${API_BASE}${endpoint}`, {
+  let res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers
   });
+
+  if (res.status === 401) {
+    try {
+      const loginRes = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'demo@candidate.ai', password: 'DemoPassword123!' })
+      });
+      if (loginRes.ok) {
+        const loginData = await loginRes.json();
+        state.token = loginData.access_token;
+        localStorage.setItem('token', state.token);
+        headers['Authorization'] = `Bearer ${state.token}`;
+        res = await fetch(`${API_BASE}${endpoint}`, {
+          ...options,
+          headers
+        });
+      }
+    } catch (e) {}
+  }
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {

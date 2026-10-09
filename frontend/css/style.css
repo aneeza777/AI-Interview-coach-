@@ -2555,3 +2555,157 @@ textarea:focus {
   border-radius: var(--radius-md);
   padding: 1.1rem;
 }
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   COMPREHENSIVE MOBILE & TABLET RESPONSIVENESS (320px - 860px)
+   ═════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 860px) {
+  /* 1. App Shell & Main Content */
+  .app-main-content {
+    padding: 0.75rem 0.5rem !important;
+  }
+  
+  /* 2. Top Navigation Bar */
+  .main-header {
+    padding: 0.5rem 0.75rem !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+  }
+  .nav-container {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    justify-content: space-between !important;
+  }
+  .brand-logo {
+    gap: 0.5rem !important;
+  }
+  .brand-tag {
+    display: none !important;
+  }
+  .user-display-name {
+    display: none !important;
+  }
+  .nav-links {
+    order: 3 !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    flex-wrap: nowrap !important;
+    padding: 0.35rem 0.5rem !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .nav-links::-webkit-scrollbar {
+    display: none !important;
+  }
+  .nav-btn {
+    flex-shrink: 0 !important;
+    padding: 0.35rem 0.65rem !important;
+    font-size: 0.76rem !important;
+  }
+  
+  /* 3. Screen Top Bars & Headers */
+  .screen-top-bar, .dashboard-header-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.85rem !important;
+    padding: 1rem !important;
+  }
+  .screen-actions, .banner-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  .screen-actions .btn, .banner-actions .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  
+  /* 4. Dashboard Feature Cards Grid */
+  .feature-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+  }
+  .glass-card {
+    padding: 1.1rem !important;
+  }
+
+  /* 5. Active Interview Arena */
+  .interview-arena-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  .interview-question-card, .interview-proctor-card {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .interview-actions-row {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+  .interview-actions-row .btn {
+    flex: 1 1 auto !important;
+    min-width: 120px !important;
+    justify-content: center !important;
+  }
+  .camera-feed-container {
+    height: 180px !important;
+  }
+
+  /* 6. Resume Matcher & Review Screen */
+  .cv-matcher-input-grid, .cv-review-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  .cv-stats-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+  .drop-zone-cv {
+    padding: 1.5rem 1rem !important;
+  }
+
+  /* 7. Scorecard & Reports */
+  .scorecard-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  .printable-certificate {
+    padding: 1rem !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* 8. Auth Screen */
+  .auth-wrapper {
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    padding: 1rem 0.5rem !important;
+  }
+  .auth-hero {
+    text-align: center !important;
+  }
+  .hero-feature-pills {
+    justify-content: center !important;
+  }
+  .auth-card-container {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* 9. Toasts & Modals */
+  .toast-container {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: calc(100% - 2rem) !important;
+    max-width: 400px !important;
+    bottom: 1rem !important;
+  }
+  .modal-dialog {
+    width: calc(100% - 1.5rem) !important;
+    margin: 1rem auto !important;
+    padding: 1.25rem 1rem !important;
+  }
+}
+

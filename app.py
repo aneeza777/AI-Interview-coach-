@@ -32,75 +32,33 @@ _ROOT = Path(__file__).parent.resolve()
 sys.path.insert(0, str(_ROOT))
 sys.path.insert(0, str(_ROOT / "backend"))
 
+from starlette.routing import Route
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import gradio as gr
 from backend.main import app as fastapi_app, FRONTEND_DIR, init_db
 
 # 1. Initialize database tables
 init_db()
 
-# 2. Read and bundle the full custom project frontend (Image 2 UI)
-with open(FRONTEND_DIR / "index.html", "r", encoding="utf-8") as f:
-    raw_html = f.read()
-
-with open(FRONTEND_DIR / "css" / "style.css", "r", encoding="utf-8") as f:
-    css_content = f.read()
-
-with open(FRONTEND_DIR / "js" / "app.js", "r", encoding="utf-8") as f:
-    js_content = f.read()
-
-# Inline CSS & JS with base href for full API and asset resolution
-full_doc = raw_html.replace(
-    '<head>',
-    '<head>\n  <base href="/">\n'
-).replace(
-    '<link rel="stylesheet" href="/css/style.css">',
-    f'<style>\n{css_content}\n</style>'
-).replace(
-    '<script src="/js/app.js"></script>',
-    f'<script>\n{js_content}\n</script>'
-)
-
-escaped_doc = html.escape(full_doc, quote=True)
-
-# 3. Create Gradio Blocks embedding the full custom project frontend
+# 2. Gradio container setup (allows HF Spaces Gradio SDK to detect, orchestrate, and launch)
 with gr.Blocks(
     title="AI Interview Coach | Alibaba Cloud AI Hackathon 2026",
 ) as demo:
-    gr.HTML(f"""
-    <style>
-      html, body {{
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        overflow: hidden !important;
-        background: #0b0f17 !important;
-      }}
-      .gradio-container {{
-        max-width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-      }}
-      footer {{
-        display: none !important;
-      }}
-      #app-frame {{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        border: none;
-        margin: 0;
-        padding: 0;
-        z-index: 9999999;
-        background: #0b0f17;
-      }}
-    </style>
-    <iframe id="app-frame" srcdoc="{escaped_doc}" allow="microphone; camera; display-capture; autoplay"></iframe>
-    """)
+    gr.HTML("<div style='text-align:center;padding:2rem;color:#94a3b8;'>AI Interview Coach is running...</div>")
+
+# 3. Direct Root & Static Serving (Eliminates iframe completely for 100% native mobile mic access & responsive layout)
+async def custom_root_endpoint(request):
+    return FileResponse(str(FRONTEND_DIR / "index.html"))
+
+# Prioritize our custom root routes at index 0 of demo.app router
+demo.app.router.routes.insert(0, Route("/", custom_root_endpoint, methods=["GET"]))
+demo.app.router.routes.insert(0, Route("/index.html", custom_root_endpoint, methods=["GET"]))
+
+# Mount static directories directly on demo.app
+demo.app.mount("/css", StaticFiles(directory=str(FRONTEND_DIR / "css")), name="frontend_css")
+demo.app.mount("/js", StaticFiles(directory=str(FRONTEND_DIR / "js")), name="frontend_js")
+demo.app.mount("/web", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend_web")
 
 # 4. Attach all FastAPI backend endpoints (/api/auth, /api/interviews, /api/resumes, etc.)
 demo.app.include_router(fastapi_app.router)

@@ -355,9 +355,16 @@ async function loadCVReviewScreen() {
   try {
     const resumes = await fetchAPI('/resumes');
     const select = document.getElementById('cv-select-previous');
+    const resumeList = Array.isArray(resumes) ? resumes : [];
+
+    const activeExists = resumeList.some(r => r.id === state.activeResumeId);
+    if (!activeExists) {
+      state.activeResumeId = resumeList.length > 0 ? resumeList[0].id : null;
+    }
+
     if (select) {
       select.innerHTML = '<option value="">-- Upload New or Pick Previous CV --</option>' +
-        resumes.map(r => `<option value="${r.id}">${r.filename} (${r.target_role || 'General'})</option>`).join('');
+        resumeList.map(r => `<option value="${r.id}">${r.filename} (${r.target_role || 'General'})</option>`).join('');
       if (state.activeResumeId) {
         select.value = state.activeResumeId;
       }
@@ -365,10 +372,6 @@ async function loadCVReviewScreen() {
 
     if (state.activeResumeId) {
       await fetchAndRenderCVReview(state.activeResumeId);
-    } else if (resumes && resumes.length > 0) {
-      state.activeResumeId = resumes[0].id;
-      if (select) select.value = resumes[0].id;
-      await fetchAndRenderCVReview(resumes[0].id);
     }
   } catch (err) {
     console.error('Failed to load CV review screen:', err);
@@ -382,6 +385,7 @@ async function handleCVReviewResumeChange(resumeId) {
 }
 
 async function fetchAndRenderCVReview(resumeId) {
+  if (!resumeId) return;
   try {
     const data = await fetchAPI(`/resumes/${resumeId}/review`);
     const jdText = document.getElementById('cv-job-description')?.value.trim();
@@ -396,7 +400,8 @@ async function fetchAndRenderCVReview(resumeId) {
     }
     renderCVReviewScreen(data, jdMatchData);
   } catch (err) {
-    showToast(err.message, 'error');
+    console.warn('Could not load CV review:', err);
+    state.activeResumeId = null;
   }
 }
 
@@ -777,15 +782,21 @@ function renderCurrentQuestion() {
 async function loadModelAnswerForCurrentQuestion() {
   try {
     const data = await fetchAPI(`/interviews/${state.activeInterview.id}/model-answer?question_index=${state.currentQuestionIndex}`);
-    const concepts = data.key_concepts || ['STAR Framework', 'Clear Explanation', 'Problem Solving'];
+    const concepts = (data && data.key_concepts && data.key_concepts.length > 0) ? data.key_concepts : ['STAR Framework', 'Clear Explanation', 'Problem Solving'];
+    const modelAns = (data && data.model_answer) ? data.model_answer : 'Structure your response using the STAR method: describe the Situation, Task, Action taken, and measurable Result.';
     document.getElementById('model-answer-text').innerHTML = `
-      <p><strong>Recommended Model Answer:</strong> ${data.model_answer}</p>
+      <p><strong>Recommended Model Answer:</strong> ${modelAns}</p>
       <div style="margin-top: 0.6rem;">
         <strong>Key Keywords:</strong> ${concepts.map(c => `<span class="kw-pill">${c}</span>`).join(' ')}
       </div>
     `;
   } catch (err) {
-    document.getElementById('model-answer-text').textContent = 'Structure your response using the STAR method (Situation, Task, Action, Result).';
+    document.getElementById('model-answer-text').innerHTML = `
+      <p><strong>Recommended Model Answer:</strong> Focus on demonstrating your relevant experience using the STAR framework (Situation, Task, Action, Result). Highlight specific technical tools, collaboration, and measurable outcomes.</p>
+      <div style="margin-top: 0.6rem;">
+        <strong>Key Keywords:</strong> <span class="kw-pill">STAR Framework</span> <span class="kw-pill">Technical Implementation</span> <span class="kw-pill">Measurable Outcome</span>
+      </div>
+    `;
   }
 }
 
@@ -823,17 +834,44 @@ async function toggleAudioRecording() {
 
 async function startAudioRecording() {
   try {
-    state.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    state.audioStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    });
     state.audioChunks = [];
-    state.mediaRecorder = new MediaRecorder(state.audioStream);
+
+    // Robust MIME type negotiation for mobile Chrome, Safari, Android
+    let mimeType = '';
+    const preferredTypes = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/ogg;codecs=opus',
+      'audio/mp4',
+      'audio/aac',
+      'audio/wav'
+    ];
+    for (const t of preferredTypes) {
+      if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) {
+        mimeType = t;
+        break;
+      }
+    }
+
+    state.mediaRecorder = mimeType
+      ? new MediaRecorder(state.audioStream, { mimeType })
+      : new MediaRecorder(state.audioStream);
 
     setupAudioVisualizer(state.audioStream);
 
     state.mediaRecorder.ondataavailable = (e) => {
-      if (e.data.size > 0) state.audioChunks.push(e.data);
+      if (e.data && e.data.size > 0) state.audioChunks.push(e.data);
     };
 
-    state.mediaRecorder.start();
+    // Use 250ms timeslice so audio is continually buffered even if speaking briefly
+    state.mediaRecorder.start(250);
     state.isRecording = true;
 
     // UI Updates
@@ -851,14 +889,19 @@ async function startAudioRecording() {
     // Live Web Speech Recognition (Visual Preview)
     startLiveSpeechRecognitionPreview();
   } catch (err) {
-    showToast('Microphone access note: ' + err.message, 'info');
+    showToast('Microphone note: ' + err.message, 'info');
   }
 }
 
 function stopAudioRecording() {
   if (!state.isRecording || !state.mediaRecorder) return;
 
-  state.mediaRecorder.stop();
+  try {
+    if (state.mediaRecorder.state !== 'inactive') {
+      state.mediaRecorder.stop();
+    }
+  } catch (e) {}
+
   state.isRecording = false;
   clearTimeout(state.silenceTimer);
   hideSilenceToast();
@@ -869,8 +912,15 @@ function stopAudioRecording() {
   document.getElementById('rec-dot-indicator').classList.remove('recording');
   document.getElementById('rec-status-label').textContent = 'Audio Captured';
   document.getElementById('wave-visualizer').classList.remove('active');
+
+  // Always enable submit answer and re-record once user stops speaking
   document.getElementById('btn-submit-answer').disabled = false;
   document.getElementById('btn-re-record').disabled = false;
+
+  const transcriptEl = document.getElementById('transcript-content');
+  if (!transcriptEl.textContent.trim()) {
+    transcriptEl.innerHTML = '<span style="color: var(--accent-mint);">🎙️ Voice audio captured! Click <strong>Submit Answer ➔</strong> to evaluate with Whisper AI.</span>';
+  }
 }
 
 function discardAndReRecord() {
@@ -977,9 +1027,15 @@ async function submitCurrentAnswer() {
 
     // Only attach audio if the candidate spoke / recorded audio AND did not type the answer
     if (!manualText && state.audioChunks && state.audioChunks.length > 0) {
-      const audioBlob = new Blob(state.audioChunks, { type: 'audio/wav' });
-      if (audioBlob.size > 200) {
-        formData.append('audio', audioBlob, 'answer.wav');
+      const mime = (state.mediaRecorder && state.mediaRecorder.mimeType) ? state.mediaRecorder.mimeType : 'audio/webm';
+      let ext = 'webm';
+      if (mime.includes('mp4') || mime.includes('aac')) ext = 'mp4';
+      else if (mime.includes('ogg')) ext = 'ogg';
+      else if (mime.includes('wav')) ext = 'wav';
+
+      const audioBlob = new Blob(state.audioChunks, { type: mime });
+      if (audioBlob.size > 100) {
+        formData.append('audio', audioBlob, `answer.${ext}`);
       }
     }
 
@@ -999,13 +1055,17 @@ async function submitCurrentAnswer() {
       data.combined_score !== undefined && data.combined_score !== null ? data.combined_score :
       (data.content_score !== undefined && data.content_score !== null ? data.content_score : 0)
     );
+    const recordedText = data.transcription || answerText;
     if (!state.activeInterview.answers) state.activeInterview.answers = [];
     state.activeInterview.answers.push({
       question_number: state.currentQuestionIndex + 1,
       question: (state.activeInterview.questions[state.currentQuestionIndex] || {}).question,
-      transcription: answerText,
+      transcription: recordedText,
       score: scoreVal,
-      user_answer: answerText,
+      combined_score: scoreVal,
+      content_score: Math.round(data.content_score !== undefined ? data.content_score : scoreVal),
+      confidence_score: Math.round(data.confidence_score !== undefined ? data.confidence_score : scoreVal),
+      user_answer: recordedText,
       feedback: data.content_feedback || 'Completed'
     });
 

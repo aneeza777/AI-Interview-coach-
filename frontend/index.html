@@ -115,18 +115,18 @@
                 <span>Sign In to Dashboard</span> ➔
               </button>
               
-              <!-- 1-Click Judge & Demo Sign In -->
+              <!-- Guest Mode -->
               <div style="margin: 0.85rem 0 0.5rem 0; display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.75rem;">
                 <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.12);"></span>
-                <span>QUICK HACKATHON EVALUATION</span>
+                <span>OR CONTINUE WITHOUT AN ACCOUNT</span>
                 <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.12);"></span>
               </div>
-              <button type="button" class="btn btn-outline btn-block" style="border-color: var(--accent-emerald); color: var(--accent-mint); font-weight: 600; padding: 0.65rem 1rem;" onclick="loginAsJudgeOrDemo()">
-                ⚡ 1-Click Judge & Demo Sign In
+              <button type="button" class="btn btn-outline btn-block" style="border-color: var(--accent-emerald); color: var(--accent-mint); font-weight: 600; padding: 0.65rem 1rem;" onclick="enterGuestMode()">
+                ⚡ Continue in Guest Mode
               </button>
 
               <div class="auth-footer-note" style="margin-top: 0.75rem;">
-                <span>Click above for instant demo access, or create an account with any email.</span>
+                <span>Practice instantly in Guest Mode, or register with your email.</span>
               </div>
             </form>
 
@@ -459,6 +459,14 @@
               <!-- Dynamic skills -->
             </div>
           </div>
+
+          <!-- Detected Certifications & Achievements -->
+          <div class="glass-card cv-certs-card" style="margin-top: 1.25rem;">
+            <h3>🏆 Certifications & Achievements</h3>
+            <div class="skills-tags-cloud" id="cv-certs-list">
+              <!-- Dynamic certifications -->
+            </div>
+          </div>
         </div>
 
         <!-- Right: Detected Mistakes & Actionable Improvements -->
@@ -558,9 +566,15 @@
             </div>
 
             <div class="form-group">
-              <label for="setup-resume-select">Select Candidate Resume / CV <span style="color: var(--accent-mint); font-size: 0.8rem;">(Recommended)</span></label>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                <label for="setup-resume-select" style="margin-bottom: 0;">Candidate Resume / CV <span style="color: var(--accent-rose); font-size: 0.8rem;">* Required</span></label>
+                <label for="setup-quick-cv-file" class="btn btn-sm btn-outline" style="cursor: pointer; padding: 0.2rem 0.65rem; font-size: 0.75rem; border-color: var(--accent-indigo); color: var(--accent-sky); margin-bottom: 0;">
+                  📎 Upload CV (PDF)
+                </label>
+                <input type="file" id="setup-quick-cv-file" accept=".pdf" style="display: none;" onchange="handleSetupQuickCVUpload(event)">
+              </div>
               <select id="setup-resume-select">
-                <option value="">-- Auto-Tailor from Uploaded CV --</option>
+                <option value="">-- Choose or Upload Candidate CV (PDF) --</option>
               </select>
             </div>
 

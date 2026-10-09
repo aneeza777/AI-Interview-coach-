@@ -15,7 +15,10 @@ Analyzes a resume/CV like a real recruiter and highlights issues:
 import re
 from pathlib import Path
 from typing import Dict, List, Tuple
-from models.resume_parser import extract_text_from_pdf
+try:
+    from models.resume_parser import extract_text_from_pdf, extract_certifications
+except ImportError:
+    from backend.models.resume_parser import extract_text_from_pdf, extract_certifications
 
 
 # ──────────────────────────────────────────────
@@ -481,6 +484,7 @@ def review_cv(pdf_path: str) -> Dict:
         "improvement_plan": improvement_plan,
         "summary": summary,
         "word_count": len(text.split()),
+        "certifications": extract_certifications(text),
     }
 
 
@@ -497,7 +501,10 @@ def match_job_description(resume_text: str, jd_text: str, resume_skills: List[st
             "recommendations": ["Paste a job description to see skill match analysis."],
         }
 
-    from models.resume_parser import extract_skills
+    try:
+        from models.resume_parser import extract_skills
+    except ImportError:
+        from backend.models.resume_parser import extract_skills
 
     r_skills_set = set(s.lower() for s in (resume_skills or extract_skills(resume_text)))
     jd_skills_set = set(s.lower() for s in extract_skills(jd_text))

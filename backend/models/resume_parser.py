@@ -477,6 +477,51 @@ def extract_projects(text: str) -> List[str]:
 
 
 # ──────────────────────────────────────────────
+# Certification & Achievement extraction
+# ──────────────────────────────────────────────
+def extract_certifications(text: str) -> List[str]:
+    """Extract certifications, licenses, and achievements from resume."""
+    cert_lines = []
+    lines = text.split("\n")
+    in_cert_section = False
+
+    cert_headers = [
+        "certifications", "certificates", "certification", "licenses",
+        "certifications & achievements", "achievements", "awards", "courses",
+        "honors & awards", "licenses & certifications", "accreditations", "competitions"
+    ]
+    stop_headers = [
+        "skills", "technical skills", "education", "experience",
+        "work experience", "projects", "interests", "references", "summary", "profile"
+    ]
+
+    for line in lines:
+        line_stripped = line.strip()
+        if not line_stripped:
+            continue
+        line_lower = line_stripped.lower()
+
+        if any(line_lower == h or line_lower.startswith(h + ":") or line_lower == h.upper() for h in cert_headers):
+            in_cert_section = True
+            continue
+        elif in_cert_section and any(line_lower == h or line_lower.startswith(h + ":") or line_lower == h.upper() for h in stop_headers):
+            in_cert_section = False
+
+        if in_cert_section:
+            cleaned = re.sub(r'^[•\-\*\d\.\)\s]+', '', line_stripped).strip()
+            if len(cleaned) > 3 and not cleaned.lower().startswith(("http", "www")):
+                if cleaned not in cert_lines:
+                    cert_lines.append(cleaned)
+        else:
+            if any(term in line_lower for term in ["certified", "certification", "aws certified", "microsoft certified", "google cloud certified", "licensed", "runner-up", "competition", "hackathon"]):
+                cleaned = re.sub(r'^[•\-\*\d\.\)\s]+', '', line_stripped).strip()
+                if 4 < len(cleaned) < 120 and cleaned not in cert_lines:
+                    cert_lines.append(cleaned)
+
+    return cert_lines[:8]
+
+
+# ──────────────────────────────────────────────
 # Name extraction via spaCy NER
 # ──────────────────────────────────────────────
 def _is_valid_name(text: str) -> bool:
@@ -719,6 +764,7 @@ def parse_resume_text(raw_text: str) -> Dict:
         "experience": experience,
         "education": education,
         "projects": extract_projects(raw_text),
+        "certifications": extract_certifications(raw_text),
         "inferred_role": infer_target_role(raw_text),
     }
 

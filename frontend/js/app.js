@@ -89,29 +89,23 @@ async function handleLogin(e) {
   const password = document.getElementById('login-password').value;
 
   try {
-    showToast('Signing in...');
+    showToast('Verifying credentials...');
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(formatAPIError(data) || 'Login failed');
+    if (!res.ok) throw new Error(formatAPIError(data) || 'Wrong credentials: This email is not registered.');
 
     state.token = data.access_token;
     localStorage.setItem('token', state.token);
     state.user = data.user;
     updateUserUI();
-    showToast('Welcome back!', 'success');
+    showToast(`Welcome back, ${data.user.full_name || 'Candidate'}!`, 'success');
     navigateTo('dashboard');
   } catch (err) {
-    // Standalone / Vercel fallback
-    state.token = 'standalone-token-' + Date.now();
-    localStorage.setItem('token', state.token);
-    state.user = { id: 1, full_name: email.split('@')[0] || 'Candidate', email };
-    updateUserUI();
-    showToast('Welcome, Candidate! (Interactive Demo)', 'success');
-    navigateTo('dashboard');
+    showToast(err.message || 'Wrong credentials: This email is not registered. Please create an account first or enter in Guest Mode.', 'error');
   }
 }
 
@@ -129,65 +123,54 @@ async function handleRegister(e) {
       body: JSON.stringify({ full_name: fullName, email, password })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(formatAPIError(data) || 'Registration failed');
+    if (!res.ok) throw new Error(formatAPIError(data) || 'Registration failed. Email might already be in use.');
 
     state.token = data.access_token;
     localStorage.setItem('token', state.token);
     state.user = data.user;
     updateUserUI();
-    showToast('Account created successfully!', 'success');
+    showToast(`Account created successfully! Welcome, ${fullName}!`, 'success');
     navigateTo('dashboard');
   } catch (err) {
-    // Standalone / Vercel fallback
-    state.token = 'standalone-token-' + Date.now();
-    localStorage.setItem('token', state.token);
-    state.user = { id: 1, full_name: fullName || 'Candidate', email };
-    updateUserUI();
-    showToast('Account created! (Interactive Demo)', 'success');
-    navigateTo('dashboard');
+    showToast(err.message || 'Registration failed. This email may already be in use.', 'error');
   }
 }
 
-async function loginAsJudgeOrDemo() {
-  const defaultName = (state.user && state.user.full_name && state.user.full_name !== 'Candidate' && state.user.full_name !== 'Hackathon Evaluator') ? state.user.full_name : 'Aneeza';
-  const candidateName = prompt('Please enter your Candidate Name for your interview scorecard & certificate:', defaultName) || defaultName;
+async function enterGuestMode() {
+  const currentName = (state.user && state.user.full_name && state.user.full_name !== 'Candidate' && state.user.full_name !== 'Hackathon Evaluator') ? state.user.full_name : '';
+  const guestName = prompt('What would you like to be called?', currentName || 'Candidate');
+  if (guestName === null) {
+    // User cancelled prompt
+    return;
+  }
+  const chosenName = guestName.trim() || 'Candidate';
 
-  const email = 'judge@hackathon.ai';
-  const password = 'Password123!';
-  showToast(`Setting up profile for ${candidateName}...`);
+  showToast(`Setting up Guest Mode for ${chosenName}...`);
   try {
-    let res = await fetch(`${API_BASE}/auth/login`, {
+    const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email: 'demo@candidate.ai', password: 'DemoPassword123!' })
     });
-    let data = await res.json();
-    if (!res.ok) {
-      // Auto-register if not yet created in the database
-      res = await fetch(`${API_BASE}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ full_name: candidateName, email, password })
-      });
-      data = await res.json();
+    const data = await res.json();
+    if (res.ok && data.access_token) {
+      state.token = data.access_token;
+    } else {
+      state.token = 'standalone-guest-' + Date.now();
     }
-    if (!res.ok) throw new Error(formatAPIError(data) || 'Sign in failed');
-    state.token = data.access_token;
-    localStorage.setItem('token', state.token);
-    state.user = data.user || { id: 1, full_name: candidateName, email };
-    state.user.full_name = candidateName;
-    updateUserUI();
-    showToast(`Welcome, ${candidateName}!`, 'success');
-    navigateTo('dashboard');
   } catch (err) {
-    // Standalone / Vercel fallback
-    state.token = 'standalone-judge-token-' + Date.now();
-    localStorage.setItem('token', state.token);
-    state.user = { id: 1, full_name: candidateName, email: 'candidate@ai.coach' };
-    updateUserUI();
-    showToast(`Welcome, ${candidateName}!`, 'success');
-    navigateTo('dashboard');
+    state.token = 'standalone-guest-' + Date.now();
   }
+
+  localStorage.setItem('token', state.token);
+  state.user = { id: 1, full_name: chosenName, email: 'guest@candidate.ai' };
+  updateUserUI();
+  showToast(`Welcome, ${chosenName}! Entered in Guest Mode.`, 'success');
+  navigateTo('dashboard');
+}
+
+function loginAsJudgeOrDemo() {
+  return enterGuestMode();
 }
 
 function logout() {
@@ -540,15 +523,15 @@ function renderCVReviewScreen(resumeData, jdMatchData = null) {
     : (resumeData || {});
   const parsed = resumeData?.parsed_data || review.parsed_data || {};
   document.getElementById('cv-candidate-name').textContent = parsed.name || state.user?.full_name || 'Candidate';
-  document.getElementById('cv-target-role').textContent = review.target_role || review.job_title || 'General Professional';
-  document.getElementById('cv-overall-score').textContent = review.score !== undefined ? review.score : (review.cv_score !== undefined ? review.cv_score : 78);
-  document.getElementById('cv-grade-badge').textContent = `Grade: ${review.grade || 'B+'}`;
-  document.getElementById('cv-exp-years').textContent = `${parsed.experience_years || 2}+ Years`;
-  document.getElementById('cv-education').textContent = (Array.isArray(parsed.education) ? parsed.education.join(', ') : parsed.education) || 'Not detected';
+  document.getElementById('cv-target-role').textContent = review.target_role || review.job_title || parsed.inferred_role || 'General Professional';
+  document.getElementById('cv-overall-score').textContent = review.score !== undefined ? review.score : (review.cv_score !== undefined ? review.cv_score : 0);
+  document.getElementById('cv-grade-badge').textContent = `Grade: ${review.grade || 'N/A'}`;
+  document.getElementById('cv-exp-years').textContent = parsed.experience_years ? `${parsed.experience_years}+ Years` : (review.experience_years ? `${review.experience_years} Years` : 'Early Career');
+  document.getElementById('cv-education').textContent = (Array.isArray(parsed.education) && parsed.education.length > 0 ? parsed.education.join(', ') : (typeof parsed.education === 'string' && parsed.education.trim() ? parsed.education : 'Not detected'));
 
   const wordCountElem = document.getElementById('cv-word-count');
   if (wordCountElem) {
-    wordCountElem.textContent = `${review.word_count || 380} words`;
+    wordCountElem.textContent = `${review.word_count || 0} words`;
   }
 
   // JD Match box
@@ -572,15 +555,7 @@ function renderCVReviewScreen(resumeData, jdMatchData = null) {
   // Section Checklist
   const sectionGrid = document.getElementById('cv-sections-checklist');
   if (sectionGrid) {
-    const sections = review.sections_found || resumeData?.sections_found || {
-      contact: true,
-      summary: true,
-      experience: true,
-      education: true,
-      skills: true,
-      projects: true,
-      certifications: false
-    };
+    const sections = review.sections_found || resumeData?.sections_found || {};
     const sectionNames = [
       { key: 'contact', label: 'Contact Info' },
       { key: 'summary', label: 'Professional Summary' },
@@ -604,9 +579,20 @@ function renderCVReviewScreen(resumeData, jdMatchData = null) {
 
   // Skills List
   const skillsList = document.getElementById('cv-skills-list');
-  const skills = parsed.skills || ['Python', 'FastAPI', 'JavaScript', 'SQL', 'Git'];
+  const skills = Array.isArray(parsed.skills) ? parsed.skills : [];
   if (skillsList) {
-    skillsList.innerHTML = skills.map(s => `<span class="kw-pill">${s}</span>`).join('');
+    skillsList.innerHTML = skills.length > 0
+      ? skills.map(s => `<span class="kw-pill">${s}</span>`).join('')
+      : `<span style="font-size: 0.85rem; color: var(--text-muted);">No technical skills detected in this document.</span>`;
+  }
+
+  // Certifications & Achievements
+  const certsList = document.getElementById('cv-certs-list');
+  const certs = parsed.certifications || review.certifications || [];
+  if (certsList) {
+    certsList.innerHTML = (Array.isArray(certs) && certs.length > 0)
+      ? certs.map(c => `<span class="kw-pill kw-matched">🏆 ${c}</span>`).join(' ')
+      : `<span style="font-size: 0.85rem; color: var(--text-muted);">${review.sections_found?.certifications ? 'Certifications section found.' : 'No certifications detected in this document.'}</span>`;
   }
 
   // Detected Mistakes / Issues
@@ -712,6 +698,74 @@ function setSetupMode(mode) {
   }
 }
 
+async function handleSetupQuickCVUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith('.pdf')) {
+    showToast('Please select a valid PDF file.', 'error');
+    return;
+  }
+  showToast(`Uploading and parsing ${file.name}...`);
+  try {
+    const formData = new FormData();
+    formData.append('resume', file);
+    const existingJob = document.getElementById('setup-job-title')?.value.trim() || 'General Professional';
+    formData.append('job_title', existingJob);
+
+    let res = await fetch(`${API_BASE}/resumes/upload`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${state.token}` },
+      body: formData
+    });
+    if (res.status === 401) {
+      const loginRes = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'demo@candidate.ai', password: 'DemoPassword123!' })
+      });
+      if (loginRes.ok) {
+        const loginData = await loginRes.json();
+        state.token = loginData.access_token;
+        localStorage.setItem('token', state.token);
+        state.user = loginData.user;
+        const retryFormData = new FormData();
+        retryFormData.append('resume', file);
+        retryFormData.append('job_title', existingJob);
+        res = await fetch(`${API_BASE}/resumes/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${state.token}` },
+          body: retryFormData
+        });
+      }
+    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(formatAPIError(data) || 'Upload failed');
+
+    state.activeResumeId = data.id;
+
+    // Auto populate job title if empty or general
+    const jobInput = document.getElementById('setup-job-title');
+    if (jobInput && (!jobInput.value.trim() || jobInput.value.trim().toLowerCase() === 'general professional')) {
+      const parsedRole = data.parsed_data?.inferred_role || data.job_title;
+      if (parsedRole && parsedRole !== 'General Professional') {
+        jobInput.value = parsedRole;
+      }
+    }
+
+    // Refresh resumes dropdown and select the newly uploaded one
+    const resumes = await fetchAPI('/resumes');
+    const resumeList = Array.isArray(resumes) ? resumes : [data];
+    populateSetupResumeDropdown(resumeList);
+    const sel = document.getElementById('setup-resume-select');
+    if (sel) sel.value = data.id;
+
+    const cvScore = (data.cv_review && data.cv_review.score !== undefined) ? data.cv_review.score : (data.score || 80);
+    showToast(`✓ CV linked: ${file.name} (Score: ${cvScore}/100)`, 'success');
+  } catch (err) {
+    showToast(`Failed to parse resume: ${err.message}`, 'error');
+  }
+}
+
 async function startInterviewSession() {
   const jobTitleInput = document.getElementById('setup-job-title');
   const jobTitle = (jobTitleInput ? jobTitleInput.value : '').trim();
@@ -722,7 +776,7 @@ async function startInterviewSession() {
 
   // 1. Mandatory Target Field / Role validation
   if (!jobTitle || jobTitle.length < 2) {
-    showToast('Target Job Title / Field is required! Please enter your job role (e.g. Full Stack AI Developer, Teacher, Nurse, Marketing).', 'warning');
+    showToast('Target Job Title / Field is required! Please enter your job field (e.g. Full Stack AI Developer, Doctor, Accountant).', 'warning');
     if (jobTitleInput) {
       jobTitleInput.focus();
       jobTitleInput.style.borderColor = 'var(--accent-rose)';
@@ -731,14 +785,16 @@ async function startInterviewSession() {
   }
   if (jobTitleInput) jobTitleInput.style.borderColor = '';
 
-  // 2. CV check & guidance
+  // 2. Candidate CV enforcement
   if (!resumeId && (!state.activeResumeId || state.activeResumeId === null)) {
-    const wantsUpload = confirm(`You have not linked a parsed CV yet for this interview.\n\nUploading your CV tailors the questions directly to your specific technical projects and past experience.\n\nClick 'OK' to upload your CV now in Resume Matcher, or 'Cancel' to proceed with general questions for ${jobTitle}.`);
+    const filePicker = document.getElementById('setup-quick-cv-file');
+    const wantsUpload = confirm(`Candidate CV is required before beginning the interview session.\n\nUploading your CV allows the AI interviewer to generate tailored questions matching your specific past projects, skills, and certifications.\n\nClick 'OK' to select and upload your CV (PDF) right now.`);
     if (wantsUpload) {
-      navigateTo('cv-review');
-      showToast('Please upload your CV here, then return to begin your customized interview.', 'info');
-      return;
+      if (filePicker) filePicker.click();
+      else navigateTo('cv-review');
     }
+    showToast('Please upload or select your CV (PDF) before starting the interview.', 'warning');
+    return;
   }
 
   const btn = document.getElementById('btn-start-session');

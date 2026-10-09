@@ -168,9 +168,9 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
         db.refresh(user)
 
     if not user:
-        raise HTTPException(401, "Account not found with this email. Please click the 'Register' tab to create an account.")
+        raise HTTPException(401, "Wrong credentials: This email is not registered. Please create an account first or enter in Guest Mode.")
     if not verify_password(user_data.password, user.hashed_password):
-        raise HTTPException(401, "Incorrect password. Please check your password and try again.")
+        raise HTTPException(401, "Wrong credentials: Incorrect password. Please check your password and try again.")
 
     token = create_access_token({"sub": str(user.id)})
     return {

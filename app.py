@@ -64,4 +64,12 @@ demo.app.mount("/web", StaticFiles(directory=str(FRONTEND_DIR), html=True), name
 demo.app.include_router(fastapi_app.router)
 
 if __name__ == "__main__":
-    demo.queue().launch(show_error=True)
+    import time
+    app, _, _ = demo.queue().launch(prevent_thread_lock=True, show_error=True)
+    app.router.routes.insert(0, Route("/", custom_root_endpoint, methods=["GET"]))
+    app.router.routes.insert(0, Route("/index.html", custom_root_endpoint, methods=["GET"]))
+    try:
+        while True:
+            time.sleep(3600)
+    except (KeyboardInterrupt, SystemExit):
+        demo.close()

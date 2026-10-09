@@ -34,11 +34,22 @@ def compile_question_result(
     Returns:
         Unified result dict for this question.
     """
-    content_score = content_eval.get("content_score", 0)
-    confidence_score = confidence.get("confidence_score", 0)
+    content_score = float(content_eval.get("content_score", 0))
+    confidence_score = float(confidence.get("confidence_score", 0))
 
-    # Weighted combined score: 60% content, 40% confidence
-    combined_score = round(content_score * 0.6 + confidence_score * 0.4, 1)
+    # Gated combined scoring:
+    # A wrong or irrelevant answer cannot pass just because the delivery sounded confident!
+    if content_score < 30.0:
+        # Off-topic / wrong answer: confidence cannot inflate failing content
+        combined_score = round(content_score * 0.90 + min(confidence_score, content_score) * 0.10, 1)
+        combined_score = min(combined_score, 25.0)
+    elif content_score < 50.0:
+        # Weak / partial answer: confidence is capped
+        combined_score = round(content_score * 0.80 + min(confidence_score, 50.0) * 0.20, 1)
+        combined_score = min(combined_score, 48.0)
+    else:
+        # Solid answer: 70% content, 30% confidence
+        combined_score = round(content_score * 0.70 + confidence_score * 0.30, 1)
 
     return {
         "question_number": question.get("number", 0),

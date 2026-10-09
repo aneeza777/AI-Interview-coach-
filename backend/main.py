@@ -521,21 +521,21 @@ async def submit_answer(
             try:
                 transcription = transcribe_audio(str(audio_path), language="en", prompt=clean_vocab_prompt)
             except Exception as e:
-                # If audio transcription fails, fallback cleanly to provided answer_text or constructive speech note
+                # If audio transcription fails, fallback cleanly to provided answer_text or bracketed error
                 if answer_text and answer_text.strip():
                     transcription = {"text": answer_text.strip(), "words_per_minute": 135.0, "duration": 20.0}
                 else:
                     transcription = {
-                        "text": "The candidate provided an audio response explaining their practical approach and key concepts.",
-                        "words_per_minute": 130.0,
-                        "duration": 15.0
+                        "text": "[Audio transcription error. Please speak clearly into your microphone.]",
+                        "words_per_minute": 0.0,
+                        "duration": 0.0
                     }
 
             if (not transcription.get("text") or transcription.get("text").startswith("[")):
                 if answer_text and answer_text.strip():
                     transcription["text"] = answer_text.strip()
-                elif (transcription.get("duration", 0) > 1.0):
-                    transcription["text"] = "Spoken answer captured. Candidate outlined the core technical ideas and experience."
+                else:
+                    transcription["text"] = "[No clear speech detected. Please speak clearly into your microphone.]"
 
             try:
                 confidence = detect_confidence(str(audio_path))

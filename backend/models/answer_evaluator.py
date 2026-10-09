@@ -101,9 +101,19 @@ def _semantic_score(answer_text: str, question: str, expected_keywords: List[str
             np.linalg.norm(answer_embedding[0]) * np.linalg.norm(reference_embedding[0])
         )
 
-        # Rescale to be more discriminating:
-        # unrelated text (~0.05 sim) -> 0, clearly relevant (~0.6 sim) -> 1
-        normalized = max(0.0, min(1.0, (similarity - 0.05) / 0.55))
+        # Unrelated natural English text in sentence-transformers has baseline similarity ~0.35 - 0.50.
+        # True topical relevance only begins above ~0.50.
+        if similarity < 0.50:
+            # Below 0.50 is off-topic / completely irrelevant
+            normalized = max(0.0, (similarity - 0.35) * 0.15)
+        elif similarity < 0.68:
+            # 0.50 - 0.68: weak / peripheral relevance
+            normalized = 0.05 + ((similarity - 0.50) / 0.18) * 0.35
+        else:
+            # 0.68 - 0.90+: strong relevant content
+            normalized = 0.40 + ((similarity - 0.68) / 0.22) * 0.60
+            normalized = min(1.0, normalized)
+
         return round(float(normalized), 3)
 
     except Exception as e:
@@ -243,46 +253,94 @@ def evaluate_answer(
             "tips": List[str],
         }
     """
-    if not answer_text.strip():
+    trimmed = answer_text.strip()
+    if not trimmed or trimmed.startswith("["):
         return {
-            "content_score": 0,
+            "content_score": 0.0,
             "breakdown": {
-                "keyword_score": 0,
-                "semantic_score": 0,
-                "depth_score": 0,
+                "keyword_score": 0.0,
+                "semantic_score": 0.0,
+                "depth_score": 0.0,
                 "matched_keywords": [],
                 "missed_keywords": expected_keywords,
                 "word_count": 0,
                 "sentence_count": 0,
                 "filler_count": 0,
+                "unique_word_ratio": 1.0,
             },
-            "feedback": "No answer provided. Try speaking your response clearly.",
-            "tips": ["Take a moment to think before answering.", "Even a brief answer is better than silence."],
+            "feedback": "No audible or clear speech was detected. Please make sure your microphone is working and speak aloud clearly.",
+            "tips": ["Speak directly into your microphone.", "Use the 'Type Answer Instead' tab if you are having microphone hardware issues."],
         }
 
     # Run all scoring components
-    kw_score, matched_kw = _keyword_score(answer_text, expected_keywords)
-    sem_score = _semantic_score(answer_text, question, expected_keywords)
-    dep_score, depth_info = _depth_score(answer_text)
-    filler_count, fillers_found = _count_fillers(answer_text)
-    rep_penalty, unique_ratio = _repetition_penalty(answer_text)
+    kw_score, matched_kw = _keyword_score(trimmed, expected_keywords)
+    sem_score = _semantic_score(trimmed, question, expected_keywords)
+    dep_score, depth_info = _depth_score(trimmed)
+    filler_count, fillers_found = _count_fillers(trimmed)
+    rep_penalty, unique_ratio = _repetition_penalty(trimmed)
 
     # Missed keywords
     missed_kw = [kw for kw in expected_keywords if kw not in matched_kw]
 
-    # ── Weighted combination ──
-    # For technical: keywords matter more
-    # For behavioral: depth and semantics matter more
-    if question_type == "technical":
-        weights = {"keyword": 0.40, "semantic": 0.30, "depth": 0.30}
+    # Explicit admission of not knowing / refusal / pass
+    dont_know_patterns = [
+        r'\b(don\'?t|do not|did not)\s+.*?\b(know|understand)\b',
+        r'\bno\s+(idea|clue|knowledge|experience|answer)\b',
+        r'\bnot\s+sure\b',
+        r'\b(can\'?t|cannot)\s+.*?\b(answer|explain|tell|say)\b',
+        r'\bhave no idea\b',
+        r'\bnever heard of\b',
+        r'\bpass\b',
+        r'\bskip\b',
+    ]
+    lower_ans = trimmed.lower()
+    is_dont_know = any(re.search(p, lower_ans) for p in dont_know_patterns) and len(matched_kw) == 0
+
+    if is_dont_know:
+        return {
+            "content_score": 12.0,
+            "breakdown": {
+                "keyword_score": 0.0,
+                "semantic_score": round(sem_score * 100, 1),
+                "depth_score": round(dep_score * 100, 1),
+                "matched_keywords": [],
+                "missed_keywords": expected_keywords,
+                "word_count": depth_info["word_count"],
+                "sentence_count": depth_info["sentence_count"],
+                "filler_count": filler_count,
+                "unique_word_ratio": unique_ratio,
+            },
+            "feedback": "You indicated that you do not know the answer or lack experience with this topic. In an interview, try to explain related concepts, your thought process, or how you would research the solution rather than declining completely.",
+            "tips": ["Mention related tools or frameworks you are familiar with.", "Break down the problem logically even if you don't know the exact answer."],
+        }
+
+    # ── Depth score gated by relevance ──
+    # Rambling off-topic should NOT be rewarded with depth points!
+    relevance_factor = max(kw_score, sem_score)
+    if relevance_factor < 0.20:
+        effective_depth = min(dep_score * relevance_factor, 0.10)
     else:
-        weights = {"keyword": 0.25, "semantic": 0.35, "depth": 0.40}
+        effective_depth = dep_score * (0.30 + 0.70 * relevance_factor)
+
+    # ── Weighted combination ──
+    # For technical: keywords matter most
+    # For behavioral: keywords and semantics matter most
+    if question_type == "technical":
+        weights = {"keyword": 0.45, "semantic": 0.35, "depth": 0.20}
+    else:
+        weights = {"keyword": 0.35, "semantic": 0.45, "depth": 0.20}
 
     raw_score = (
         kw_score * weights["keyword"]
         + sem_score * weights["semantic"]
-        + dep_score * weights["depth"]
+        + effective_depth * weights["depth"]
     )
+
+    # Off-topic penalty: If 0 keywords matched AND semantic similarity is under 0.30:
+    if len(matched_kw) == 0 and sem_score < 0.30:
+        raw_score = min(raw_score, 0.18)
+        if sem_score < 0.10:
+            raw_score = min(raw_score, 0.08)
 
     # Penalty for excessive fillers (max -15%) + repetition
     filler_penalty = min(0.15, filler_count * 0.02)

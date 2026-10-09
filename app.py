@@ -107,6 +107,9 @@ with gr.Blocks(
 for route in fastapi_app.routes:
     if hasattr(route, "path") and (route.path.startswith("/api") or route.path.startswith("/static") or route.path.startswith("/css") or route.path.startswith("/js")):
         demo.app.routes.insert(0, route)
+        demo.app.router.routes.insert(0, route)
+
+app = demo.app
 
 if __name__ == "__main__":
     demo.queue().launch(show_error=True)

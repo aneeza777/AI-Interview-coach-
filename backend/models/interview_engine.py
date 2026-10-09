@@ -808,26 +808,136 @@ def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> 
     projects = resume_data.get("projects", [])
     target_proj = question.get("target_project") or (projects[0][:40] if projects else None)
 
-    # 1. Introduction
-    if q_type == "introduction":
-        if total_years > 0:
-            exp_phrase = f"with notable experience at {company}, " if company else ""
+    # 0. Check domain category for job title
+    domain = _match_job_title(job_title)
+
+    # 1. Introduction & Background (handles introduction type or question text)
+    is_intro = q_type == "introduction" or any(w in q_text for w in [
+        "introduce yourself", "tell me about yourself", "tell us about yourself",
+        "your background", "overview of your background", "who you are", "walk me through your resume"
+    ])
+    if is_intro:
+        if domain == "education":
             return (
-                f"Hello, my name is {name}. I hold a background in {education} and bring {total_years}+ years "
-                f"of professional experience in the field, {exp_phrase}specializing in {top_skills}. "
-                f"Throughout my career, I have focused on delivering high-quality, measurable outcomes and "
-                f"collaborating closely with colleagues and stakeholders. I am excited about this {job_title} "
-                f"position because it directly aligns with my expertise and allows me to contribute to impactful work."
+                f"Hello, my name is {name}. With a strong passion for education and student-centered learning, "
+                f"I bring experience in lesson planning, classroom management, differentiated instruction, and curriculum development. "
+                f"Throughout my teaching practice, I focus on creating inclusive, engaging learning environments where every student can "
+                f"achieve their full academic potential. I am excited about this {job_title} opportunity because it aligns directly with my "
+                f"educational philosophy and dedication to student success."
             )
+        elif domain in ["software engineer", "frontend developer", "backend developer", "mobile developer", "devops engineer", "data scientist"]:
+            return (
+                f"Hello, my name is {name}. I am a software engineer specializing in scalable system design, clean architecture, "
+                f"and modern development best practices. Throughout my projects, I focus on building reliable, maintainable codebases "
+                f"and collaborating closely with cross-functional teams to deliver high-impact software solutions. I am excited about this {job_title} "
+                f"role because it allows me to contribute my technical problem-solving capabilities to your product roadmap."
+            )
+        elif domain == "healthcare":
+            return (
+                f"Hello, my name is {name}. I am a dedicated healthcare professional with comprehensive clinical background in patient "
+                f"assessment, evidence-based care protocols, and empathetic communication. My core focus is always patient safety, accurate "
+                f"clinical workflows, and collaborative interdisciplinary teamwork. I am enthusiastic about this {job_title} opportunity to deliver "
+                f"high-quality compassionate care."
+            )
+        elif domain == "finance":
+            return (
+                f"Hello, my name is {name}. I am a finance and accounting professional with proven experience in financial modeling, "
+                f"statutory compliance, budget forecasting, and risk analysis. I specialize in turning complex financial data into actionable "
+                f"strategic insights that safeguard capital and drive profitability. I am excited to bring my analytical rigor to this {job_title} position."
+            )
+        elif domain in ["marketing", "sales"]:
+            return (
+                f"Hello, my name is {name}. I am a results-driven professional with extensive experience across strategic campaign planning, "
+                f"data-driven conversion optimization, and client relationship management. In my work, I combine data-backed analytics with creative "
+                f"execution to grow audience reach and maximize return on investment. I look forward to contributing to your commercial growth as a {job_title}."
+            )
+        else:
+            if total_years > 0:
+                exp_phrase = f"with notable experience at {company}, " if company else ""
+                return (
+                    f"Hello, my name is {name}. I hold a background in {education} and bring {total_years}+ years of professional experience "
+                    f"in the field, {exp_phrase}specializing in {top_skills}. Throughout my career, I have focused on delivering high-quality, "
+                    f"measurable outcomes and collaborating closely with colleagues and stakeholders. I am excited about this {job_title} position "
+                    f"because it directly aligns with my expertise and allows me to contribute to impactful work."
+                )
+            return (
+                f"Hello, my name is {name}. I completed my studies in {education}, where I built a strong foundation in the core principles of my discipline. "
+                f"Through academic work, practical training, and hands-on assignments, I have developed solid proficiency in {top_skills}. "
+                f"I am eager to begin my career as a {job_title}, applying my problem-solving ability, curiosity, and commitment to quality to make a positive impact on your team."
+            )
+
+    # 2. Tool & Daily Workflow questions
+    if any(w in q_text for w in ["tools", "methodologies", "daily workflow", "languages", "technologies you use"]):
+        if domain == "education":
+            return (
+                "In my daily instructional workflow, I integrate modern learning management systems (like Google Classroom or Canvas), "
+                "interactive visual tools, and formative assessment platforms. Methodologically, I employ differentiated instruction, "
+                "Bloom's Taxonomy for scaffolding concepts, and backward design to ensure lesson plans directly align with curriculum standards."
+            )
+        elif domain in ["software engineer", "frontend developer", "backend developer", "mobile developer", "devops engineer", "data scientist"]:
+            return (
+                "In my daily workflow, I rely on modern development tools including Git for version control, Docker for containerization, "
+                "automated CI/CD testing pipelines, and observability dashboards. Methodologically, I follow Agile/Scrum sprints, "
+                "test-driven development (TDD), and clean architecture principles to ensure code is robust, performant, and easily maintainable."
+            )
+        else:
+            return (
+                f"In my daily workflow as a {job_title}, I rely on industry-standard productivity, analytics, and collaboration tools. "
+                f"Methodologically, I utilize structured workflows, continuous feedback loops, and quality checklists to ensure consistent accuracy, "
+                f"accountability, and timely milestone delivery."
+            )
+
+    # 3. Challenging Problem / STAR Resolution
+    if any(w in q_text for w in ["challenging problem", "star approach", "problem you faced", "obstacle", "complex issue"]):
+        if domain == "education":
+            return (
+                "[Situation] In a previous academic term, several students struggled with core abstract concepts, resulting in low initial test scores. "
+                "[Task] My goal was to diagnose individual learning gaps and raise student comprehension without falling behind the syllabus. "
+                "[Action] I conducted quick diagnostic quizzes, introduced differentiated peer-learning groups, and incorporated hands-on real-world examples into every module. "
+                "[Result] By the end of the term, average assessment scores improved by 28%, and all students successfully met course proficiencies."
+            )
+        elif domain in ["software engineer", "frontend developer", "backend developer", "mobile developer", "devops engineer", "data scientist"]:
+            return (
+                "[Situation] In a previous production release, our application experienced unexpected latency spikes under high peak traffic. "
+                "[Task] My responsibility was to diagnose the root cause and restore sub-100ms response times. "
+                "[Action] I analyzed profiling traces, identified redundant N+1 database queries, implemented distributed caching, and optimized database indexing. "
+                "[Result] System latency dropped by 65%, API throughput doubled, and zero downtime incidents occurred during subsequent high-traffic events."
+            )
+        else:
+            return (
+                "[Situation] During a critical initiative, unexpected resource constraints threatened our core project deadline. "
+                "[Task] My responsibility was to maintain deliverable quality while realigning project milestones. "
+                "[Action] I conducted a rapid impact analysis, eliminated non-essential bottlenecks, reallocated high-priority tasks, and maintained transparent daily stakeholder communication. "
+                "[Result] We successfully completed all deliverables on schedule, exceeding baseline performance metrics."
+            )
+
+    # 4. Scalability, Quality, & Maintenance
+    if any(w in q_text for w in ["scalability", "quality", "maintainability", "production environments", "standards"]):
+        if domain == "education":
+            return (
+                "I ensure educational quality and long-term consistency by maintaining detailed curriculum documentation, "
+                "utilizing standardized rubrics for transparent grading, and conducting periodic student feedback loops to continuously refine teaching strategies."
+            )
+        elif domain in ["software engineer", "frontend developer", "backend developer", "mobile developer", "devops engineer", "data scientist"]:
+            return (
+                "I ensure production scalability and quality by enforcing automated unit and integration tests, practicing modular component design, "
+                "implementing proactive health monitoring, and following infrastructure-as-code principles for predictable deployments."
+            )
+        else:
+            return (
+                f"I ensure quality and maintainability in my {job_title} work by establishing standardized operating procedures, "
+                f"conducting thorough peer reviews, documenting key processes, and utilizing automated checks to catch discrepancies early."
+            )
+
+    # 5. Career Contribution / 1-Year Goals
+    if any(w in q_text for w in ["contributing most", "next year", "growth", "where do you see yourself"]):
         return (
-            f"Hello, my name is {name}. I completed my studies in {education}, where I built a strong "
-            f"foundation in the core principles of my discipline. "
-            f"Through academic work, practical training, and hands-on assignments, I have developed solid proficiency in {top_skills}. "
-            f"I am eager to begin my career as a {job_title}, applying my problem-solving ability, curiosity, "
-            f"and commitment to quality to make a positive impact on your team."
+            f"Over the next year in this {job_title} role, my goal is to make an immediate positive impact by mastering the team's operational workflows, "
+            f"consistently delivering high-quality outcomes, and collaborating with cross-functional peers to optimize processes. "
+            f"Long-term, I aim to mentor emerging team members and drive forward-looking initiatives that support organizational growth."
         )
 
-    # 2. Experience-based (STAR method)
+    # 6. Experience-based (STAR method)
     if q_type == "experience":
         if company and total_years > 0:
             return (
@@ -852,7 +962,7 @@ def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> 
             f"[Result] We delivered our work on time, earned strong evaluations, and I gained valuable practical experience."
         )
 
-    # 3. Project-based (STAR method)
+    # 7. Project-based (STAR method)
     if q_type == "projects":
         proj_name = f"'{target_proj}'" if target_proj else "a key initiative I worked on"
         return (
@@ -863,7 +973,7 @@ def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> 
             f"end-to-end from planning to successful completion."
         )
 
-    # 4. Skill-based (domain-neutral)
+    # 8. Skill-based / Technical
     if q_type == "technical":
         return (
             f"I have extensive hands-on experience applying {primary_skill} in real-world situations. "
@@ -872,7 +982,7 @@ def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> 
             f"[Result] This disciplined approach ensures my work with {primary_skill} is reliable, compliant, and easy for others to build upon."
         )
 
-    # 5. Behavioral (STAR method tailored to theme)
+    # 9. Behavioral (STAR method tailored to theme)
     if q_type == "behavioral":
         if any(w in q_text for w in ["conflict", "disagree", "teammate", "difficult"]):
             return (
@@ -895,7 +1005,7 @@ def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> 
             "[Result] We delivered on schedule with no major issues, proving the value of structured prioritization and clear communication."
         )
 
-    # 6. Education
+    # 10. Education
     if q_type == "education":
         return (
             f"My education in {education} gave me a comprehensive grounding in the core theory and principles of my field. "
@@ -903,7 +1013,7 @@ def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> 
             f"This foundation equipped me with the analytical mindset and discipline required to succeed in a {job_title} role."
         )
 
-    # 7. Job-specific
+    # 11. Job-specific
     if q_type == "job_specific":
         return (
             f"As a {job_title}, my core focus is on delivering accurate, high-quality results that meet the needs of the people I serve. "
@@ -911,14 +1021,14 @@ def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> 
             f"Throughout the work, I emphasize quality checks, clear documentation, and open communication to ensure consistent, reliable outcomes."
         )
 
-    # 8. Follow-up
+    # 12. Follow-up
     if q_type == "follow_up":
         return (
             f"To elaborate on that: when working with {primary_skill}, I pay close attention to accuracy, risk management, and trade-offs. "
             f"In practice, this means verifying my work carefully, tracking outcomes, and continuously improving based on feedback."
         )
 
-    # 9. Closing
+    # 13. Closing
     if q_type == "closing":
         return (
             f"Thank you very much for this opportunity. I would love to learn more about the team's upcoming priorities, "
@@ -927,7 +1037,7 @@ def generate_model_answer(question: Dict, resume_data: Dict, job_title: str) -> 
 
     # Fallback
     return (
-        f"For this question, I would structure my answer using the STAR method: outlining the Situation and Task, "
+        f"For this question, I structure my answer using the STAR method: outlining the Situation and Task, "
         f"explaining how I applied {top_skills} during the Action phase, and highlighting the measurable Result."
     )
 

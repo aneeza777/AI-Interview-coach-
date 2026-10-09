@@ -77,6 +77,20 @@ def get_current_user(
     if not token:
         return None
 
+    # Gracefully accept offline/demo standalone tokens
+    if isinstance(token, str) and token.startswith("standalone-"):
+        demo_user = db.query(User).filter(User.email == "demo@candidate.ai").first()
+        if not demo_user:
+            demo_user = User(
+                email="demo@candidate.ai",
+                hashed_password=hash_password("DemoPassword123!"),
+                full_name="Candidate",
+            )
+            db.add(demo_user)
+            db.commit()
+            db.refresh(demo_user)
+        return demo_user
+
     payload = decode_token(token)
     if payload is None:
         return None

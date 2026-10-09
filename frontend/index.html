@@ -676,30 +676,36 @@
           </div>
         </div>
 
-        <!-- Right: Camera / Audio Visualizer & Controls -->
+        <!-- Right: AI Audio Proctor Stage & Controls (Camera Removed) -->
         <div class="interview-right-col">
           <div class="glass-card media-stage-card">
-            <div class="video-preview-box">
-              <video id="webcam-preview" autoplay playsinline muted class="camera-feed"></video>
-              <div class="camera-overlay" id="camera-overlay">
-                <span class="cam-icon">📹</span>
-                <span>Camera Preview</span>
+            <!-- AI Audio Proctor & Voice Wave Stage -->
+            <div class="audio-proctor-stage" id="audio-proctor-stage">
+              <div class="audio-stage-orb-container">
+                <div class="audio-stage-glow-ring" id="audio-glow-ring"></div>
+                <div class="audio-stage-mic-icon" id="stage-mic-icon">🎙️</div>
               </div>
-              <button class="btn-cam-switch" id="btn-toggle-cam" onclick="toggleCamera()">
-                <span>📷</span>
-              </button>
-            </div>
+              <div class="audio-stage-info">
+                <h4 id="audio-stage-title">AI Voice Coach Arena</h4>
+                <p id="audio-stage-subtitle">Real-time Whisper STT & Librosa Acoustic Pacing</p>
+                <span class="audio-stage-status-badge" id="audio-stage-badge">🟢 Microphone Ready</span>
+              </div>
 
-            <!-- Audio Waveform Visualizer -->
-            <div class="audio-wave-visualizer" id="wave-visualizer">
-              <div class="wave-bar"></div>
-              <div class="wave-bar"></div>
-              <div class="wave-bar"></div>
-              <div class="wave-bar"></div>
-              <div class="wave-bar"></div>
-              <div class="wave-bar"></div>
-              <div class="wave-bar"></div>
-              <div class="wave-bar"></div>
+              <!-- Audio Waveform Visualizer -->
+              <div class="audio-wave-visualizer" id="wave-visualizer">
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+              </div>
             </div>
 
             <!-- Floating Silence Toast Alert -->

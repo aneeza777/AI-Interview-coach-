@@ -100,7 +100,7 @@ with gr.Blocks(
         background: #0b0f17;
       }}
     </style>
-    <iframe id="app-frame" srcdoc="{escaped_doc}" allow="microphone *; camera *; display-capture *; autoplay *"></iframe>
+    <iframe id="app-frame" srcdoc="{escaped_doc}" allow="microphone *; autoplay *"></iframe>
     """)
 
 # 4. Attach all FastAPI backend endpoints (/api/auth, /api/interviews, /api/resumes, etc.)

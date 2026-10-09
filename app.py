@@ -103,12 +103,8 @@ with gr.Blocks(
     <iframe id="app-frame" srcdoc="{escaped_doc}" allow="microphone *; autoplay *"></iframe>
     """)
 
-# 4. Mount Gradio interface and unify with FastAPI
-app = gr.mount_gradio_app(fastapi_app, demo, path="/gradio")
-demo.app = app
-demo.server_app = app
+# 4. Attach all FastAPI backend endpoints (/api/auth, /api/interviews, /api/resumes, etc.)
+demo.app.include_router(fastapi_app.router)
 
 if __name__ == "__main__":
-    import uvicorn
-    port = int(os.getenv("PORT", 7860))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    demo.queue().launch(show_error=True)

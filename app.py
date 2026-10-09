@@ -104,7 +104,9 @@ with gr.Blocks(
     """)
 
 # 4. Attach all FastAPI backend endpoints (/api/auth, /api/interviews, /api/resumes, etc.)
-demo.app.include_router(fastapi_app.router)
+for route in fastapi_app.routes:
+    if hasattr(route, "path") and (route.path.startswith("/api") or route.path.startswith("/static") or route.path.startswith("/css") or route.path.startswith("/js")):
+        demo.app.routes.insert(0, route)
 
 if __name__ == "__main__":
     demo.queue().launch(show_error=True)

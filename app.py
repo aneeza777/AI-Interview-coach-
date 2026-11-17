@@ -39,6 +39,17 @@ from backend.main import app as fastapi_app, FRONTEND_DIR, init_db
 # 1. Initialize database tables
 init_db()
 
+# Hook into Gradio's App creation so all FastAPI backend endpoints are registered on launch
+_orig_create_app = gr.routes.App.create_app
+
+@staticmethod
+def _custom_create_app(*args, **kwargs):
+    gradio_app = _orig_create_app(*args, **kwargs)
+    gradio_app.include_router(fastapi_app.router)
+    return gradio_app
+
+gr.routes.App.create_app = _custom_create_app
+
 # 2. Read and bundle the full custom project frontend (Image 2 UI) with updated responsive CSS & JS
 with open(FRONTEND_DIR / "index.html", "r", encoding="utf-8") as f:
     raw_html = f.read()
